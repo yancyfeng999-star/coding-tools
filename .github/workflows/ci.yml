@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
+
+      - name: Install Tuist
+        run: |
+          brew tap tuist/tuist
+          brew install tuist
+
+      - name: Cache Tuist
+        uses: actions/cache@v4
+        with:
+          path: |
+            Apps/Mac/Tuist/.build
+            Apps/Mac/.tuist-generated
+          key: ${{ runner.os }}-tuist-${{ hashFiles('Apps/Mac/Project.swift', 'Apps/Mac/Tuist/Package.swift') }}
+
+      - name: Install Dependencies
+        run: cd Apps/Mac && tuist install
+
+      - name: Generate
+        run: cd Apps/Mac && tuist generate
+
+      - name: Test
+        run: cd Apps/Mac && ./scripts/run-tests.sh
+
+      - name: Build
+        run: cd Apps/Mac && ./scripts/build.sh

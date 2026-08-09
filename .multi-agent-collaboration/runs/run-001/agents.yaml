@@ -1,0 +1,215 @@
+# Coding Tools · Run 001 Agent Registry
+# Created: 2026-08-09
+# Run ID: run-001
+# Objective: 阶段 0/1 落地（产品合同 + 工程骨架 + Tuist generate 验证）
+
+run:
+  id: run-001
+  objective: |
+    阶段 0（产品安全契约）+ 阶段 1（工程骨架）落地。
+    1. Tuist 工程能 tuist generate
+    2. 8 个 Stage 0 工具参数表由子代理 A 补全
+    3. SECURITY_MODEL / CATALOG_SCHEMA 评审
+    4. 多代理协作模板可被通用 Agent 读取并接力
+  createdAt: 2026-08-09
+  status: ready
+  baselineCommit: null
+  targetVersion: 0.1.0
+
+agents:
+  - agent_id: coordinator
+    runtime: codex_thread
+    role: Coordinator / Integrator
+    responsibilities:
+      - 任务图设计
+      - 独占 state.yaml
+      - 集成 + 收口
+    canWrite:
+      - .multi-agent-collaboration/**/state.yaml
+      - .multi-agent-collaboration/**/events/**
+      - .multi-agent-collaboration/**/tasks/**
+    canRead:
+      - "**"
+    ownedPaths: []
+    forbiddenPaths:
+      - "**/Package.resolved.lock"
+    dependsOn: []
+
+  - agent_id: owner-catalog-installer
+    runtime: document_subagent
+    role: Owner (子代理 A · Catalog + Installer)
+    responsibilities:
+      - Catalog 目录实现
+      - ManifestSecurity 签名验证
+      - Installers Adapter（Homebrew / mise / 官方包）
+      - ProcessExecution 受控进程
+      - Detection 检测
+    canWrite:
+      - Apps/Mac/Sources/Catalog/**
+      - Apps/Mac/Sources/ManifestSecurity/**
+      - Apps/Mac/Sources/Installers/**
+      - Apps/Mac/Sources/ProcessExecution/**
+      - Apps/Mac/Sources/Detection/**
+      - Catalog/tools/**
+      - Catalog/schemas/**
+      - Catalog/revocations/**
+      - Apps/Mac/Tests/CatalogTests/**
+      - Apps/Mac/Tests/InstallerTests/**
+      - Apps/Mac/Tests/ManifestSecurityTests/**
+    canRead:
+      - "**"
+    ownedPaths:
+      - Apps/Mac/Sources/Catalog
+      - Apps/Mac/Sources/ManifestSecurity
+      - Apps/Mac/Sources/Installers
+      - Apps/Mac/Sources/ProcessExecution
+      - Apps/Mac/Sources/Detection
+      - Catalog/tools
+      - Catalog/schemas
+      - Catalog/revocations
+    forbiddenPaths:
+      - Apps/Mac/Sources/App/**
+      - Apps/Mac/Sources/UI/**
+      - Apps/Mac/Sources/Content/**
+      - Apps/Mac/Sources/Localization/**
+      - Apps/Mac/Sources/Theme/**
+      - Apps/Mac/Sources/Updates/**
+      - Apps/Mac/scripts/**
+      - .github/**
+    dependsOn: []
+    inbox: inbox/owner-catalog-installer.yaml
+    outbox: outbox/owner-catalog-installer.yaml
+
+  - agent_id: owner-ui-content-i18n
+    runtime: document_subagent
+    role: Owner (子代理 B · UI + Content + Localization)
+    responsibilities:
+      - SwiftUI 视图
+      - Content 元数据同步
+      - Localization 多语言
+      - Theme 主题
+    canWrite:
+      - Apps/Mac/Sources/UI/**
+      - Apps/Mac/Sources/Content/**
+      - Apps/Mac/Sources/Localization/**
+      - Apps/Mac/Sources/Theme/**
+      - Apps/Mac/Sources/App/Views/**
+      - Catalog/content/**
+      - Apps/Mac/Tests/AppTests/**
+    canRead:
+      - "**"
+    ownedPaths:
+      - Apps/Mac/Sources/UI
+      - Apps/Mac/Sources/Content
+      - Apps/Mac/Sources/Localization
+      - Apps/Mac/Sources/Theme
+      - Catalog/content
+    forbiddenPaths:
+      - Apps/Mac/Sources/Catalog/**
+      - Apps/Mac/Sources/ManifestSecurity/**
+      - Apps/Mac/Sources/Installers/**
+      - Apps/Mac/Sources/ProcessExecution/**
+      - Apps/Mac/Sources/Detection/**
+      - Apps/Mac/scripts/**
+      - .github/**
+    dependsOn: []
+    inbox: inbox/owner-ui-content-i18n.yaml
+    outbox: outbox/owner-ui-content-i18n.yaml
+
+  - agent_id: owner-release-update-security
+    runtime: document_subagent
+    role: Owner (子代理 C · Release + Update + Security)
+    responsibilities:
+      - Sparkle Updates 集成
+      - 发布脚本完善
+      - CI workflow 完善
+      - EdDSA / DMG / 公证流程
+      - 安全审查
+    canWrite:
+      - Apps/Mac/Sources/Updates/**
+      - Apps/Mac/scripts/**
+      - .github/**
+      - docs/RELEASE_WORKFLOW.md
+      - docs/AGENT_RELEASE_WORKFLOW.md
+      - docs/SECURITY_MODEL.md
+    canRead:
+      - "**"
+    ownedPaths:
+      - Apps/Mac/Sources/Updates
+      - Apps/Mac/scripts
+      - .github
+    forbiddenPaths:
+      - Apps/Mac/Sources/Catalog/**
+      - Apps/Mac/Sources/Installers/**
+      - Apps/Mac/Sources/App/Views/**
+      - Catalog/tools/**
+    dependsOn: []
+    inbox: inbox/owner-release-update-security.yaml
+    outbox: outbox/owner-release-update-security.yaml
+
+  - agent_id: reviewer
+    runtime: document_subagent
+    role: Reviewer (只读)
+    responsibilities:
+      - 跨模块 Review
+      - 安全审查
+    canWrite:
+      - reviews/**
+    canRead:
+      - "**"
+    ownedPaths: []
+    forbiddenPaths:
+      - "**/Sources/**"
+      - "**/scripts/**"
+    dependsOn: []
+
+  - agent_id: qa
+    runtime: document_subagent
+    role: QA (只读)
+    responsibilities:
+      - 跑测试
+      - 真实环境验证
+      - 验收
+    canWrite:
+      - qa-results/**
+    canRead:
+      - "**"
+    ownedPaths: []
+    forbiddenPaths:
+      - "**/Sources/**"
+      - "**/scripts/**"
+    dependsOn: []
+
+handoffs:
+  - from: owner-catalog-installer
+    to: reviewer
+    when: HANDOFF_READY
+  - from: owner-ui-content-i18n
+    to: reviewer
+    when: HANDOFF_READY
+  - from: owner-release-update-security
+    to: reviewer
+    when: HANDOFF_READY
+  - from: reviewer
+    to: qa
+    when: REVIEW_APPROVED
+  - from: qa
+    to: coordinator
+    when: QA_PASSED
+
+sharedResources:
+  - path: Apps/Mac/Project.swift
+    owner: coordinator
+    rule: "高冲突文件，串行编辑"
+  - path: Apps/Mac/Sources/Domain/**
+    owner: coordinator
+    rule: "Domain 模型由 Coordinator 维护；其他 Agent 提需求"
+  - path: Apps/Mac/Sources/App/CodingToolsApp.swift
+    owner: coordinator
+    rule: "App 入口由 Coordinator 维护"
+  - path: CHANGELOG.md
+    owner: coordinator
+    rule: "CHANGELOG 由 Coordinator 写"
+  - path: AGENTS.md
+    owner: coordinator
+    rule: "Agent 协作入口由 Coordinator 维护"

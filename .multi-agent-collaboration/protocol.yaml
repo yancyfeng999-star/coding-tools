@@ -1,0 +1,67 @@
+protocol:
+  version: 3
+  createdAt: 2026-08-09
+  description: |
+    Coding Tools 多代理协作 v3 协议。
+    主代理 + 3 个边界清晰的子代理并行模式。
+  transport: hybrid
+  governance: standard
+  defaultMaxParallel: 3
+  maxAttempts: 3
+  ackTimeoutSeconds: 300
+  leaseSeconds: 1800
+
+roles:
+  coordinator:
+    canDo:
+      - "设计任务图"
+      - "初始化 Run"
+      - "独占 state.yaml 写权限"
+      - "集成 + 收口"
+      - "发布最终版本"
+    cannotDo:
+      - "直接修改子代理 owned paths"
+      - "绕过 Reviewer/QA 直接进入发布"
+  owner:
+    canDo:
+      - "实现任务文档规定的内容"
+      - "写入自己的 outbox"
+      - "在 owned paths 自由修改"
+    cannotDo:
+      - "修改其他 Agent 的 outbox"
+      - "绕过 Reviewer 直接标完成"
+  reviewer:
+    canDo:
+      - "读取所有任务和 diff"
+      - "产出 REVIEW_APPROVED / CHANGES_REQUESTED"
+    cannotDo:
+      - "修改代码"
+  qa:
+    canDo:
+      - "运行测试 + 真实环境验证"
+      - "产出 QA_PASSED / QA_FAILED"
+    cannotDo:
+      - "修改代码"
+
+events:
+  - TASK_READY
+  - TASK_DISPATCHED
+  - ACK
+  - LEASE_ACQUIRED
+  - LEASE_RENEWED
+  - HANDOFF_READY
+  - REVIEW_APPROVED
+  - CHANGES_REQUESTED
+  - QA_PASSED
+  - QA_FAILED
+  - BLOCKED
+  - WAITING_USER_APPROVAL
+  - APPROVAL_GRANTED
+  - APPROVAL_REJECTED
+  - TASK_RESUMED
+  - TASK_COMPLETED
+  - RELEASE_READY
+  - DOCUMENT_SUBAGENT_RESULT_RECEIVED
+  - DOCUMENT_SUBAGENT_FAILED
+  - RETRY_SCHEDULED
+  - DEAD_LETTER

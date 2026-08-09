@@ -1,0 +1,71 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcuserstate
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xccheckout
+
+# Tuist
+Apps/Mac/Tuist/.build/
+Apps/Mac/.tuist-generated/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved.bak
+
+# Fastlane / CI
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Sparkle
+Apps/Mac/Sources/Resources/PrivateKeys/
+
+# 密钥 / 凭证
+*.p12
+*.cer
+*.p8
+*.p7b
+*.key
+*.pem
+appspec.yml
+secrets.vault
+.env
+.env.local
+.notary/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*~
+
+# 日志
+*.log
+Logs/
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# Python (用于 build 脚本)
+__pycache__/
+*.pyc
+.venv/
+venv/

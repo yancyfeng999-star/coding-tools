@@ -1,0 +1,40 @@
+# Coding Tools · Multi-Agent Project Identity
+# Created: 2026-08-09
+# DO NOT EDIT after Run initialization. Each Run has its own agents.yaml.
+
+project:
+  name: coding-tools
+  displayName: Coding Tools
+  description: macOS 开发者工具中心：可信安装源 + 教程知识库 + 工具启动器 + 环境检测 + 自动更新
+  repo: https://github.com/yancyfeng999-star/coding-tools.git
+  localRoot: /Users/yancyfeng/Desktop/Mac Dpxx项目/自研软件/Coding Tools
+
+identity:
+  productType: macOS application
+  stack:
+    - SwiftUI
+    - AppKit
+    - Tuist 4
+    - Sparkle 2
+    - SQLite (GRDB)
+    - Homebrew / mise
+  deploymentTarget: "14.0"
+  minimumOS: "14.0"
+
+ownership:
+  # 不允许任何 Agent 修改以下只读区域
+  protected:
+    - .multi-agent-collaboration/project.yaml
+    - .multi-agent-collaboration/protocol.yaml
+  # 主代理独占
+  coordinatorOwned:
+    - .multi-agent-collaboration/**/state.yaml
+    - .multi-agent-collaboration/**/events/
+
+versioning:
+  mode: tracked
+  scheme: semver
+  source: Apps/Mac/Sources/App/Info.plist
+  currentVersion: 0.0.0
+  baselineVersion: 0.0.0
+  targetVersion: 0.1.0

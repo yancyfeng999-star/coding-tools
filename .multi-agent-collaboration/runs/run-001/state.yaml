@@ -1,0 +1,79 @@
+state:
+  runId: run-001
+  status: ready
+  currentVersion: 0.0.0
+  targetVersion: 0.1.0
+  baselineCommit: null
+  lastEventId: 0
+  createdAt: 2026-08-09
+
+  tasks:
+    T001:
+      status: ready
+      owner: owner-catalog-installer
+      title: "阶段 0 — 8 个 Stage 0 工具参数表补全"
+      dependsOn: []
+    T002:
+      status: ready
+      owner: owner-catalog-installer
+      title: "阶段 0 — SECURITY_MODEL / CATALOG_SCHEMA 评审"
+      dependsOn: []
+    T003:
+      status: ready
+      owner: owner-catalog-installer
+      title: "阶段 2 — Catalog 远程下载 + 签名验证 + 缓存实现"
+      dependsOn: [T001, T002]
+    T004:
+      status: ready
+      owner: owner-catalog-installer
+      title: "阶段 3 — Homebrew / mise / 官方包 Adapter 实现"
+      dependsOn: [T003]
+    T005:
+      status: ready
+      owner: owner-ui-content-i18n
+      title: "阶段 1 — UI 完整布局（首页 / 工具 / 内容 / 设置）"
+      dependsOn: []
+    T006:
+      status: ready
+      owner: owner-ui-content-i18n
+      title: "阶段 4 — MenuBarExtra 完整 + 主题切换"
+      dependsOn: [T005]
+    T007:
+      status: ready
+      owner: owner-ui-content-i18n
+      title: "阶段 5 — Content 元数据同步 + 缓存"
+      dependsOn: [T005]
+    T008:
+      status: ready
+      owner: owner-ui-content-i18n
+      title: "阶段 6 — Localization 中英文 + Theme 三模式"
+      dependsOn: [T005]
+    T009:
+      status: ready
+      owner: owner-release-update-security
+      title: "阶段 1 — tuist generate 验证可启动"
+      dependsOn: []
+    T010:
+      status: ready
+      owner: owner-release-update-security
+      title: "阶段 7 — Sparkle 2 完整集成"
+      dependsOn: [T009]
+    T011:
+      status: ready
+      owner: owner-release-update-security
+      title: "阶段 7 — 完整发布脚本（DMG / 公证 / Appcast）"
+      dependsOn: [T010]
+    T012:
+      status: ready
+      owner: owner-release-update-security
+      title: "阶段 7 — CI workflow 完善"
+      dependsOn: [T009]
+
+  nextDispatchBatch: 1
+  activeWorkers: 0
+  blockedTasks: []
+  completedTasks: []
+  failedTasks: []
+
+leases: []
+locks: []
