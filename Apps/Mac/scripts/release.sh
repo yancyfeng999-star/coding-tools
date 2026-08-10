@@ -248,10 +248,10 @@ $NOTES"
   # ============== 步骤 8: gh release create ==============
   echo "==> Step 8/8  gh release create"
   ASSETS=(
-    "$REPO_ROOT/$ZIP_PATH"
-    "$REPO_ROOT/$APPCAST"
+    "$REPO_ROOT/Apps/Mac/$ZIP_PATH"
+    "$REPO_ROOT/Apps/Mac/$APPCAST"
   )
-  [[ -f "$REPO_ROOT/$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg" ]] && ASSETS+=("$REPO_ROOT/$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg")
+  [[ -f "$REPO_ROOT/Apps/Mac/$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg" ]] && ASSETS+=("$REPO_ROOT/Apps/Mac/$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg")
 
   run gh release create "$TAG" \
     "${ASSETS[@]}" \
