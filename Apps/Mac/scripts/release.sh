@@ -211,9 +211,6 @@ if [[ -f "$ZIP_PATH" ]]; then
   fi
   # 把 <enclosure url="<PREFIX><filename>" 改成 <PREFIX><TAG>/<filename>
   sed -i '' "s|${PREFIX}|${PREFIX}${TAG}/|g" "$APPCAST"
-  # Sparkle 2.x 严格要求每个 <enclosure> 显式 xml:lang，否则 log 警告 + 部分版本不识别
-  # 简化 pattern：<enclosure 后直接插入 xml:lang="en"
-  sed -i '' 's|<enclosure |<enclosure xml:lang="en" |g' "$APPCAST"
 
   # 追加 .pkg 的 <enclosure>（generate_appcast 不支持 .pkg，参考官方 doc 手写）
   PKG_PATH="$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.pkg"
@@ -221,7 +218,8 @@ if [[ -f "$ZIP_PATH" ]]; then
     PKG_SIG=$("$SIGN_UPDATE" --ed-key-file "$SPARKLE_PRIVATE_KEY" -p "$PKG_PATH" 2>/dev/null | tail -1 | tr -d '\n')
     PKG_LEN=$(stat -f%z "$PKG_PATH")
     PKG_URL="${PREFIX}${TAG}/${ARTIFACT_BASE}-${VERSION}.pkg"
-    PKG_ENCLOSURE="            <enclosure url=\"${PKG_URL}\" length=\"${PKG_LEN}\" type=\"application/vnd.apple.installer-package+xml\" sparkle:edSignature=\"${PKG_SIG}\" sparkle:installationType=\"package\"/>"
+    # Sparkle 2.x 严格要求每个 <enclosure> 显式 xml:lang
+    PKG_ENCLOSURE="            <enclosure xml:lang=\"en\" url=\"${PKG_URL}\" length=\"${PKG_LEN}\" type=\"application/vnd.apple.installer-package+xml\" sparkle:edSignature=\"${PKG_SIG}\" sparkle:installationType=\"package\"/>"
     # 在 zip <enclosure> 之后插入 pkg <enclosure>
     sed -i '' "/sparkle:edSignature=\"[^\"]*\"\\/>/a\\
 ${PKG_ENCLOSURE}
