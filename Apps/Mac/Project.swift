@@ -169,6 +169,7 @@ let project = Project(
                 .target(name: "Persistence"),
                 .target(name: "Localization"),
                 .target(name: "Theme"),
+                .target(name: "Updates"),
             ]
         ),
         .target(

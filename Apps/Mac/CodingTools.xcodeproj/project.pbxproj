@@ -49,6 +49,7 @@
 		536E1AA2A6FC42BD996DC02A /* ProcessExecution.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58A18308FE5B09A6CB66222F /* ProcessExecution.framework */; };
 		5496445A22673CB78C543348 /* Catalog.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E0AB5337F1DAF7CC7B17C6C /* Catalog.framework */; };
 		57E68F3F330FF0B33C393CAC /* RemoteContentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6995325FFA924001511E6A0 /* RemoteContentLoader.swift */; };
+		5C62D02B561A66E789A3EF07 /* Updates.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8545CF9249CA12E0938FC6D6 /* Updates.framework */; };
 		63FF2F3E1FB2B583CE316F46 /* Sparkle.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB72B6828AF2904D0261D607 /* Sparkle.xcframework */; };
 		64D65E889C98615B196E6F1D /* Installers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 075D81157B4945796F9A2D2E /* Installers.framework */; };
 		668613C053984AF1FFAD5CD2 /* UI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEBF757E9E7DE20E30033C9F /* UI.framework */; };
@@ -193,6 +194,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 5E5F72C5BC203917CFEE4F9E;
 			remoteInfo = Domain;
+		};
+		46887BC160D1B73292D6EE4F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B90E012FABAB1A6208DDF1A9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8938EA4B0346FE7BACA106B6;
+			remoteInfo = Updates;
 		};
 		4B266155653338E4BAE14C50 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -940,6 +948,7 @@
 				AF38F12B0823DC10808C9346 /* Localization.framework in Frameworks */,
 				3E81C3C4C44C881BAA4A7D84 /* Persistence.framework in Frameworks */,
 				1AA8DC5F873DDF68D2191DB5 /* Theme.framework in Frameworks */,
+				5C62D02B561A66E789A3EF07 /* Updates.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1624,6 +1633,7 @@
 				CAB3BCB55083DAEF62E44787 /* PBXTargetDependency */,
 				2C15F0BCF8CCAEC72094E2E6 /* PBXTargetDependency */,
 				D49F910648C210EB4950B364 /* PBXTargetDependency */,
+				9B5145512A6BF010CE950CCD /* PBXTargetDependency */,
 			);
 			name = UI;
 			packageProductDependencies = (
@@ -2403,6 +2413,12 @@
 			name = ProcessExecution;
 			target = F61FABEE3131ECC0A15B9A9C /* ProcessExecution */;
 			targetProxy = 7C62097E541686F1B762B0E6 /* PBXContainerItemProxy */;
+		};
+		9B5145512A6BF010CE950CCD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Updates;
+			target = 8938EA4B0346FE7BACA106B6 /* Updates */;
+			targetProxy = 46887BC160D1B73292D6EE4F /* PBXContainerItemProxy */;
 		};
 		9BF306C1C2D540AF8BA82DA3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
