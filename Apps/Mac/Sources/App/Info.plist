@@ -61,5 +61,19 @@
 		<string>en</string>
 		<string>zh-Hans</string>
 	</array>
+	<key>SUFeedURL</key>
+	<string>https://github.com/yancyfeng999-star/coding-tools/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>__SPARKLE_PUBLIC_KEY__</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUEnableAutomaticDownloading</key>
+	<false/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+	<key>SUAllowsAutomaticUpdates</key>
+	<true/>
+	<key>SUMinimumAutoupdateVersion</key>
+	<string>0.5.0</string>
 </dict>
 </plist>

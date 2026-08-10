@@ -1,0 +1,276 @@
+# owner-catalog-installer · outbox
+# Run: run-001 · Status: HANDOFF_READY · Owner: 子代理 A
+# Date: 2026-08-10
+# Scope: 阶段 2（Catalog + ManifestSecurity）+ 阶段 3（Installers + ProcessExecution + Detection）
+
+deliverables:
+  status: COMPLETED
+  scope: |
+    阶段 2：Catalog（远程下载 + 签名验证 + 缓存 + 离线）+ ManifestSecurity（真 Ed25519 +
+    canonical JSON + PublicKey loader）。
+    阶段 3：ProcessExecution（真 Process + Pipe，禁 /bin/sh -c）+ Installers（4 个 Adapter）
+    + Detection（路径/版本/架构/App + Team ID）。
+    8 个 Stage 0 工具的 catalog JSON 全部生成并通过 schema 校验。
+
+# ---------- 测试结果 ----------
+
+test_results:
+  total: 57
+  passed: 57
+  failed: 0
+  duration_seconds: ~1.2 (总运行时间，不含首次构建)
+  schemes:
+    DomainTests:
+      executed: 3
+      failures: 0
+      notes: |
+        原有 3 个测试（Tool identity / ToolCategory allCases / OperationLog）继续通过。
+        4-arg init 保留作为测试便利构造器，全字段 init 暴露给 Catalog 解码用。
+    CatalogTests:
+      executed: 12
+      failures: 0
+      coverage:
+        - CatalogSnapshot 过期 / 撤销 / Codable round-trip（3）
+        - RemoteCatalogLoader success / network failure / offline fallback to cache /
+          metadata / schema mismatch / invalid JSON / cached empty / non-HTTPS rejected（8）
+        - Mock HTTPClient + 文件系统缓存 + 临时目录隔离（无跨测试污染）
+    InstallerTests:
+      executed: 32
+      failures: 0
+      coverage:
+        InstallAction / AdapterRegistry (5):
+          - InstallAction enum 形状 / AdapterRegistry 调度 / 不支持时 throw
+        HomebrewAdapter (3):
+          - plan 接受正确 action / 拒绝错误 action / brew 路径正确
+        MiseAdapter (2):
+          - plan toolID 形如 "node@22" / 拒绝非 mise action
+        OfficialArtifactAdapter (2):
+          - plan 接受 / 拒绝错误 action
+        ProcessExecution (14):
+          - success / nonZeroExit / shellForbidden (sh + bash) / timeout / cancellation
+          - missing executable / Bearer 脱敏 / Basic auth URL 脱敏 / 用户路径脱敏
+          - GitHub PAT 脱敏 (ghp/gho/ghs) / env var 脱敏 / PEM block 脱敏 / 非敏感保留
+        Detection (6):
+          - parseVersion 覆盖 git/python/go/node/rust 输出
+          - real git (`/usr/bin/git`) → installed + version 解析
+          - missing command → notInstalled
+          - Xcode (`com.apple.dt.Xcode`) → installed + bundleID 匹配
+            (teamID 依赖 codesign 输出格式，做 smoke check 不强制断言)
+          - probeAll 并发多 tool
+          - systemArchitecture → arm64 (Apple Silicon)
+    ManifestSecurityTests:
+      executed: 10
+      failures: 0
+      coverage:
+        - 合法 Ed25519 签名通过
+        - 篡改 signature（合法 base64 但内容随机）→ signatureInvalid
+        - signature 非 base64 → signatureMalformed
+        - 空 signature → signatureInvalid
+        - 用 keyB 签但 keyID 写 kA → 拒绝
+        - 过期 snapshot → expired
+        - 未知 keyID → unknownKey
+        - revokedItems 标记 / 撤销检查
+        - canonicalize 同输入 → 同输出（确定性）
+        - canonicalize 顶层 keys 字典序排序
+
+# ---------- 真实 macOS 测试 ----------
+
+real_macos_smoke:
+  environment:
+    host: "My Mac (M-series, arm64)"
+    macos: "26.6.1 (25G76)"
+    swift: "6.3.3"
+    tuist: "4.203.1"
+    homebrew: "6.0.15 at /opt/homebrew/bin/brew"
+    mise: "未安装"
+  detections:
+    git:
+      path: /usr/bin/git
+      version: "2.50.1"
+      architecture: arm64
+      status: installed
+      command_run: "git --version"
+    node:
+      path: /Users/yancyfeng/.local/bin/node
+      version: "22.22.2"
+      status: installed
+      note: "不在常规 PATH 里但 locateExecutable 通过 /Users/<u>/.local/bin 找到"
+    xcode:
+      path: /Applications/Xcode.app
+      bundleID: "com.apple.dt.Xcode"
+      status: installed
+      note: "NSWorkspace.urlForApplication 命中"
+    missing:
+      command: "this-does-not-exist-xyz"
+      status: notInstalled
+  process_execution:
+    real_process_tests: "14 个全部使用真实 /bin/echo / /usr/bin/false / /bin/sleep / /bin/sh / /bin/bash"
+    shell_blocked: "sh + bash 都被 .shellForbidden 拒绝，参数化调用未触发拼接"
+    cancellation: "0.31s 内 Task.cancel() 触发 process.terminate() + 子进程被杀"
+
+# ---------- 文件清单 ----------
+
+files:
+  new:
+    - path: Apps/Mac/Sources/Domain/InstallOption.swift
+      lines: 124
+      purpose: "InstallOption (JSON DTO) + InstallActionDescriptor + InstallOptionType + DomainError"
+    - path: Apps/Mac/Sources/Domain/LaunchCapability.swift
+      lines: 48
+      purpose: "LaunchCapability + LaunchType（与 schema 对齐）"
+    - path: Apps/Mac/Sources/Domain/LocalizedString.swift
+      lines: 35
+      purpose: "LocalizedString map type + fallback chain（zh-Hans > en > first non-empty）"
+    - path: Apps/Mac/Sources/Domain/ToolStatus.swift
+      lines: 9
+      purpose: "ToolStatus enum (active / deprecated / experimental)"
+    - path: Apps/Mac/Sources/ManifestSecurity/ManifestCanonicalizer.swift
+      lines: 174
+      purpose: "Canonical JSON 序列化（排序 keys + 去除 keyID/signature + 无空白 + 极简字符串转义）"
+    - path: Apps/Mac/Sources/ManifestSecurity/Resources/PublicKeys/dev-pub-2026a.pub
+      lines: 0
+      bytes: 32
+      purpose: "dev Ed25519 公钥（raw 32 字节，hex 形式 0xe7be…9d74）— Bundle.module 加载测试用"
+    - path: Apps/Mac/Sources/Installers/HomebrewAdapter.swift
+      lines: 181
+      purpose: "HomebrewAdapter 基类 + Formula/Cask adapter + HomebrewPathResolver"
+    - path: Apps/Mac/Sources/Installers/MiseToolAdapter.swift
+      lines: 113
+      purpose: "MiseToolAdapter + which mise 路径解析 + toolID 解析 'node@22' 形式"
+    - path: Apps/Mac/Sources/Installers/OfficialArtifactAdapter.swift
+      lines: 212
+      purpose: "下载 + SHA-256 校验 + NSWorkspace 打开 DMG/ZIP；HTTPS-only + Bundle ID/Team ID 校验"
+    - path: Apps/Mac/Tests/InstallerTests/ProcessExecutionTests.swift
+      lines: 171
+      purpose: "14 个真进程 / 脱敏测试"
+    - path: Apps/Mac/Tests/InstallerTests/DetectionTests.swift
+      lines: 132
+      purpose: "Detection 单元测试 + 真实 git / Xcode 探测"
+    - path: Catalog/tools/git.json
+      lines: 47
+      purpose: "Stage 0 git (homebrew-formula)"
+    - path: Catalog/tools/nodejs.json
+      lines: 53
+      purpose: "Stage 0 nodejs (mise-tool + homebrew-formula)"
+    - path: Catalog/tools/python.json
+      lines: 53
+      purpose: "Stage 0 python (mise-tool + homebrew-formula)"
+    - path: Catalog/tools/go.json
+      lines: 53
+      purpose: "Stage 0 go (mise-tool + homebrew-formula)"
+    - path: Catalog/tools/rust.json
+      lines: 47
+      purpose: "Stage 0 rust (homebrew-formula: rustup-init, riskLevel=medium)"
+    - path: Catalog/tools/vscode.json
+      lines: 56
+      purpose: "Stage 0 vscode (homebrew-cask + official-artifact, TeamID UBF8T346G9)"
+    - path: Catalog/tools/docker-desktop.json
+      lines: 56
+      purpose: "Stage 0 docker-desktop (homebrew-cask + official-artifact, TeamID 9BNSXJN65R)"
+    - path: Catalog/tools/iterm2.json
+      lines: 45
+      purpose: "Stage 0 iterm2 (homebrew-cask, TeamID H7V7XYUQ7F)"
+  modified:
+    - path: Apps/Mac/Sources/Domain/Domain.swift
+      lines: 273
+      changes: "Tool 扩展为完整 schema 字段（保留 4-arg init 向后兼容）；CatalogSnapshot 加 Decodable；新增 supportedSchemaVersion"
+    - path: Apps/Mac/Sources/ManifestSecurity/ManifestSecurity.swift
+      lines: 137
+      changes: "Ed25519ManifestVerifier 真实验签（CryptoKit Curve25519.Signing）；PublicKeyLoader 从 Bundle(for:) 加载 PublicKeys/；新增 signatureMalformed / publicKeyMalformed / canonicalizationFailed 错误"
+    - path: Apps/Mac/Sources/ProcessExecution/ProcessExecution.swift
+      lines: 336
+      changes: "Process + Pipe 真实实现；带 sh/bash 防御；Task group 竞争超时；OutputRedactor 扩展（Bearer / Basic auth / 用户路径 / GitHub PATs / env var / PEM block）"
+    - path: Apps/Mac/Sources/Installers/Installers.swift
+      lines: 160
+      changes: "InstallActionType 移至 Domain；InstallProgress + InstallProgressHandler；AdapterRegistry；InstallError 扩展"
+    - path: Apps/Mac/Sources/Detection/Detection.swift
+      lines: 274
+      changes: "InstallationDetector 真实 probe 实现（CLI 路径探测 + --version 解析 + uname -m + file 二进制架构 + NSWorkspace App 探测 + codesign Team ID）"
+    - path: Apps/Mac/Sources/Catalog/Catalog.swift
+      lines: 240
+      changes: "RemoteCatalogLoader 真实实现（URLSession + 30s 超时 + 离线缓存 + schemaVersion 校验 + HTTPS-only）；FileSystemCatalogCache + CachedCatalogMetadata"
+    - path: Apps/Mac/Tests/CatalogTests/CatalogTests.swift
+      lines: 254
+      changes: "新增 8 个 loader 测试 + 4 个 snapshot 测试"
+    - path: Apps/Mac/Tests/ManifestSecurityTests/ManifestSecurityTests.swift
+      lines: 258
+      changes: "新增 8 个签名测试 + 2 个 canonical 测试"
+    - path: Apps/Mac/Tests/InstallerTests/InstallerTests.swift
+      lines: 205
+      changes: "新增 5 个 InstallAction/AdapterRegistry + 3 个 Homebrew + 2 个 Mise + 2 个 OfficialArtifact 测试"
+
+# ---------- 关键约束自检 ----------
+
+constraint_self_check:
+  - name: "无 command / script / sudo / postInstall 等禁字段在 catalog JSON"
+    status: PASS
+    evidence: "python3 + jsonschema 校验 + 手工遍历所有 tools[*].installOptions[*]，0 命中"
+  - name: "ProcessExecutor 不使用 /bin/sh -c"
+    status: PASS
+    evidence: "ProcessExecutor.run() 拒绝 sh/bash/zsh/csh/tcsh 包装（.shellForbidden）；现有测试覆盖 sh + bash 两个拒绝路径"
+  - name: "公开 PublicKey 在 Resources/ 目录"
+    status: PASS
+    evidence: "Apps/Mac/Sources/ManifestSecurity/Resources/PublicKeys/dev-pub-2026a.pub (32 字节，hex 0xe7be…9d74)"
+  - name: "8 个 JSON 全部通过 schema 校验"
+    status: PASS
+    evidence: "jsonschema.validate 全 8 个文件 0 失败（python3 -c '...' 一次性校验）"
+  - name: "无 print() 在 Sources/"
+    status: PASS
+    evidence: "grep -rn 'print(' Sources/{Catalog,ManifestSecurity,Installers,ProcessExecution,Detection,Domain} 无命中"
+  - name: "Project.swift 调整 — 最小必要"
+    status: PASS
+    evidence: |
+      Detection 加上 ProcessExecution 依赖（必需，否则 Detection 引用 ProcessExecutor 编不过）。
+      InstallerTests 加上 Detection 依赖（必需，否则 DetectionTests 找不到 Detection）。
+      target 列表未动；其它子代理 owned paths 未动。
+
+# ---------- 给 Coordinator 的请求（边界调整） ----------
+
+coordinator_requests:
+  - priority: high
+    topic: "PublicKey 路径 — 需要 Coordinator 决策"
+    detail: |
+      任务规范说"公开 PublicKeyRegistry 从 `Apps/Mac/Sources/App/Resources/PublicKeys/` 读取"，
+      但 App/Resources 属于子代理 B（UI + Content + Localization + Theme）管辖范围，
+      我的 owned paths 不包含。
+      当前实现：放在 `Apps/Mac/Sources/ManifestSecurity/Resources/PublicKeys/dev-pub-2026a.pub`，
+      ManifestSecurity 框架通过 `Bundle(for: _ManifestSecurityBundleToken.self)` 加载。
+      这样 CodingTools 主 App 引用 ManifestSecurity 框架时，公钥已自动打包。
+      建议保持现状；若需把公钥复制到 App/Resources/PublicKeys/ 作为冗余/可见展示，
+      请协调子代理 B 补一份（keyID = 'dev-pub-2026a'），BundlePublicKeyLoader 接受 bundle
+      参数已支持该用法。
+  - priority: medium
+    topic: "ContentView.swift pre-existing bug"
+    detail: |
+      跑 `xcodebuild -scheme CodingTools build` 时发现子代理 B 的
+      Apps/Mac/Sources/App/Views/Content/ContentView.swift 引用 ContentType 但
+      `import Content` 缺失（pre-existing bug，阶段 1 就存在，但当时没人 build 过
+      CodingTools 主 scheme，只 build 测试 scheme 所以未触发）。
+      该文件不在我 owned paths，未做修改。
+      修复建议：在 ContentView.swift 顶部加 `import Content`，无需其它改动。
+  - priority: low
+    topic: "Project.swift 调整已记录在 constraint_self_check.evidence"
+    detail: |
+      检测模块 + 测试依赖调整；如需 review 看 git diff。
+
+# ---------- 下一步建议（不做，只标注） ----------
+
+next_steps_for_coordinator_or_owner:
+  - "阶段 4（UI）: 集成 RemoteCatalogLoader 走 Application Services；UI 拿 InstallationProbe 显示"
+  - "阶段 5（Content）: ContentManifest 也可以复用 ManifestSecurity 的 canonical JSON + Ed25519 验签"
+  - "阶段 7（子代理 C）: 用 dev-pub-2026a.pub 对应的私钥（0x9c4534d2c24a07d7928af79bb46d140ffdd00ee6a2f3884abfa8281502862b75）签真实 catalog；App 内置公钥列表未来可从 GitHub Releases 拉取"
+  - "Catalog snapshot 聚合: 当前 8 个文件每个含 1 个 tool；v1.0.0 上线前建议拆为单 catalog snapshot + 8 个 tool 文件，stage 5 决定"
+
+# ---------- 总耗时 ----------
+
+timing:
+  started_at: "2026-08-10 11:25:00 +08:00"
+  finished_at: "2026-08-10 12:09:00 +08:00"
+  duration_minutes: 44
+  notes: "包含 Domain 扩展 / 4 个 adapter / 真实 Process + Pipe / Detection / 57 个测试 / 8 JSON 校验 / 真实 macOS 验证"
+
+signoff:
+  agent: owner-catalog-installer
+  status: COMPLETED
+  blocking_issues: []
+  followups: 2  # 1) ContentView import；2) PublicKey 双份 vs 单一

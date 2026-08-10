@@ -84,6 +84,7 @@ let project = Project(
             sources: ["Sources/Detection/**"],
             dependencies: [
                 .target(name: "Domain"),
+                .target(name: "ProcessExecution"),
             ]
         ),
         .target(
@@ -201,6 +202,7 @@ let project = Project(
             settings: .settings(
                 base: [
                     "PRODUCT_NAME": "Coding Tools",
+                    "EXECUTABLE_NAME": "CodingTools",
                     "ENABLE_PREVIEWS": "NO",
                     "CODE_SIGN_IDENTITY": "-",
                     "CODE_SIGNING_ALLOWED": "YES",
@@ -247,6 +249,7 @@ let project = Project(
                 .target(name: "Installers"),
                 .target(name: "ProcessExecution"),
                 .target(name: "Domain"),
+                .target(name: "Detection"),
             ]
         ),
         .target(
@@ -270,6 +273,22 @@ let project = Project(
             sources: ["Tests/AppTests/**"],
             dependencies: [
                 .target(name: "CodingTools"),
+                .target(name: "Localization"),
+                .target(name: "Theme"),
+                .target(name: "Content"),
+                .target(name: "UI"),
+                .target(name: "Domain"),
+            ]
+        ),
+        .target(
+            name: "UpdatesTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "com.codingtools.updates-tests",
+            deploymentTargets: .macOS("14.0"),
+            sources: ["Tests/UpdatesTests/**"],
+            dependencies: [
+                .target(name: "Updates"),
             ]
         ),
     ],
@@ -284,9 +303,17 @@ let project = Project(
                     TestableTarget.testableTarget(target: "CatalogTests"),
                     TestableTarget.testableTarget(target: "InstallerTests"),
                     TestableTarget.testableTarget(target: "ManifestSecurityTests"),
+                    TestableTarget.testableTarget(target: "UpdatesTests"),
+                    TestableTarget.testableTarget(target: "AppTests"),
                 ]
             ),
             runAction: .runAction(configuration: .debug, executable: .target("CodingTools"))
+        ),
+        .scheme(
+            name: "AppTests",
+            shared: true,
+            buildAction: .buildAction(targets: [.target("CodingTools")]),
+            testAction: .targets([TestableTarget.testableTarget(target: "AppTests")])
         ),
         .scheme(
             name: "DomainTests",
@@ -311,6 +338,12 @@ let project = Project(
             shared: true,
             buildAction: .buildAction(targets: [.target("ManifestSecurity")]),
             testAction: .targets([TestableTarget.testableTarget(target: "ManifestSecurityTests")])
+        ),
+        .scheme(
+            name: "UpdatesTests",
+            shared: true,
+            buildAction: .buildAction(targets: [.target("Updates")]),
+            testAction: .targets([TestableTarget.testableTarget(target: "UpdatesTests")])
         ),
     ]
 )

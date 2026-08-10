@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.10-002-gemini-cli",
+  "createdAt": "2026-08-10T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "gemini-cli",
+      "slug": "gemini-cli",
+      "name": "Gemini CLI",
+      "localizedName": {
+        "en": "Gemini CLI",
+        "zh-Hans": "Gemini CLI"
+      },
+      "description": "Google 官方终端 AI 工作流工具。基于 Gemini 3，能分析大型代码库、生成图片/视频、自动化复杂流程。",
+      "localizedDescription": {
+        "en": "Google's official terminal AI workflow tool. Powered by Gemini 3. Analyze large codebases, generate apps from images, and automate complex workflows.",
+        "zh-Hans": "Google 官方终端 AI 工作流工具。基于 Gemini 3，能分析大型代码库、生成图片/视频、自动化复杂流程。"
+      },
+      "category": "ai-coding",
+      "tags": ["ai", "google", "gemini", "cli", "agent"],
+      "homepageURL": "https://geminicli.com",
+      "documentationURL": "https://github.com/google-gemini/gemini-cli",
+      "installOptions": [
+        {
+          "type": "npm-global",
+          "packageName": "@google/gemini-cli",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "gemini",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

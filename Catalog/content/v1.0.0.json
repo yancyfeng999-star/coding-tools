@@ -1,0 +1,225 @@
+{
+  "schemaVersion": "1.0.0",
+  "contentVersion": "2026.08.10-001",
+  "createdAt": "2026-08-10T03:28:25Z",
+  "expiresAt": "2026-11-10T03:28:25Z",
+  "items": [
+    {
+      "id": "git-docs-progit",
+      "toolID": "git",
+      "type": "docs",
+      "title": "Pro Git · 官方电子书",
+      "author": "Scott Chacon, Ben Straub",
+      "sourceURL": "https://git-scm.com/book/en/v2",
+      "language": "en",
+      "tags": ["git", "version-control", "book"]
+    },
+    {
+      "id": "git-docs-official",
+      "toolID": "git",
+      "type": "docs",
+      "title": "Git 官方文档",
+      "author": "Git Project",
+      "sourceURL": "https://git-scm.com/doc",
+      "language": "en",
+      "tags": ["git", "reference"]
+    },
+    {
+      "id": "git-video-intro",
+      "toolID": "git",
+      "type": "video",
+      "title": "Git & GitHub Crash Course",
+      "author": "Traversy Media",
+      "sourceURL": "https://www.youtube.com/watch?v=SWYqp7iY_Tc",
+      "language": "en",
+      "tags": ["git", "github", "beginner"]
+    },
+
+    {
+      "id": "nodejs-docs-official",
+      "toolID": "nodejs",
+      "type": "docs",
+      "title": "Node.js 官方文档",
+      "author": "OpenJS Foundation",
+      "sourceURL": "https://nodejs.org/en/docs",
+      "language": "en",
+      "tags": ["node", "javascript", "runtime"]
+    },
+    {
+      "id": "nodejs-docs-api",
+      "toolID": "nodejs",
+      "type": "docs",
+      "title": "Node.js API Reference",
+      "author": "OpenJS Foundation",
+      "sourceURL": "https://nodejs.org/api/",
+      "language": "en",
+      "tags": ["node", "api", "reference"]
+    },
+    {
+      "id": "nodejs-video-crash",
+      "toolID": "nodejs",
+      "type": "video",
+      "title": "Node.js Crash Course",
+      "author": "Traversy Media",
+      "sourceURL": "https://www.youtube.com/watch?v=fBNz5xF-Kx4",
+      "language": "en",
+      "tags": ["node", "beginner"]
+    },
+
+    {
+      "id": "python-docs-official",
+      "toolID": "python",
+      "type": "docs",
+      "title": "Python 官方文档",
+      "author": "Python Software Foundation",
+      "sourceURL": "https://docs.python.org/3/",
+      "language": "en",
+      "tags": ["python", "reference"]
+    },
+    {
+      "id": "python-video-intro",
+      "toolID": "python",
+      "type": "video",
+      "title": "Python for Beginners",
+      "author": "Microsoft Developer",
+      "sourceURL": "https://www.youtube.com/watch?v=jFCNu1-XdMY",
+      "language": "en",
+      "tags": ["python", "beginner"]
+    },
+
+    {
+      "id": "go-docs-tour",
+      "toolID": "go",
+      "type": "docs",
+      "title": "A Tour of Go",
+      "author": "Go Team",
+      "sourceURL": "https://go.dev/tour/",
+      "language": "en",
+      "tags": ["go", "tutorial"]
+    },
+    {
+      "id": "go-docs-effective",
+      "toolID": "go",
+      "type": "docs",
+      "title": "Effective Go",
+      "author": "Go Team",
+      "sourceURL": "https://go.dev/doc/effective_go",
+      "language": "en",
+      "tags": ["go", "best-practices"]
+    },
+    {
+      "id": "go-video-crash",
+      "toolID": "go",
+      "type": "video",
+      "title": "Go Crash Course",
+      "author": "Traversy Media",
+      "sourceURL": "https://www.youtube.com/watch?v=SqrbIlUwR0U",
+      "language": "en",
+      "tags": ["go", "beginner"]
+    },
+
+    {
+      "id": "rust-docs-book",
+      "toolID": "rust",
+      "type": "docs",
+      "title": "The Rust Programming Language",
+      "author": "Steve Klabnik, Carol Nichols",
+      "sourceURL": "https://doc.rust-lang.org/book/",
+      "language": "en",
+      "tags": ["rust", "tutorial", "book"]
+    },
+    {
+      "id": "rust-docs-cargo",
+      "toolID": "rust",
+      "type": "docs",
+      "title": "The Cargo Book",
+      "author": "Rust Project",
+      "sourceURL": "https://doc.rust-lang.org/cargo/",
+      "language": "en",
+      "tags": ["rust", "cargo", "reference"]
+    },
+    {
+      "id": "rust-video-crash",
+      "toolID": "rust",
+      "type": "video",
+      "title": "Rust Crash Course",
+      "author": "Traversy Media",
+      "sourceURL": "https://www.youtube.com/watch?v=zF34dRivLOw",
+      "language": "en",
+      "tags": ["rust", "beginner"]
+    },
+
+    {
+      "id": "vscode-docs-official",
+      "toolID": "vscode",
+      "type": "docs",
+      "title": "Visual Studio Code Documentation",
+      "author": "Microsoft",
+      "sourceURL": "https://code.visualstudio.com/docs",
+      "language": "en",
+      "tags": ["vscode", "editor", "docs"]
+    },
+    {
+      "id": "vscode-video-tips",
+      "toolID": "vscode",
+      "type": "video",
+      "title": "VS Code Top 10 Tips & Tricks",
+      "author": "Fireship",
+      "sourceURL": "https://www.youtube.com/watch?v=xJxY9ldE7E4",
+      "language": "en",
+      "tags": ["vscode", "tips", "productivity"]
+    },
+
+    {
+      "id": "docker-docs-official",
+      "toolID": "docker-desktop",
+      "type": "docs",
+      "title": "Docker Desktop for Mac",
+      "author": "Docker Inc.",
+      "sourceURL": "https://docs.docker.com/desktop/install/mac-install/",
+      "language": "en",
+      "tags": ["docker", "install", "macos"]
+    },
+    {
+      "id": "docker-docs-getting-started",
+      "toolID": "docker-desktop",
+      "type": "docs",
+      "title": "Docker Getting Started",
+      "author": "Docker Inc.",
+      "sourceURL": "https://docs.docker.com/get-started/",
+      "language": "en",
+      "tags": ["docker", "tutorial"]
+    },
+    {
+      "id": "docker-video-intro",
+      "toolID": "docker-desktop",
+      "type": "video",
+      "title": "Docker in 100 Seconds",
+      "author": "Fireship",
+      "sourceURL": "https://www.youtube.com/watch?v=Gjnup-PuquQ",
+      "language": "en",
+      "tags": ["docker", "intro"]
+    },
+
+    {
+      "id": "iterm2-docs-official",
+      "toolID": "iterm2",
+      "type": "docs",
+      "title": "iTerm2 Documentation",
+      "author": "George Nachman",
+      "sourceURL": "https://iterm2.com/documentation.html",
+      "language": "en",
+      "tags": ["iterm2", "terminal", "docs"]
+    },
+    {
+      "id": "iterm2-video-tips",
+      "toolID": "iterm2",
+      "type": "video",
+      "title": "iTerm2 Tips & Tricks",
+      "author": "Tech Insider",
+      "sourceURL": "https://www.youtube.com/watch?v=ASQ8z5g-7yQ",
+      "language": "en",
+      "tags": ["iterm2", "tips"]
+    }
+  ]
+}

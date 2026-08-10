@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.10-002-opencode",
+  "createdAt": "2026-08-10T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "opencode",
+      "slug": "opencode",
+      "name": "OpenCode",
+      "localizedName": {
+        "en": "OpenCode",
+        "zh-Hans": "OpenCode"
+      },
+      "description": "开源终端 AI 编码代理（SST 出品）。模型灵活可选，支持 Claude、OpenAI、Gemini 等。MIT 许可，build/plan 双代理模式。",
+      "localizedDescription": {
+        "en": "Open-source terminal AI coding agent by SST. Model-agnostic, supports Claude, OpenAI, Gemini. MIT licensed, build/plan dual-agent mode.",
+        "zh-Hans": "开源终端 AI 编码代理（SST 出品）。模型灵活可选，支持 Claude、OpenAI、Gemini 等。MIT 许可，build/plan 双代理模式。"
+      },
+      "category": "ai-coding",
+      "tags": ["ai", "open-source", "sst", "cli", "agent", "mit"],
+      "homepageURL": "https://opencode.ai",
+      "documentationURL": "https://opencode.ai/docs",
+      "installOptions": [
+        {
+          "type": "npm-global",
+          "packageName": "opencode-ai@latest",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "opencode",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

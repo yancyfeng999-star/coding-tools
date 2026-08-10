@@ -1,0 +1,302 @@
+---
+agent_id: owner-release-update-security
+run_id: run-001
+delivered_at: 2026-08-10T11:35:00+08:00
+handoff_status: HANDOFF_READY
+depends_on_resolved:
+  - T009
+related_tasks:
+  - T010  # 阶段 7 — Sparkle 2 完整集成
+  - T011  # 阶段 7 — 完整发布脚本
+  - T012  # 阶段 7 — CI workflow 完善
+
+# ============== 交付物清单 ==============
+
+deliverables:
+
+  # ----- T010: Sparkle 2 完整集成 -----
+  - path: Apps/Mac/Sources/Updates/Updates.swift
+    action: rewrite
+    size_bytes: 3622
+    summary: |
+      重构为三层架构：
+        AppUpdating (公开协议) ← SparkleAppUpdater ← UpdaterBackend ← SparkleUpdaterBackend
+      新增 NoOpAppUpdater 用于 previews / tests。
+      完整支持 setAutomaticChecksEnabled / setAutomaticDownloadEnabled。
+    verification:
+      - "xcodebuild -scheme Updates build  → BUILD SUCCEEDED"
+      - "otool -L Updates  → 链接 Sparkle.framework 2.9.5"
+
+  - path: Apps/Mac/Tests/UpdatesTests/UpdatesTests.swift
+    action: create
+    size_bytes: 3314
+    summary: 10 个单元测试覆盖 NoOpAppUpdater / SparkleAppUpdater / MockUpdaterBackend
+    verification:
+      - "xcodebuild -scheme UpdatesTests test  → TEST SUCCEEDED (10/10)"
+
+  - path: Apps/Mac/Project.swift
+    action: edit
+    summary: |
+      新增 UpdatesTests target (unitTests product, bundleId com.codingtools.updates-tests)
+      + UpdatesTests scheme + 加入 CodingTools scheme 的 testAction。
+      纯新增，未动任何现有 target。
+    rationale: |
+      Project.swift 是 sharedResource "高冲突文件，串行编辑"，但本次为纯新增
+      单一 target，不动任何其他 Agent 拥有的 target。Reviewer 如需协调其他 Agent
+      一并升级 Project.swift，请通过 Coordinator 串行处理。
+    verification:
+      - "tuist generate → 成功生成 UpdatesTests scheme"
+      - "Project.pbxproj 中 UpdatesTests 出现 22 次"
+
+  - path: Apps/Mac/Sources/App/AppDelegate.swift
+    action: rewrite
+    summary: |
+      集成 SPUStandardUpdaterController：
+        - init 阶段构造（startingUpdater=false）
+        - applicationDidFinishLaunching 显式调用 startSparkleUpdater
+        - 暴露 appUpdater: AppUpdating 给 UI 层（子代理 B 的 SettingsView 可调用）
+    verification: "语法 + 类型检查通过，Updates 模块依赖 OK"
+
+  - path: Apps/Mac/Sources/App/Info.plist
+    action: edit
+    summary: |
+      注入 7 个 Sparkle 字段：
+        SUFeedURL = https://github.com/yancyfeng999-star/coding-tools/releases/latest/download/appcast.xml
+        SUPublicEDKey = __SPARKLE_PUBLIC_KEY__  ← 占位符，release.sh 注入
+        SUEnableAutomaticChecks = true
+        SUEnableAutomaticDownloading = false  ← v1.0 前不自动下载
+        SUScheduledCheckInterval = 86400
+        SUAllowsAutomaticUpdates = true
+        SUMinimumAutoupdateVersion = 0.5.0
+    verification: "PlistBuddy 读取所有 key 正确"
+
+  # ----- T011: 完整发布脚本 -----
+  - path: Apps/Mac/scripts/build.sh
+    action: rewrite
+    summary: |
+      - 支持 CONFIG=Debug|Release
+      - 默认 --no-binary-cache
+      - SKIP_TUIST_INSTALL=1 跳过 tuist install（CI 缓存场景）
+      - --help 输出
+    verification: "bash -n OK；./build.sh --help 输出正确"
+
+  - path: Apps/Mac/scripts/run-tests.sh
+    action: rewrite
+    summary: |
+      - 5 个 test scheme（Domain/Catalog/Installer/ManifestSecurity/Updates）
+      - SCHEMES= 过滤指定
+      - 解析 Executed N tests 输出实际通过/失败数
+      - 失败不 crash，收集所有结果后统一退出码
+    verification: "bash -n OK；实际跑 5 scheme 20/20 pass"
+
+  - path: Apps/Mac/scripts/bump-version.sh
+    action: rewrite
+    summary: |
+      - patch/minor/major/x.y.z + --check
+      - 校验 git 工作区干净（排除 .multi-agent-collaboration）
+      - 校验 tag 未占用
+      - 自动更新 CHANGELOG（[Unreleased] → [X.Y.Z]）
+      - SKIP_GIT=1 跳过 commit
+    verification: "bash -n OK；bump-version.sh --check 输出当前 v0.0.0"
+
+  - path: Apps/Mac/scripts/package-release.sh
+    action: rewrite
+    summary: |
+      - Release build
+      - DMG：hdiutil 流程 + /Applications 快捷方式
+      - ZIP：ditto 给 Sparkle in-app update
+      - SHA-256 校验和
+      - 如 SPARKLE_PRIVATE_KEY 设置，sign_update 给 ZIP 加 .sig
+    verification: "bash -n OK"
+
+  - path: Apps/Mac/scripts/sign-release.sh
+    action: rewrite
+    summary: |
+      - codesign --deep --force --options runtime --timestamp
+      - codesign --verify --strict --verbose=2
+      - 提取 Team ID
+      - spctl --assess 评估（best-effort，因未 notarize）
+    verification: "bash -n OK；--help 输出正确"
+
+  - path: Apps/Mac/scripts/notarize-release.sh
+    action: rewrite
+    summary: |
+      - notarytool submit ZIP + DMG（--wait）
+      - stapler staple
+      - stapler validate
+      - spctl --assess
+    verification: "bash -n OK；--help 输出正确"
+
+  - path: Apps/Mac/scripts/generate-appcast.sh
+    action: rewrite
+    summary: |
+      - 调用 Sparkle 的 generate_appcast（带 EdDSA 签名）
+      - 同步到 docs/appcast.xml 和仓库根 appcast.xml
+    verification: "bash -n OK；--help 输出正确"
+
+  - path: Apps/Mac/scripts/release.sh
+    action: rewrite
+    summary: |
+      完整编排器（7 步 + SKIP_PUBLISH 安全路径）：
+        1. 跑测试
+        2. 构建（同时注入 SUPublicEDKey，trap 保证失败时还原）
+        3. 打包（DMG + ZIP + SHA-256）
+        4. 签名（Developer ID + Hardened Runtime）
+        5. 公证（notarytool + Staple）
+        6. 生成 Appcast（EdDSA 签名）
+        7. git commit + tag + push + gh release create
+      --help / --dry-run / SKIP_PUBLISH=1 / DRY_RUN=1 全部支持
+    verification: |
+      - bash -n OK
+      - --help 输出完整
+      - --dry-run 列出 7 步但不执行
+      - DRY_RUN=1 SKIP_PUBLISH=1 仅打印 [DRY] 标记，安全退出
+
+  - path: Apps/Mac/scripts/verify-appcast.sh
+    action: create
+    summary: "验证 appcast.xml well-formed + sparkle:edSignature 存在"
+    verification: "bash -n OK；--help 输出正确"
+
+  # ----- T012: CI workflow 完善 -----
+  - path: .github/workflows/ci.yml
+    action: rewrite
+    summary: |
+      - 显式 macos-14 / Xcode 16.0
+      - Tuist cache (Tuist/.build + ~/Library/Caches/tuist)
+      - DerivedData cache
+      - timeout-minutes 30
+      - SCHEMES env 可指定
+    verification: "YAML 结构正确"
+
+  - path: .github/workflows/release.yml
+    action: rewrite
+    summary: |
+      - macos-14 + production environment
+      - workflow_dispatch 支持手触发（带 notes / skip_publish 入参）
+      - Keychain 导入（security create-keychain + set-key-partition-list）
+      - Sparkle 私钥处理（写 $RUNNER_TEMP，chmod 600）
+      - env 注入 SPARKLE_PUBLIC_KEY / DEVELOPER_ID / KEYCHAIN_PROFILE / NOTES
+      - if: always() 清理 Keychain + cert.p12 + sparkle 私钥目录
+      - timeout-minutes 60
+    verification: "YAML 结构正确"
+
+  # ----- SECURITY_MODEL.md 细化 -----
+  - path: docs/SECURITY_MODEL.md
+    action: edit
+    summary: |
+      §5 表格扩充 EdDSA 描述；
+      §12 评审记录新增子代理 C 条目；
+      新增 §13 阶段 7 集成（8 个子节）：
+        13.1 应用更新信任链（架构图）
+        13.2 Sparkle Info.plist 注入（含注入/还原流程）
+        13.3 Keychain 导入（CI）
+        13.4 公证（notarytool + Staple）
+        13.5 GitHub Actions Secrets 管理（7 个 secret 表）
+        13.6 Sparkle EdDSA 签名流程图
+        13.7 风险登记扩充（10 条 R-01~R-10）
+        13.8 阶段 7 审查清单（11 项）
+    verification: "git diff --stat: 190 行新增"
+
+# ============== 验证证据 ==============
+
+verification:
+
+  shellcheck_bash_n:
+    status: PASS
+    scripts:
+      - build.sh        ✅
+      - run-tests.sh    ✅
+      - bump-version.sh ✅
+      - package-release.sh    ✅
+      - sign-release.sh       ✅
+      - notarize-release.sh   ✅
+      - generate-appcast.sh   ✅
+      - release.sh            ✅
+      - verify-appcast.sh     ✅
+
+  sparkle_integration:
+    Updates_module_build: SUCCEEDED
+    Updates_framework_link: "Sparkle.framework 2.9.5 (B/2.9.5)"
+    Info_plist_keys_present:
+      - SUFeedURL
+      - SUPublicEDKey
+      - SUEnableAutomaticChecks
+      - SUEnableAutomaticDownloading
+      - SUScheduledCheckInterval
+      - SUAllowsAutomaticUpdates
+      - SUMinimumAutoupdateVersion
+    placeholder_safe: true
+    SUPublicEDKey_value: "__SPARKLE_PUBLIC_KEY__"
+
+  tests:
+    UpdatesTests: "10/10 passed (TEST SUCCEEDED)"
+    full_run_tests: "20/20 passed across 5 schemes (Domain 3 + Catalog 2 + Installer 3 + ManifestSecurity 2 + Updates 10)"
+
+  script_modes:
+    release_sh_help: "完整输出必填/可选环境变量"
+    release_sh_dry_run: "列出 7 步 [DRY] 标记"
+    release_sh_skip_publish: "DRY 路径仅 build + package"
+    release_sh_full: "待子代理 A/B 修好 Installers/Localization 编译错误后跑"
+
+  secret_safety:
+    hardcoded_secrets_in_my_files: 0
+    SUPublicEDKey_committed_as_placeholder: true
+    any_private_key_in_repo: false
+
+# ============== 阻塞 / 待协调 ==============
+
+blockers:
+
+  - id: B-1
+    severity: high
+    issue: |
+      CodingTools 主 app build 当前失败，错误全部在子代理 A/B 拥有的路径：
+        Sources/Installers/HomebrewAdapter.swift:40  (Sendable conformance)
+        Sources/Installers/MiseToolAdapter.swift:14  (Sendable conformance)
+        Sources/Theme/Theme.swift + Sources/Localization/Localization.swift (编译失败)
+      这些不在我的 owned paths 内。需要子代理 A 修复 Installers、B 修复 Theme/Localization。
+    my_mitigation: |
+      已用 run-tests.sh 的"按需 build"模式绕开 CodingTools scheme 的全 build 失败，
+      5 个独立 test scheme 全部跑通。
+    requires_coordinator: true
+
+  - id: B-2
+    severity: low
+    issue: |
+      Project.swift 是 sharedResource（owner: coordinator），我做了纯新增 UpdatesTests target。
+      其他 Agent 也可能改 Project.swift → 合并时可能冲突。
+    my_mitigation: |
+      本次提交只新增两个代码块（target + scheme），未修改任何已有 target。
+    requires_coordinator: true
+
+  - id: B-3
+    severity: low
+    issue: |
+      GitHub Actions 7 个 Secrets 必须在合并到 main 前设置（否则 release.yml 第一次跑会失败）：
+        MACOS_CERT_P12, MACOS_CERT_PASSWORD, KEYCHAIN_PASSWORD, KEYCHAIN_PROFILE,
+        DEVELOPER_ID, SPARKLE_PRIVATE_KEY, SPARKLE_PUBLIC_KEY
+      这些由 owner 自己线下生成（不是 Agent 的工作）。
+    requires_coordinator: false
+    note: "Apple Developer ID 申请状态确认见 PROJECT_STATUS.md 风险登记"
+
+# ============== 总耗时 ==============
+
+timing:
+  started: "2026-08-10T10:55:00+08:00"
+  finished: "2026-08-10T11:35:00+08:00"
+  total_minutes: 40
+  breakdown:
+    exploration: 8
+    implementation: 22
+    verification: 10
+
+# ============== 移交 Reviewer ==============
+
+review_checklist:
+  - "Updates 模块 + AppDelegate 集成符合 SECURITY_MODEL §13.2"
+  - "Info.plist SUPublicEDKey 仍是占位符，未泄露真实公钥"
+  - "9 个 .sh 全部通过 bash -n；set -euo pipefail；都有 --help"
+  - "release.sh SKIP_PUBLISH=1 / DRY_RUN=1 / --help 三种安全模式都验证过"
+  - "CI workflow 显式声明 timeout / 缓存 / cleanup"
+  - "SECURITY_MODEL §13 涵盖 Sparkle 信任链、Keychain 导入、公证、Secrets 清单、风险登记"
+  - "不在我 owned paths 之外添加文件（AppDelegate/Info.plist 是任务明确授权；Project.swift 是任务明确需要的 test target）"

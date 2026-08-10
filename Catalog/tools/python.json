@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.10-001-python",
+  "createdAt": "2026-08-10T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "python",
+      "slug": "python",
+      "name": "Python",
+      "localizedName": {
+        "en": "Python",
+        "zh-Hans": "Python"
+      },
+      "description": "Powerful, high-level programming language with dynamic typing and a comprehensive standard library. Used widely for scripting, data science, and web development.",
+      "localizedDescription": {
+        "en": "Powerful, high-level programming language with dynamic typing and a comprehensive standard library. Used widely for scripting, data science, and web development.",
+        "zh-Hans": "功能强大的高级编程语言，动态类型且标准库丰富，广泛用于脚本、数据科学与 Web 开发。"
+      },
+      "category": "language-runtime",
+      "tags": ["python", "runtime", "interpreter", "pip"],
+      "homepageURL": "https://www.python.org",
+      "documentationURL": "https://docs.python.org/3",
+      "installOptions": [
+        {
+          "type": "mise-tool",
+          "toolName": "python",
+          "version": "3.12",
+          "riskLevel": "low"
+        },
+        {
+          "type": "homebrew-formula",
+          "packageName": "python@3.12",
+          "versionRule": ">=3.12.0",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "python3",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

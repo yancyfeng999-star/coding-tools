@@ -4,6 +4,16 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "Release notes (Chinese)"
+        required: true
+        type: string
+      skip_publish:
+        description: "仅本地打包（不推 GitHub Release）"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -12,6 +22,7 @@ jobs:
   release:
     name: Build, Sign, Notarize, Publish
     runs-on: macos-14
+    timeout-minutes: 60
     environment: production
 
     steps:
@@ -19,6 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.0.app
@@ -27,13 +39,16 @@ jobs:
         run: |
           brew tap tuist/tuist
           brew install tuist
+          tuist version
 
+      # ============== 签名证书 ==============
       - name: Import Signing Certificate
         env:
           MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
           MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
+          set -euo pipefail
           KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
@@ -43,24 +58,41 @@ jobs:
           security list-keychain -d user -s "$KEYCHAIN_PATH"
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
+      # ============== Sparkle 私钥 ==============
       - name: Set Up Sparkle Keys
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
+          set -euo pipefail
           mkdir -p $RUNNER_TEMP/sparkle
           echo "$SPARKLE_PRIVATE_KEY" > $RUNNER_TEMP/sparkle/ed25519_private_key
+          chmod 600 $RUNNER_TEMP/sparkle/ed25519_private_key
+          # 同时拷一份 generate_appcast / sign_update 工具（如 secrets 提供）
+          # 这里假设私钥同目录有 Sparkle 工具链（由 build 步骤放在 $RUNNER_TEMP/sparkle/）
           echo "SPARKLE_PRIVATE_KEY=$RUNNER_TEMP/sparkle/ed25519_private_key" >> $GITHUB_ENV
+          # SPARKLE_PUBLIC_KEY 公钥从另一个 secret 取
+          echo "SPARKLE_PUBLIC_KEY_B64=${{ secrets.SPARKLE_PUBLIC_KEY }}" >> $GITHUB_ENV
+          # export 为 release.sh 可读
+          {
+            echo "SPARKLE_PUBLIC_KEY=${{ secrets.SPARKLE_PUBLIC_KEY }}"
+            echo "DEVELOPER_ID=${{ secrets.DEVELOPER_ID }}"
+            echo "KEYCHAIN_PROFILE=${{ secrets.KEYCHAIN_PROFILE }}"
+            echo "NOTES=${{ github.event.inputs.notes || github.event.head_commit.message }}"
+            echo "SKIP_PUBLISH=${{ github.event.inputs.skip_publish && '1' || '0' }}"
+          } >> $GITHUB_ENV
 
       - name: Build & Release
         env:
-          DEVELOPER_ID: ${{ secrets.DEVELOPER_ID }}
-          KEYCHAIN_PROFILE: ${{ secrets.KEYCHAIN_PROFILE }}
-          NOTES: ${{ github.event.head_commit.message }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           cd Apps/Mac
           ./scripts/release.sh
 
+      # ============== Keychain 清理 ==============
       - name: Cleanup Keychain
         if: always()
         run: |
-          security delete-keychain $RUNNER_TEMP/build.keychain-db || true
+          security delete-keychain $RUNNER_TEMP/build.keychain-db 2>/dev/null || true
+          rm -rf $RUNNER_TEMP/sparkle || true
+          rm -f $RUNNER_TEMP/cert.p12 || true

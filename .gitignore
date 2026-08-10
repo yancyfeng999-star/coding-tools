@@ -21,11 +21,27 @@ xcuserdata/
 # Tuist
 Apps/Mac/Tuist/.build/
 Apps/Mac/.tuist-generated/
+Apps/Mac/Derived/
+Apps/Mac/CodingTools.xcodeproj/xcuserdata/
+Apps/Mac/CodingTools.xcworkspace/xcuserdata/
 
 # Swift Package Manager
 .swiftpm/
 .build/
 Package.resolved.bak
+
+# 发版产物（不入仓；build/dist/ 集中放）
+Apps/Mac/build/
+*.dmg
+*.zip
+*.dSYM
+*.dSYM.zip
+
+# Sparkle 私钥（公钥已写进 Info.plist，私钥必须本地保管）
+.keys/
+Sparkle/PrivateKeys/
+*.ed25519
+*_private.pem
 
 # Fastlane / CI
 fastlane/report.xml

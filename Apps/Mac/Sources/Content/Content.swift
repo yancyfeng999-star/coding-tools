@@ -58,3 +58,36 @@ public protocol ContentLoading: Sendable {
     func loadContent(toolID: String?) async throws -> [ContentItem]
     func loadAll() async throws -> [ContentItem]
 }
+
+/// 单次内容快照的 manifest 格式。Catalog 也用类似的 v1 + 签名 + 缓存。
+/// 阶段 5 占位：先不加签名验证（子代理 A 走 Catalog 签名）。
+public struct ContentManifest: Hashable, Sendable, Codable {
+    public let schemaVersion: String
+    public let contentVersion: String
+    public let createdAt: Date
+    public let expiresAt: Date
+    public let items: [ContentItem]
+
+    public init(
+        schemaVersion: String = "1.0.0",
+        contentVersion: String,
+        createdAt: Date,
+        expiresAt: Date,
+        items: [ContentItem]
+    ) {
+        self.schemaVersion = schemaVersion
+        self.contentVersion = contentVersion
+        self.createdAt = createdAt
+        self.expiresAt = expiresAt
+        self.items = items
+    }
+
+    public var isExpired: Bool { expiresAt < Date() }
+}
+
+public enum ContentError: Error, Sendable, Equatable {
+    case invalidURL
+    case network(String)
+    case decoding(String)
+    case schemaMismatch(expected: String, got: String)
+}

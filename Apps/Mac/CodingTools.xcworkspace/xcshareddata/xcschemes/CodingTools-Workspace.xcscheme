@@ -272,6 +272,20 @@
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "66BF404855FFFB0A55D1A0BE"
+               BuildableName = "UpdatesTests.xctest"
+               BlueprintName = "UpdatesTests"
+               ReferencedContainer = "container:CodingTools.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -332,6 +346,17 @@
                BlueprintIdentifier = "A47B0583A2E1F0171E39A003"
                BuildableName = "ManifestSecurityTests.xctest"
                BlueprintName = "ManifestSecurityTests"
+               ReferencedContainer = "container:CodingTools.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "66BF404855FFFB0A55D1A0BE"
+               BuildableName = "UpdatesTests.xctest"
+               BlueprintName = "UpdatesTests"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </TestableReference>

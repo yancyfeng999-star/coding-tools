@@ -1,56 +1,62 @@
 import SwiftUI
+import Localization
+import Theme
+import UI
 
-/// 阶段 1 占位：阶段 4 接入完整 UI（首页 / 工具目录 / 内容中心 / 设置）
+/// 阶段 4 完整 UI：4 个 tab + 安装弹窗 + 菜单栏。
+/// AppModel 只负责 selectedTab / searchText（高冲突，Coordinator 拥有）；
+/// 其他状态由 AppState 持有（Sources/UI/State/）。
 struct RootView: View {
     @EnvironmentObject private var appModel: AppModel
+    @StateObject private var state = AppState()
+    @ObservedObject private var language = LanguageManager.shared
+    @ObservedObject private var theme = ThemeManager.shared
+    @StateObject private var menuBar = AppMenuBar.shared
 
     var body: some View {
         TabView(selection: $appModel.selectedTab) {
-            HomePlaceholder()
-                .tabItem { Label("首页", systemImage: "house") }
+            HomeView()
+                .tabItem {
+                    Label(LocalizedStringKey("tab.home"), systemImage: "house")
+                }
                 .tag(AppTab.home)
-            CatalogPlaceholder()
-                .tabItem { Label("工具", systemImage: "shippingbox") }
+            CatalogView()
+                .tabItem {
+                    Label(LocalizedStringKey("tab.catalog"), systemImage: "shippingbox")
+                }
                 .tag(AppTab.catalog)
-            ContentPlaceholder()
-                .tabItem { Label("教程", systemImage: "book") }
+            ContentView()
+                .tabItem {
+                    Label(LocalizedStringKey("tab.content"), systemImage: "book")
+                }
                 .tag(AppTab.content)
-            SettingsPlaceholder()
-                .tabItem { Label("设置", systemImage: "gear") }
+            SettingsView()
+                .tabItem {
+                    Label(LocalizedStringKey("tab.settings"), systemImage: "gear")
+                }
                 .tag(AppTab.settings)
         }
-        .frame(minWidth: 720, minHeight: 480)
-    }
-}
-
-private struct HomePlaceholder: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("Coding Tools")
-                .font(.largeTitle)
-            Text("v0.0.0 · 工程原型")
-                .foregroundStyle(.secondary)
-            Text("阶段 0 — 产品和安全契约")
-                .font(.callout)
+        .frame(minWidth: 880, minHeight: 560)
+        .environmentObject(state)
+        .environmentObject(language)
+        .environmentObject(theme)
+        .bindLanguage(language)
+        .bindTheme(theme)
+        .task {
+            await state.loadCatalogIfNeeded()
+            await state.loadContentIfNeeded()
+            await state.loadFavorites()
+            menuBar.attach(state: state)
+            menuBar.refreshMenu()
         }
-        .padding()
-    }
-}
-
-private struct CatalogPlaceholder: View {
-    var body: some View {
-        ContentUnavailableView("工具目录", systemImage: "shippingbox", description: Text("阶段 2 接入"))
-    }
-}
-
-private struct ContentPlaceholder: View {
-    var body: some View {
-        ContentUnavailableView("教程与视频", systemImage: "book", description: Text("阶段 5 接入"))
-    }
-}
-
-private struct SettingsPlaceholder: View {
-    var body: some View {
-        ContentUnavailableView("设置", systemImage: "gear", description: Text("阶段 6 完善"))
+        .onChange(of: state.recent) { _, _ in
+            menuBar.refreshMenu()
+        }
+        .onChange(of: state.favorites) { _, _ in
+            menuBar.refreshMenu()
+        }
+        .onChange(of: theme.mode) { _, _ in
+            menuBar.refreshMenu()
+        }
     }
 }

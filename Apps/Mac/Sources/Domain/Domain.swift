@@ -3,19 +3,106 @@ import Foundation
 // MARK: - Domain Models
 //
 // 这是 Coding Tools 的核心数据模型。完整定义见 docs/CATALOG_SCHEMA.md。
-// 阶段 0 仅占位；阶段 2 由子代理 A 完善。
+// 阶段 0/1 占位（Tool 仅 4 字段）；阶段 2 由子代理 A 补全为完整 schema 对齐
+// 版本，并保留 4 字段 init 以保持现有测试可用。
 
 public struct Tool: Identifiable, Hashable, Sendable, Codable {
     public let id: String
     public let slug: String
     public let name: String
+    public let localizedName: LocalizedString
+    public let description: String
+    public let localizedDescription: LocalizedString
     public let category: ToolCategory
+    public let tags: [String]
+    public let homepageURL: URL
+    public let documentationURL: URL?
+    public let installOptions: [InstallOption]
+    public let launchCapability: LaunchCapability?
+    public let supportedArchitectures: [Architecture]
+    public let minimumMacOS: String
+    public let status: ToolStatus
+    public let riskLevel: RiskLevel
 
-    public init(id: String, slug: String, name: String, category: ToolCategory) {
+    public init(
+        id: String,
+        slug: String,
+        name: String,
+        category: ToolCategory,
+        installOptions: [InstallOption] = []
+    ) {
         self.id = id
         self.slug = slug
         self.name = name
+        self.localizedName = LocalizedString(name)
+        self.description = ""
+        self.localizedDescription = LocalizedString("")
         self.category = category
+        self.tags = []
+        self.homepageURL = URL(string: "https://example.com")!
+        self.documentationURL = nil
+        self.installOptions = installOptions
+        self.launchCapability = nil
+        self.supportedArchitectures = []
+        self.minimumMacOS = "14.0"
+        self.status = .active
+        self.riskLevel = .low
+    }
+
+    public init(
+        id: String,
+        slug: String,
+        name: String,
+        localizedName: LocalizedString,
+        description: String,
+        localizedDescription: LocalizedString,
+        category: ToolCategory,
+        tags: [String] = [],
+        homepageURL: URL,
+        documentationURL: URL? = nil,
+        installOptions: [InstallOption] = [],
+        launchCapability: LaunchCapability? = nil,
+        supportedArchitectures: [Architecture] = [],
+        minimumMacOS: String = "14.0",
+        status: ToolStatus = .active,
+        riskLevel: RiskLevel
+    ) {
+        self.id = id
+        self.slug = slug
+        self.name = name
+        self.localizedName = localizedName
+        self.description = description
+        self.localizedDescription = localizedDescription
+        self.category = category
+        self.tags = tags
+        self.homepageURL = homepageURL
+        self.documentationURL = documentationURL
+        self.installOptions = installOptions
+        self.launchCapability = launchCapability
+        self.supportedArchitectures = supportedArchitectures
+        self.minimumMacOS = minimumMacOS
+        self.status = status
+        self.riskLevel = riskLevel
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try c.decode(String.self, forKey: .id)
+        self.slug = try c.decode(String.self, forKey: .slug)
+        self.name = try c.decode(String.self, forKey: .name)
+        self.localizedName = try c.decode(LocalizedString.self, forKey: .localizedName)
+        self.description = try c.decode(String.self, forKey: .description)
+        self.localizedDescription = try c.decode(LocalizedString.self, forKey: .localizedDescription)
+        self.category = try c.decode(ToolCategory.self, forKey: .category)
+        self.tags = try c.decodeIfPresent([String].self, forKey: .tags) ?? []
+        self.homepageURL = try c.decode(URL.self, forKey: .homepageURL)
+        self.documentationURL = try c.decodeIfPresent(URL.self, forKey: .documentationURL)
+        self.installOptions = try c.decodeIfPresent([InstallOption].self, forKey: .installOptions) ?? []
+        self.launchCapability = try c.decodeIfPresent(LaunchCapability.self, forKey: .launchCapability)
+        self.supportedArchitectures = try c.decodeIfPresent([Architecture].self, forKey: .supportedArchitectures) ?? []
+        self.minimumMacOS = try c.decodeIfPresent(String.self, forKey: .minimumMacOS) ?? "14.0"
+        self.status = try c.decodeIfPresent(ToolStatus.self, forKey: .status) ?? .active
+        self.riskLevel = try c.decodeIfPresent(RiskLevel.self, forKey: .riskLevel) ?? .low
     }
 }
 
@@ -118,11 +205,25 @@ public struct CatalogSnapshot: Hashable, Sendable, Codable {
         self.revokedItems = revokedItems
     }
 
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.schemaVersion = try c.decode(String.self, forKey: .schemaVersion)
+        self.catalogVersion = try c.decode(String.self, forKey: .catalogVersion)
+        self.createdAt = try c.decode(Date.self, forKey: .createdAt)
+        self.expiresAt = try c.decode(Date.self, forKey: .expiresAt)
+        self.keyID = try c.decode(String.self, forKey: .keyID)
+        self.signature = try c.decode(String.self, forKey: .signature)
+        self.tools = try c.decode([Tool].self, forKey: .tools)
+        self.revokedItems = try c.decodeIfPresent([String].self, forKey: .revokedItems) ?? []
+    }
+
     public var isExpired: Bool { expiresAt < Date() }
 
     public func isRevoked(toolID: String) -> Bool {
         revokedItems.contains(toolID)
     }
+
+    public var supportedSchemaVersion: String { "1.0.0" }
 }
 
 // MARK: - Installation Probe

@@ -108,7 +108,8 @@
             "homebrew-formula",
             "homebrew-cask",
             "mise-tool",
-            "official-artifact"
+            "official-artifact",
+            "npm-global"
           ]
         },
         "packageName": { "type": "string" },
@@ -143,6 +144,15 @@
         {
           "if": { "properties": { "type": { "const": "official-artifact" } } },
           "then": { "required": ["url", "sha256"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "npm-global" } } },
+          "then": {
+            "anyOf": [
+              { "required": ["packageName"] },
+              { "required": ["url"] }
+            ]
+          }
         }
       ]
     },

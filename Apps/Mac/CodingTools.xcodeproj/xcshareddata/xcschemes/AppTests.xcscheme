@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CC3B2597192B99C2E03EA5C9"
-               BuildableName = "AppTests.xctest"
-               BlueprintName = "AppTests"
+               BlueprintIdentifier = "BC7DA244806E32AD61F1EFD0"
+               BuildableName = "Coding Tools.app"
+               BlueprintName = "CodingTools"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -51,15 +51,16 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "CC3B2597192B99C2E03EA5C9"
-            BuildableName = "AppTests.xctest"
-            BlueprintName = "AppTests"
+            BlueprintIdentifier = "BC7DA244806E32AD61F1EFD0"
+            BuildableName = "Coding Tools.app"
+            BlueprintName = "CodingTools"
             ReferencedContainer = "container:CodingTools.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -67,15 +68,16 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "CC3B2597192B99C2E03EA5C9"
-            BuildableName = "AppTests.xctest"
-            BlueprintName = "AppTests"
+            BlueprintIdentifier = "BC7DA244806E32AD61F1EFD0"
+            BuildableName = "Coding Tools.app"
+            BlueprintName = "CodingTools"
             ReferencedContainer = "container:CodingTools.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

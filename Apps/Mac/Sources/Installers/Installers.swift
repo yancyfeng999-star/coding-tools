@@ -18,12 +18,20 @@ public enum InstallAction: Equatable, Sendable {
         bundleID: String?,
         teamID: String?
     )
+    /// npm 全局安装（适合 Node 生态 CLI 工具，如 Claude Code / Codex / Gemini CLI）。
+    /// 同时支持官方 install 脚本（适合 GROK / Hermes / OpenClaw 等非 npm 工具）。
+    /// scriptURL 走 `curl -fsSL <url> | bash`，需 https。
+    case npmGlobal(packageName: String?, scriptURL: URL?, versionRule: String?)
 }
 
 public protocol InstallAdapter: Sendable {
     var type: InstallActionType { get }
-    func plan(_ action: InstallAction) async throws -> InstallPlan
-    func execute(_ plan: InstallPlan) async throws -> InstallResult
+    /// Plan 阶段：把 InstallAction 转成可执行的 InstallPlan（含 toolID 关联）。
+    /// adapter 不修改参数；只检查语义合法性。
+    func plan(toolID: String, action: InstallAction) async throws -> InstallPlan
+    /// Execute 阶段：实际拉起进程。
+    func execute(_ plan: InstallPlan, progress: InstallProgressHandler?) async throws -> InstallResult
+    /// 取消正在进行的安装。
     func cancel(planID: String) async
 }
 
@@ -32,6 +40,7 @@ public enum InstallActionType: String, Sendable, Codable, CaseIterable {
     case homebrewCask = "homebrew-cask"
     case miseTool = "mise-tool"
     case officialArtifact = "official-artifact"
+    case npmGlobal = "npm-global"
 }
 
 public struct InstallPlan: Hashable, Sendable, Codable {
@@ -67,4 +76,96 @@ public enum InstallError: Error, Sendable, Equatable {
     case cancelled
     case failed(exitCode: Int32, message: String)
     case timeout
+    case adapterUnavailable(String)
+    case preconditionFailed(String)
+    case sha256Mismatch(expected: String, got: String)
+    case bundleIDMismatch(expected: String?, actual: String?)
+    case teamIDMismatch(expected: String?, actual: String?)
+    case downloadFailed(String)
+    case toolNotFound(String)
+}
+
+// MARK: - Progress
+
+public struct InstallProgress: Hashable, Sendable, Codable {
+    public let planID: String
+    public let stage: Stage
+    public let message: String
+    public let percentage: Double?
+    public let timestamp: Date
+
+    public init(
+        planID: String,
+        stage: Stage,
+        message: String,
+        percentage: Double? = nil,
+        timestamp: Date = Date()
+    ) {
+        self.planID = planID
+        self.stage = stage
+        self.message = message
+        self.percentage = percentage
+        self.timestamp = timestamp
+    }
+
+    public enum Stage: String, Hashable, Sendable, Codable {
+        case planning
+        case downloading
+        case verifying
+        case installing
+        case configuring
+        case completed
+        case failed
+        case cancelled
+    }
+}
+
+/// 进度回调。nil 表示不关心进度。
+public typealias InstallProgressHandler = @Sendable (InstallProgress) -> Void
+
+// MARK: - Registry
+
+public final class AdapterRegistry: @unchecked Sendable {
+    private var adapters: [InstallActionType: any InstallAdapter] = [:]
+
+    public init() {}
+
+    /// 5 个标准 adapter 全注册一遍。生产可换成可注入。
+    public static func defaultRegistry() -> AdapterRegistry {
+        let r = AdapterRegistry()
+        r.register(HomebrewFormulaAdapter())
+        r.register(HomebrewCaskAdapter())
+        r.register(MiseToolAdapter())
+        r.register(OfficialArtifactAdapter())
+        r.register(NpmGlobalAdapter())
+        return r
+    }
+
+    public func register(_ adapter: any InstallAdapter) {
+        adapters[adapter.type] = adapter
+    }
+
+    public func adapter(for type: InstallActionType) -> (any InstallAdapter)? {
+        adapters[type]
+    }
+
+    public func execute(
+        toolID: String,
+        action: InstallAction,
+        progress: InstallProgressHandler? = nil
+    ) async throws -> InstallResult {
+        let actionType: InstallActionType
+        switch action {
+        case .homebrewFormula: actionType = .homebrewFormula
+        case .homebrewCask: actionType = .homebrewCask
+        case .miseTool: actionType = .miseTool
+        case .officialArtifact: actionType = .officialArtifact
+        case .npmGlobal: actionType = .npmGlobal
+        }
+        guard let adapter = adapters[actionType] else {
+            throw InstallError.adapterUnavailable(actionType.rawValue)
+        }
+        let plan = try await adapter.plan(toolID: toolID, action: action)
+        return try await adapter.execute(plan, progress: progress)
+    }
 }
