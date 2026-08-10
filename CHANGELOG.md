@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 暂未发布
+
+## [1.0.1] - 2026-08-10
+
+### Changed
+
+- v1.0.1 修复：1) 安装按钮显示（Localization cache bug + String Catalog 迁移） 2) 新增 PKG 分发（pkgbuild 未签名） 3) Sparkle appcast 同时挂 zip + pkg
+
+
+
 ## [1.0.1] - 2026-08-10
 
 
