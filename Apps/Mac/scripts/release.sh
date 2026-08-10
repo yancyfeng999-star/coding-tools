@@ -123,6 +123,8 @@ fi
 # ============== 步骤 3: build (Release) ==============
 echo "==> Step 3/7  xcodebuild Release"
 export CONFIG=Release
+# 强制 clean Localization Resources（修 v1.0.0 出现的 .lproj cache bug：.app 没拿到新加的 key）
+rm -rf build/DerivedData/Build/Intermediates.noindex/CodingTools.build/Release/CodingTools.build/{zh-Hans,en}.lproj
 run ./scripts/build.sh
 
 # 把 Release 配置的 .app 拷到 OUT_DIR 方便打包
@@ -137,14 +139,29 @@ if [[ ! -d "$APP_BUNDLE_PATH" ]]; then
 fi
 echo
 
-# ============== 步骤 4: package (DMG + ZIP) ==============
-echo "==> Step 4/7  打包 DMG + ZIP"
+# ============== 步骤 4: package (ZIP + DMG + PKG) ==============
+echo "==> Step 4/7  打包 ZIP + DMG + PKG"
 mkdir -p "$OUT_DIR" "$DIST_DIR"
+# OUT_DIR: ZIP + PKG（Sparkle appcast 引用；同版本 zip + pkg 共存，pkg 是另一个 enclosure）
+# DIST_DIR: DMG（人下载用，**不进** appcast）
 if [[ "${SKIP_ZIP:-0}" != "1" ]]; then
   ditto -c -k --sequesterRsrc --keepParent \
     "$APP_BUNDLE_PATH" \
     "$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.zip"
   echo "    ✅ $OUT_DIR/${ARTIFACT_BASE}-${VERSION}.zip"
+fi
+if [[ "${SKIP_PKG:-0}" != "1" ]]; then
+  # PKG：未签名（没 Apple ID），用户首次安装需右键 → 打开绕过 Gatekeeper。
+  # Sparkle 应用内更新会自动用 installertask 静默安装（不需要 GUI 弹窗）。
+  PKG_PATH="$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.pkg"
+  rm -f "$PKG_PATH"
+  pkgbuild \
+    --root "$APP_BUNDLE_PATH" \
+    --install-location "/Applications/Coding Tools.app" \
+    --identifier "com.codingtools.macos" \
+    --version "$VERSION" \
+    "$PKG_PATH" 2>&1
+  echo "    ✅ $PKG_PATH (未签名 — 上 Apple ID 后加 --sign 'Developer ID Installer: ...')"
 fi
 if [[ "${SKIP_DMG:-0}" != "1" ]]; then
   STAGE=$(mktemp -d)
@@ -188,15 +205,28 @@ if [[ -f "$ZIP_PATH" ]]; then
     --ed-key-file "$SPARKLE_PRIVATE_KEY" \
     --download-url-prefix "$PREFIX" \
     "$OUT_DIR"
-  if [[ -f "$APPCAST" ]]; then
-    # 把 <enclosure url="<PREFIX><filename>" 改成 <PREFIX><TAG>/<filename>
-    sed -i '' "s|${PREFIX}|${PREFIX}${TAG}/|g" "$APPCAST"
-    echo "    ✅ $APPCAST ($(wc -l < "$APPCAST") lines, $(grep -c '<enclosure' "$APPCAST" || echo 0) items)"
-    echo "    (URLs patched to include ${TAG}/ segment)"
-  else
+  if [[ ! -f "$APPCAST" ]]; then
     echo "    ❌ appcast.xml 未生成" >&2
     exit 1
   fi
+  # 把 <enclosure url="<PREFIX><filename>" 改成 <PREFIX><TAG>/<filename>
+  sed -i '' "s|${PREFIX}|${PREFIX}${TAG}/|g" "$APPCAST"
+
+  # 追加 .pkg 的 <enclosure>（generate_appcast 不支持 .pkg，参考官方 doc 手写）
+  PKG_PATH="$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.pkg"
+  if [[ -f "$PKG_PATH" ]]; then
+    PKG_SIG=$("$SIGN_UPDATE" --ed-key-file "$SPARKLE_PRIVATE_KEY" -p "$PKG_PATH" 2>/dev/null | tail -1 | tr -d '\n')
+    PKG_LEN=$(stat -f%z "$PKG_PATH")
+    PKG_URL="${PREFIX}${TAG}/${ARTIFACT_BASE}-${VERSION}.pkg"
+    PKG_ENCLOSURE="            <enclosure url=\"${PKG_URL}\" length=\"${PKG_LEN}\" type=\"application/vnd.apple.installer-package+xml\" sparkle:edSignature=\"${PKG_SIG}\" sparkle:installationType=\"package\"/>"
+    # 在 zip <enclosure> 之后插入 pkg <enclosure>
+    sed -i '' "/sparkle:edSignature=\"[^\"]*\"\\/>/a\\
+${PKG_ENCLOSURE}
+" "$APPCAST"
+    echo "    ✅ +pkg enclosure added (length=$PKG_LEN, edSig=${PKG_SIG:0:16}...)"
+  fi
+  echo "    ✅ $APPCAST ($(wc -l < "$APPCAST") lines, $(grep -c '<enclosure' "$APPCAST" || echo 0) items)"
+  echo "    (URLs patched to include ${TAG}/ segment)"
 else
   echo "    ⚠️  $ZIP_PATH 不存在，跳过 appcast"
 fi
@@ -254,12 +284,14 @@ $NOTES"
   run git push origin main --tags
   echo
 
-  # ============== 步骤 8: gh release create ==============
-  echo "==> Step 8/8  gh release create"
+  # ============== 步骤 7: gh release create ==============
+  echo "==> Step 7/7  gh release create"
   ASSETS=(
     "$REPO_ROOT/Apps/Mac/$ZIP_PATH"
     "$REPO_ROOT/Apps/Mac/$APPCAST"
   )
+  PKG_FULL="$REPO_ROOT/Apps/Mac/$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.pkg"
+  [[ -f "$PKG_FULL" ]] && ASSETS+=("$PKG_FULL")
   [[ -f "$REPO_ROOT/Apps/Mac/$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg" ]] && ASSETS+=("$REPO_ROOT/Apps/Mac/$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg")
 
   run gh release create "$TAG" \
