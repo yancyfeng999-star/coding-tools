@@ -62,6 +62,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // SPUUpdater.start() 在已启动 / 配置错误时抛错；不致命，只是不自动调度
             NSLog("⚠️ Sparkle updater.start() failed: \(error)")
         }
+        // 启动后立即拉一次 appcast，让 Settings 在打开时就能显示「最新版本」。
+        // 不阻塞主流程：Sparkle 内部异步。
+        updater.checkForUpdatesInBackground()
     }
 
     // MARK: - Menu Bar
