@@ -218,8 +218,8 @@ if [[ -f "$ZIP_PATH" ]]; then
     PKG_SIG=$("$SIGN_UPDATE" --ed-key-file "$SPARKLE_PRIVATE_KEY" -p "$PKG_PATH" 2>/dev/null | tail -1 | tr -d '\n')
     PKG_LEN=$(stat -f%z "$PKG_PATH")
     PKG_URL="${PREFIX}${TAG}/${ARTIFACT_BASE}-${VERSION}.pkg"
-    # Sparkle 2.x 严格要求每个 <enclosure> 显式 xml:lang
-    PKG_ENCLOSURE="            <enclosure xml:lang=\"en\" url=\"${PKG_URL}\" length=\"${PKG_LEN}\" type=\"application/vnd.apple.installer-package+xml\" sparkle:edSignature=\"${PKG_SIG}\" sparkle:installationType=\"package\"/>"
+    # xml:lang 由最末尾统一 sed 加，这里不写
+    PKG_ENCLOSURE="            <enclosure url=\"${PKG_URL}\" length=\"${PKG_LEN}\" type=\"application/vnd.apple.installer-package+xml\" sparkle:edSignature=\"${PKG_SIG}\" sparkle:installationType=\"package\"/>"
     # 在 zip <enclosure> 之后插入 pkg <enclosure>
     sed -i '' "/sparkle:edSignature=\"[^\"]*\"\\/>/a\\
 ${PKG_ENCLOSURE}
