@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 暂未发布
+
+## [1.1.0] - 2026-08-11
+
+### Changed
+
+- v1.1.0 UI 打磨：Content 教程（内置 12 条）+ Home 可更新区接 Sparkle + 菜单栏快捷（检查更新入口）+ ToolCard 视觉升级（风险/id/进度环/hover）。
+
+
+
 ## [1.1.0] - 2026-08-11
 
 
