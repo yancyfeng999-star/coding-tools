@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 暂未发布
+
+## [1.0.7] - 2026-08-10
+
+### Changed
+
+- v1.0.7 zip+pkg enclosure 都有 xml:lang
+
+
+
 ## [1.0.7] - 2026-08-10
 
 
