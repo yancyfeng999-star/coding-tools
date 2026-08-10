@@ -42,6 +42,13 @@ public final class AppState: ObservableObject {
     @Published public var localVersion: String = ""
     @Published public var localBuild: Int = 0
 
+    /// HomeView "可更新"区显示用的远端版本（从 updateState 提取）
+    public var remoteVersionFromAvailable: String? {
+        if case .available(let v, _, _) = updateState { return v }
+        if case .readyToInstall(let v) = updateState { return v }
+        return nil
+    }
+
     // MARK: - Dependencies (可注入的最小闭包集)
 
     /// 拉取远端 Catalog 快照；返回 nil 表示未注入。
@@ -102,13 +109,20 @@ public final class AppState: ObservableObject {
 
     public func loadContentIfNeeded() async {
         guard contentItems.isEmpty else { return }
-        guard let loader = contentLoader else {
-            return
+        // 1) 内置默认数据：保证 Content tab 永远有内容可看（offline / loader 失败都 OK）
+        if contentItems.isEmpty {
+            contentItems = BundledContent.items
         }
+        // 2) 远端 loader（可选）：拿更新后的内容
+        guard let loader = contentLoader else { return }
         do {
-            contentItems = try await loader.loadAll()
+            let remote = try await loader.loadAll()
+            if !remote.isEmpty {
+                contentItems = remote
+            }
         } catch {
-            loadError = String(describing: error)
+            // 失败保持 BundledContent，不报错
+            _ = error
         }
     }
 

@@ -132,11 +132,12 @@ struct CatalogView: View {
 private struct ToolCard: View {
     let tool: Tool
     @EnvironmentObject private var state: AppState
+    @State private var isHovering = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
-                ToolIconView(toolID: tool.id, category: tool.category, size: 44)
+                ToolIconView(toolID: tool.id, category: tool.category, size: 40)
                 Spacer()
                 Button {
                     state.toggleFavorite(tool.id)
@@ -148,22 +149,44 @@ private struct ToolCard: View {
             }
             Text(tool.name)
                 .font(.headline)
-            CategoryLabel(category: tool.category)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .lineLimit(1)
             HStack(spacing: 6) {
-                HealthBadge(status: .notInstalled)
+                Text(tool.id)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.tertiary)
                 Spacer()
+                RiskBadge(level: tool.riskLevel)
+            }
+            HStack(spacing: 6) {
+                if state.installingTool?.id == tool.id {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .controlSize(.small)
+                    Text("catalog.card.installing")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                } else {
+                    HealthBadge(status: .notInstalled)
+                    Spacer()
+                }
             }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(
+            Color(nsColor: .controlBackgroundColor),
+            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                .stroke(isHovering ? Color.accentColor.opacity(0.5) : Color.primary.opacity(0.06),
+                        lineWidth: isHovering ? 1.5 : 1)
         )
+        .shadow(color: .black.opacity(isHovering ? 0.08 : 0.0), radius: isHovering ? 6 : 0, y: 2)
+        .scaleEffect(isHovering ? 1.015 : 1.0)
+        .animation(.easeInOut(duration: 0.12), value: isHovering)
         .contentShape(Rectangle())
+        .onHover { isHovering = $0 }
     }
 }
 

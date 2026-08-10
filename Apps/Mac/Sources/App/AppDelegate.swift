@@ -42,6 +42,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupMenuBar()
         applyAppearance()
         startSparkleUpdater()
+        // 注入 AppMenuBar 的 provider（菜单栏显示更新 + Settings tab 入口）
+        let menuBar = AppMenuBar.shared
+        menuBar.updateStateProvider = { [weak self] in
+            self?.updateModel.state
+        }
+        menuBar.checkForUpdatesProvider = { [weak self] in
+            self?.appUpdater.checkForUpdates()
+        }
+        menuBar.openSettingsProvider = {
+            // 通知 RootView 切到 Settings tab
+            NotificationCenter.default.post(name: .codingToolsOpenSettings, object: nil)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -70,15 +82,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Menu Bar
 
     private func setupMenuBar() {
-        // Phase 1 占位：阶段 4 接入完整 MenuBarExtra
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let button = item.button {
-            button.title = "CT"
-        }
-        statusItem = item
+        // AppMenuBar 自己创建 statusItem（"curlybraces" SF Symbol），不用 AppDelegate 这个 "CT" 占位
+        // AppDelegate 的 statusItem 字段保留作 future use
     }
 
     private func applyAppearance() {
         // 阶段 6 接入 Theme 模块；此处仅占位
     }
+}
+
+// Notification name for menu bar "open Settings" callback
+extension Notification.Name {
+    static let codingToolsOpenSettings = Notification.Name("com.codingtools.openSettings")
 }

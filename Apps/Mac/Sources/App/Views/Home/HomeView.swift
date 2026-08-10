@@ -3,8 +3,9 @@ import Localization
 import Theme
 import UI
 import Domain
+import Updates
 
-/// 首页：欢迎语 + 推荐 + 最近使用 + 可更新。
+/// 首页：欢迎语 + 推荐 + 最近使用 + 可更新（接 Sparkle）。
 struct HomeView: View {
     @EnvironmentObject private var state: AppState
     @EnvironmentObject private var appModel: AppModel
@@ -19,23 +20,16 @@ struct HomeView: View {
                         summaryStats(snapshot: snapshot)
                     }
 
-                    section(titleKey: "home.section.recent",
-                            items: state.recentTools(),
-                            emptyKey: "home.empty.recent")
-
-                    section(titleKey: "home.section.recommended",
-                            items: recommended,
-                            emptyKey: "home.empty.recommended")
-
-                    section(titleKey: "home.section.updates",
-                            items: state.tools.prefix(2).map { $0 },  // 占位
-                            emptyKey: "home.empty.updates")
+                    updatesSection
+                    recentSection
+                    recommendedSection
                 }
                 .padding(24)
             }
             .navigationTitle("home.title")
             .refreshable {
                 await state.refreshCatalog()
+                state.checkForUpdates()
             }
         }
     }
@@ -90,6 +84,77 @@ struct HomeView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Updates section (Sparkle-driven)
+
+    @ViewBuilder
+    private var updatesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("home.section.updates")
+                    .font(.headline)
+                Spacer()
+                if case .downloading(let progress, _, _) = state.updateState {
+                    Text("\(Int(progress * 100))%")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.blue)
+                }
+            }
+            switch state.updateState {
+            case .available(let remote, let build, let size):
+                UpdateAvailableCard(
+                    remoteVersion: remote,
+                    remoteBuild: build,
+                    size: size,
+                    isDownloading: false,
+                    progress: 0,
+                    onInstall: { state.checkForUpdates() }
+                )
+            case .downloading(let progress, _, _):
+                UpdateAvailableCard(
+                    remoteVersion: state.remoteVersionFromAvailable ?? "",
+                    remoteBuild: 0,
+                    size: 0,
+                    isDownloading: true,
+                    progress: progress,
+                    onInstall: { state.cancelUpdate() }
+                )
+            case .readyToInstall(let remote):
+                UpdateReadyCard(remoteVersion: remote) {
+                    appModel.selectedTab = .settings
+                }
+            case .installing:
+                UpdateProgressCard(
+                    titleKey: "home.update.installing",
+                    progress: 1.0,
+                    tint: .blue,
+                    icon: "arrow.down.circle.fill"
+                )
+            case .failed(let reason, _):
+                UpdateFailedCard(reason: reason) {
+                    state.checkForUpdates()
+                }
+            case .upToDate, .installed:
+                Text("home.update.upToDate")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            case .idle, .checking, .extracting:
+                EmptyView()
+            }
+        }
+    }
+
+    private var recentSection: some View {
+        section(titleKey: "home.section.recent",
+                items: state.recentTools(),
+                emptyKey: "home.empty.recent")
+    }
+
+    private var recommendedSection: some View {
+        section(titleKey: "home.section.recommended",
+                items: recommended,
+                emptyKey: "home.empty.recommended")
     }
 
     private var recommended: [Tool] {
@@ -174,5 +239,139 @@ func categoryKey(_ category: ToolCategory) -> String {
     case .devops: return "devops"
     case .cliUtility: return "cliUtility"
     case .languageRuntime: return "languageRuntime"
+    }
+}
+
+// MARK: - Update cards (Sparkle-driven, used in Home "可更新" section)
+
+struct UpdateAvailableCard: View {
+    let remoteVersion: String
+    let remoteBuild: Int
+    let size: Int64
+    let isDownloading: Bool
+    let progress: Double
+    let onInstall: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                Image(systemName: isDownloading ? "arrow.down.circle" : "arrow.down.circle.fill")
+                    .font(.title)
+                    .foregroundStyle(.blue)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(isDownloading
+                         ? "home.update.downloading \(Int(progress * 100))"
+                         : "home.update.available \(remoteVersion)")
+                        .font(.headline)
+                    if !isDownloading, remoteBuild > 0 {
+                        Text("v\(remoteVersion) (\(remoteBuild))")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    if !isDownloading, size > 0 {
+                        Text(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                if !isDownloading {
+                    Button("home.update.installNow", action: onInstall)
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                }
+            }
+            if isDownloading {
+                ProgressView(value: progress)
+                    .progressViewStyle(.linear)
+                    .tint(.blue)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.blue.opacity(0.25), lineWidth: 1)
+        )
+    }
+}
+
+struct UpdateReadyCard: View {
+    let remoteVersion: String
+    let onOpenSettings: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 14) {
+            Image(systemName: "arrow.up.circle.fill")
+                .font(.title)
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("home.update.readyToInstall \(remoteVersion)")
+                    .font(.headline)
+            }
+            Spacer()
+            Button("home.update.installNow", action: onOpenSettings)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.orange.opacity(0.25), lineWidth: 1)
+        )
+    }
+}
+
+struct UpdateProgressCard: View {
+    let titleKey: LocalizedStringKey
+    let progress: Double
+    let tint: Color
+    let icon: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundStyle(tint)
+            Text(titleKey)
+                .font(.headline)
+            Spacer()
+            ProgressView(value: progress)
+                .progressViewStyle(.circular)
+                .controlSize(.small)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+struct UpdateFailedCard: View {
+    let reason: String
+    let onRetry: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 14) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title)
+                .foregroundStyle(.red)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("home.update.failed")
+                    .font(.headline)
+                Text(reason)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Button("home.update.retry", action: onRetry)
+                .controlSize(.small)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }

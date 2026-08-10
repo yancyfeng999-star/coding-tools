@@ -57,5 +57,13 @@ struct RootView: View {
         .onChange(of: theme.mode) { _, _ in
             menuBar.refreshMenu()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .codingToolsOpenSettings)) { _ in
+            appModel.selectedTab = .settings
+            // 菜单栏点击 Settings 时也把主窗口拉到前台
+            NSApp.activate(ignoringOtherApps: true)
+            for window in NSApp.windows where window.canBecomeMain {
+                window.makeKeyAndOrderFront(nil)
+            }
+        }
     }
 }

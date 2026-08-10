@@ -4,16 +4,22 @@ import Localization
 import Theme
 import UI
 import Domain
+import Updates
 
-/// 菜单栏快速入口：最近使用 / 收藏 / 主题切换 / 打开主窗口。
-/// 阶段 4 由子代理 B 实现。**注意**：AppDelegate 已经创建了 "CT" 占位
-/// statusItem，这里我们自建一个并独立工作；重复问题写到 outbox 通知 Coordinator。
+/// 菜单栏快速入口：最近使用 / 收藏 / 主题切换 / 检查更新 / 打开主窗口。
 @MainActor
 public final class AppMenuBar: ObservableObject {
     public static let shared = AppMenuBar()
 
     private var statusItem: NSStatusItem?
     private weak var state: AppState?
+    /// Sparkle 更新状态 provider：AppDelegate 注入。
+    /// 返回 nil 时不显示更新区。
+    public var updateStateProvider: (() -> UpdateState?)?
+    /// 触发 Sparkle 检查更新的 provider：AppDelegate 注入。
+    public var checkForUpdatesProvider: (() -> Void)?
+    /// 切到 Settings tab：AppDelegate 注入。
+    public var openSettingsProvider: (() -> Void)?
 
     /// 由 RootView 在 appearance 时调用。
     public func attach(state: AppState) {
@@ -67,7 +73,23 @@ public final class AppMenuBar: ObservableObject {
         openMain.image = NSImage(systemSymbolName: "macwindow", accessibilityDescription: "Open")
         menu.addItem(openMain)
 
+        // Settings
+        let settingsItem = NSMenuItem(
+            title: language.localized("tab.settings", fallback: "Settings"),
+            action: #selector(openSettings),
+            keyEquivalent: ","
+        )
+        settingsItem.target = self
+        settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: "Settings")
+        menu.addItem(settingsItem)
+
         menu.addItem(.separator())
+
+        // Updates
+        if let updateItem = makeUpdateMenuItem() {
+            menu.addItem(updateItem)
+            menu.addItem(.separator())
+        }
 
         // Recent
         if let state = state, !state.recentTools().isEmpty {
@@ -158,6 +180,56 @@ public final class AppMenuBar: ObservableObject {
         return item
     }
 
+    /// 根据 Sparkle updateState 构造菜单项：
+    /// - .available / .readyToInstall → 蓝色"可更新到 v1.x.y"
+    /// - .downloading / .installing → 灰色"下载中/安装中 N%"
+    /// - 其他 → 不显示
+    private func makeUpdateMenuItem() -> NSMenuItem? {
+        guard let state = updateStateProvider?() else { return nil }
+        switch state {
+        case .available(let remote, _, _):
+            let item = NSMenuItem(
+                title: language.localized("menubar.availableUpdate \(remote)", fallback: "Update available: \(remote)"),
+                action: #selector(checkForUpdates),
+                keyEquivalent: "u"
+            )
+            item.target = self
+            item.image = NSImage(systemSymbolName: "arrow.down.circle.fill", accessibilityDescription: "Update")
+            return item
+        case .downloading(let progress, _, _):
+            let item = NSMenuItem(
+                title: language.localized("home.update.downloading \(Int(progress * 100))",
+                                        fallback: "Downloading \(Int(progress * 100))%"),
+                action: nil,
+                keyEquivalent: ""
+            )
+            item.image = NSImage(systemSymbolName: "arrow.down.circle", accessibilityDescription: "Downloading")
+            item.isEnabled = false
+            return item
+        case .readyToInstall(let remote):
+            let item = NSMenuItem(
+                title: language.localized("home.update.readyToInstall \(remote)",
+                                        fallback: "\(remote) ready to install"),
+                action: #selector(checkForUpdates),
+                keyEquivalent: "u"
+            )
+            item.target = self
+            item.image = NSImage(systemSymbolName: "arrow.up.circle.fill", accessibilityDescription: "Ready to install")
+            return item
+        case .installing:
+            let item = NSMenuItem(
+                title: language.localized("home.update.installing", fallback: "Installing…"),
+                action: nil,
+                keyEquivalent: ""
+            )
+            item.image = NSImage(systemSymbolName: "arrow.down.circle", accessibilityDescription: "Installing")
+            item.isEnabled = false
+            return item
+        default:
+            return nil
+        }
+    }
+
     // MARK: - Actions
 
     @objc private func openMainWindow() {
@@ -165,6 +237,15 @@ public final class AppMenuBar: ObservableObject {
         for window in NSApp.windows where window.canBecomeMain {
             window.makeKeyAndOrderFront(nil)
         }
+    }
+
+    @objc private func openSettings() {
+        openSettingsProvider?()
+        openMainWindow()
+    }
+
+    @objc private func checkForUpdates() {
+        checkForUpdatesProvider?()
     }
 
     @objc private func launchTool(_ sender: NSMenuItem) {
