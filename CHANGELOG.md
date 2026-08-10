@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-10
+
+
 ### Added
 - 项目根目录与 14 个 Tuist 模块占位
 - Catalog 子目录（tools / content / schemas / revocations）
