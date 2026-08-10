@@ -211,6 +211,9 @@ if [[ -f "$ZIP_PATH" ]]; then
   fi
   # 把 <enclosure url="<PREFIX><filename>" 改成 <PREFIX><TAG>/<filename>
   sed -i '' "s|${PREFIX}|${PREFIX}${TAG}/|g" "$APPCAST"
+  # Sparkle 2.x 严格要求每个 <enclosure> 显式 xml:lang，否则 log 警告 + 部分版本不识别
+  sed -i '' 's|<enclosure url="\([^"]*\)" length="\([^"]*\)" type="application/octet-stream" sparkle:edSignature="|<enclosure xml:lang="en" url="\1" length="\2" type="application/octet-stream" sparkle:edSignature="|g' "$APPCAST"
+  sed -i '' 's|<enclosure url="\([^"]*\)" length="\([^"]*\)" type="application/vnd.apple.installer-package+xml" sparkle:edSignature="|<enclosure xml:lang="en" url="\1" length="\2" type="application/vnd.apple.installer-package+xml" sparkle:edSignature="|g' "$APPCAST"
 
   # 追加 .pkg 的 <enclosure>（generate_appcast 不支持 .pkg，参考官方 doc 手写）
   PKG_PATH="$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.pkg"
