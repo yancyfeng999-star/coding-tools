@@ -35,60 +35,28 @@ public protocol AppUpdating: AnyObject {
     var isAutomaticDownloadEnabled: Bool { get }
 }
 
-/// 内部协议：把 Sparkle 控制器的能力抽象出来，方便测试用 mock。
-@MainActor
-public protocol UpdaterBackend: AnyObject {
-    var automaticallyChecksForUpdates: Bool { get set }
-    var automaticallyDownloadsUpdates: Bool { get set }
-    func checkForUpdates()
-}
-
-/// Sparkle 真实实现：包装 SPUStandardUpdaterController。
-@MainActor
-public final class SparkleUpdaterBackend: UpdaterBackend {
-    private let controller: SPUStandardUpdaterController
-
-    public init(controller: SPUStandardUpdaterController) {
-        self.controller = controller
-    }
-
-    public var automaticallyChecksForUpdates: Bool {
-        get { controller.updater.automaticallyChecksForUpdates }
-        set { controller.updater.automaticallyChecksForUpdates = newValue }
-    }
-
-    public var automaticallyDownloadsUpdates: Bool {
-        get { controller.updater.automaticallyDownloadsUpdates }
-        set { controller.updater.automaticallyDownloadsUpdates = newValue }
-    }
-
-    public func checkForUpdates() {
-        controller.updater.checkForUpdates()
-    }
-}
-
-/// 默认 `AppUpdating` 实现：把 UI 调用转发到 backend。
+/// 默认 `AppUpdating` 实现：直接包装 SPUUpdater。
 @MainActor
 public final class SparkleAppUpdater: AppUpdating {
-    private let backend: UpdaterBackend
+    private let updater: SPUUpdater
 
-    public init(backend: UpdaterBackend) {
-        self.backend = backend
+    public init(updater: SPUUpdater) {
+        self.updater = updater
     }
 
-    public var isAutomaticChecksEnabled: Bool { backend.automaticallyChecksForUpdates }
-    public var isAutomaticDownloadEnabled: Bool { backend.automaticallyDownloadsUpdates }
+    public var isAutomaticChecksEnabled: Bool { updater.automaticallyChecksForUpdates }
+    public var isAutomaticDownloadEnabled: Bool { updater.automaticallyDownloadsUpdates }
 
     public func checkForUpdates() {
-        backend.checkForUpdates()
+        updater.checkForUpdates()
     }
 
     public func setAutomaticChecksEnabled(_ enabled: Bool) {
-        backend.automaticallyChecksForUpdates = enabled
+        updater.automaticallyChecksForUpdates = enabled
     }
 
     public func setAutomaticDownloadEnabled(_ enabled: Bool) {
-        backend.automaticallyDownloadsUpdates = enabled
+        updater.automaticallyDownloadsUpdates = enabled
     }
 }
 

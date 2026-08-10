@@ -12,23 +12,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
 
     // 阶段 7：Sparkle 2 集成（EdDSA + HTTPS Appcast + GitHub Releases）
-    // - 启动时 init（`updaterController` 在 init 构造，startingUpdater=false）
-    // - applicationDidFinishLaunching 显式调用 startUpdater
-    // - 设置项由 Sparkle 内部持久化到 UserDefaults
-    // - 手动触发：UI 调用 `appUpdater.checkForUpdates()`（"设置 → 检查更新"）
-    private let updaterController: SPUStandardUpdaterController
+    private let updater: SPUUpdater
+
+    /// 更新流程状态机：让 Settings/MenuBar 订阅 emit（不弹窗）。
+    let updateModel: UpdateFlowModel
 
     /// 给 UI / AppModel 使用的更新门面。子代理 B 的设置页可直接调用。
     private(set) lazy var appUpdater: AppUpdating = {
-        let backend = SparkleUpdaterBackend(controller: updaterController)
-        return SparkleAppUpdater(backend: backend)
+        SparkleAppUpdater(updater: updater)
     }()
 
     override init() {
-        self.updaterController = SPUStandardUpdaterController(
-            startingUpdater: false,
-            updaterDelegate: nil,
-            userDriverDelegate: nil
+        // 关键：直接用 SPUUpdater 才能注入自定义 userDriver。
+        // SPUStandardUpdaterController 不支持 SPUUserDriver，只能挂 SPUStandardUserDriverDelegate。
+        let model = UpdateFlowModel()
+        self.updateModel = model
+        let driver = SilentUpdateUserDriver(model: model)
+        self.updater = SPUUpdater(
+            hostBundle: Bundle.main,
+            applicationBundle: Bundle.main,
+            userDriver: driver,
+            delegate: nil
         )
         super.init()
         Self.shared = self
@@ -46,13 +50,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Sparkle
 
-    /// 阶段 7：启动 Sparkle 调度循环（后台定时检查 + 静默下载 + 安装提示）。
-    /// 静默策略：SUEnableAutomaticDownloading=true → 静默拉新包；
-    ///          SUAllowsAutomaticUpdates=true → 提示用户重启安装（不强制）。
+    /// 启动 Sparkle 调度循环（后台定时检查 + 静默下载）。
+    /// 静默策略：SUEnableAutomaticDownloading=true → 静默拉新包。
+    /// 不弹窗：所有用户交互通过 SilentUpdateUserDriver emit 到 updateModel。
     private func startSparkleUpdater() {
-        // 触发 lazy init（确保 backend 在 startUpdater 之前已建好）
+        // 触发 lazy init（确保 appUpdater 在 start() 之前已建好）
         _ = appUpdater
-        updaterController.startUpdater()
+        do {
+            try updater.start()
+        } catch {
+            // SPUUpdater.start() 在已启动 / 配置错误时抛错；不致命，只是不自动调度
+            NSLog("⚠️ Sparkle updater.start() failed: \(error)")
+        }
     }
 
     // MARK: - Menu Bar

@@ -15,6 +15,8 @@ final class AppModel: ObservableObject {
 
     /// 给 SettingsView 暴露的更新门面。nil 表示 AppDelegate 尚未就绪（极少见）。
     var appUpdater: AppUpdating? { AppDelegate.shared?.appUpdater }
+    /// 更新流程状态机（AppState 通过它订阅 emit）。
+    var updateFlowModel: UpdateFlowModel? { AppDelegate.shared?.updateModel }
 
     // MARK: - Lifecycle
 

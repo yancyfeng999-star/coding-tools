@@ -4,6 +4,7 @@ import Combine
 import Domain
 import Content
 import Installers
+import Updates
 
 /// UI 全局状态中枢。**所有 UI 状态都通过 AppState 暴露**，
 /// AppModel 只保留 selectedTab / searchText（高冲突，由 Coordinator 拥有）。
@@ -33,6 +34,14 @@ public final class AppState: ObservableObject {
     /// 加载错误信息
     @Published public var loadError: String?
 
+    // MARK: - Updates（订阅 Sparkle userDriver 状态机）
+
+    /// 更新流程状态（Mirror of `UpdateFlowModel.state`）
+    @Published public var updateState: UpdateState = .idle
+    /// 本地版本（Mirror of Bundle.main CFBundleShortVersionString）
+    @Published public var localVersion: String = ""
+    @Published public var localBuild: Int = 0
+
     // MARK: - Dependencies (可注入的最小闭包集)
 
     /// 拉取远端 Catalog 快照；返回 nil 表示未注入。
@@ -45,7 +54,12 @@ public final class AppState: ObservableObject {
     /// 安装器注册表（AdapterRegistry）
     public var installerRegistry: AdapterRegistry = .defaultRegistry()
     /// 真实安装调用桥（默认走 AdapterRegistry）
-    public var installer: ((Tool) async -> InstallResult?)?
+    public var installer: ((Tool) async -> InstallResult)?
+    /// 更新流状态机（从 AppDelegate 注入）。如果 nil，UI 用 NoOpUpdateFlowModel。
+    public var updateFlowModel: UpdateFlowModel?
+    /// AppUpdating 门面闭包（外部注入，避免 AppState 依赖 AppModel —— 跨 framework）。
+    /// 默认 nil；CodingToolsApp 启动时设上。
+    public var appUpdatingProvider: (() -> AppUpdating?)?
 
     public init() {}
 
@@ -203,6 +217,43 @@ public final class AppState: ObservableObject {
         installingTool = nil
         installLog = ""
         installState = .idle
+    }
+
+    // MARK: - Updates (Sparkle)
+
+    /// 绑定到 UpdateFlowModel：订阅它的状态 emit。
+    /// AppDelegate 在 applicationDidFinishLaunching 里调用一次。
+    public func bindUpdates(_ model: UpdateFlowModel) {
+        self.updateFlowModel = model
+        model.addObserver(self)
+    }
+
+    /// 触发 Sparkle 检查更新（拉 appcast + 验签 + emit 状态到 UI）
+    public func checkForUpdates() {
+        appUpdatingProvider?()?.checkForUpdates()
+    }
+
+    /// 确认安装（从 .readyToInstall 状态继续；用户点「立即重启」）
+    public func confirmInstallUpdate() {
+        updateFlowModel?.fulfillDecision(.install)
+    }
+
+    /// 取消安装
+    public func cancelUpdate() {
+        updateFlowModel?.fulfillDecision(.dismiss)
+    }
+}
+
+// MARK: - UpdateObserver
+
+extension AppState: UpdateObserver {
+    public func updateStateChanged(_ state: UpdateState) {
+        self.updateState = state
+    }
+
+    public func updateMetadata(localVersion: String, localBuild: Int) {
+        self.localVersion = localVersion
+        self.localBuild = localBuild
     }
 }
 

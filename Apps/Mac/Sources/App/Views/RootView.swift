@@ -8,7 +8,7 @@ import UI
 /// 其他状态由 AppState 持有（Sources/UI/State/）。
 struct RootView: View {
     @EnvironmentObject private var appModel: AppModel
-    @StateObject private var state = AppState()
+    @EnvironmentObject private var state: AppState
     @ObservedObject private var language = LanguageManager.shared
     @ObservedObject private var theme = ThemeManager.shared
     @StateObject private var menuBar = AppMenuBar.shared
@@ -37,7 +37,6 @@ struct RootView: View {
                 .tag(AppTab.settings)
         }
         .frame(minWidth: 880, minHeight: 560)
-        .environmentObject(state)
         .environmentObject(language)
         .environmentObject(theme)
         .bindLanguage(language)
