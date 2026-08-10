@@ -226,6 +226,8 @@ ${PKG_ENCLOSURE}
 " "$APPCAST"
     echo "    ✅ +pkg enclosure added (length=$PKG_LEN, edSig=${PKG_SIG:0:16}...)"
   fi
+  # 统一给所有 <enclosure 加 xml:lang="en"（Sparkle 2.x 强要求；PKG 已经有了所以这里只补 ZIP）
+  sed -i '' 's|<enclosure |<enclosure xml:lang="en" |g' "$APPCAST"
   echo "    ✅ $APPCAST ($(wc -l < "$APPCAST") lines, $(grep -c '<enclosure' "$APPCAST" || echo 0) items)"
   echo "    (URLs patched to include ${TAG}/ segment)"
 else
