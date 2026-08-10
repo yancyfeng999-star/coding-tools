@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 暂未发布
+
+## [1.0.6] - 2026-08-10
+
+### Changed
+
+- v1.0.6 两个 enclosure 都加 xml:lang
+
+
+
 ## [1.0.6] - 2026-08-10
 
 
