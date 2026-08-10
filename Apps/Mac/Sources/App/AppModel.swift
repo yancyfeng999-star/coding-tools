@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import Updates
 
 /// 整个 App 的状态中枢。Coordinator/Owner 负责扩展。
 /// 任何 UI 状态、目录、安装队列、收藏、最近使用都通过 AppModel 暴露。
@@ -9,6 +10,11 @@ final class AppModel: ObservableObject {
 
     @Published var selectedTab: AppTab = .home
     @Published var searchText: String = ""
+
+    // MARK: - Updates (Sparkle)
+
+    /// 给 SettingsView 暴露的更新门面。nil 表示 AppDelegate 尚未就绪（极少见）。
+    var appUpdater: AppUpdating? { AppDelegate.shared?.appUpdater }
 
     // MARK: - Lifecycle
 

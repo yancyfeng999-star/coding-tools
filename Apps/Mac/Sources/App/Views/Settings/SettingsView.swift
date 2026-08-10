@@ -2,11 +2,14 @@ import SwiftUI
 import Localization
 import Theme
 import UI
+import Updates
 
-/// 设置：主题切换 / 语言切换 / 通用。
+/// 设置：主题切换 / 语言切换 / 更新 / 通用。
 struct SettingsView: View {
+    @EnvironmentObject private var appModel: AppModel
     @ObservedObject private var language = LanguageManager.shared
     @ObservedObject private var theme = ThemeManager.shared
+    @State private var isChecking = false
 
     var body: some View {
         NavigationStack {
@@ -33,6 +36,48 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Button {
+                        isChecking = true
+                        appModel.appUpdater?.checkForUpdates()
+                        // Sparkle 自己管弹窗；3s 后解锁按钮（避免重复点）
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            isChecking = false
+                        }
+                    } label: {
+                        HStack {
+                            Label("settings.update.check", systemImage: "arrow.triangle.2.circlepath")
+                            if isChecking {
+                                Spacer()
+                                ProgressView().controlSize(.small)
+                            }
+                        }
+                    }
+                    .disabled(isChecking || appModel.appUpdater == nil)
+                    .help("settings.update.help")
+
+                    HStack {
+                        Text("settings.update.channel")
+                        Spacer()
+                        Text("settings.update.channel.stable")
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Text("settings.update.feed")
+                        Spacer()
+                        Text(feedURL)
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .textSelection(.enabled)
+                    }
+                } header: {
+                    Text("settings.section.update")
+                } footer: {
+                    Text("settings.update.footer")
+                }
+
+                Section {
                     HStack {
                         Text("settings.version")
                         Spacer()
@@ -52,6 +97,10 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .navigationTitle("settings.title")
         }
+    }
+
+    private var feedURL: String {
+        (Bundle.main.infoDictionary?["SUFeedURL"] as? String) ?? "—"
     }
 
     private var themeBinding: Binding<ThemeMode> {

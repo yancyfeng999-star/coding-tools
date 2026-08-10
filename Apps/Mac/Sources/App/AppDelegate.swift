@@ -4,6 +4,11 @@ import Updates
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// 进程内共享入口，给 SwiftUI 视图（SettingsView）调 `checkForUpdates()`。
+    /// AppDelegate 在 NSApplicationDelegateAdaptor 启动时由系统构造并持有，
+    /// 所以 weak 引用安全，进程生命周期内不会释放。
+    static weak var shared: AppDelegate?
+
     private var statusItem: NSStatusItem?
 
     // 阶段 7：Sparkle 2 集成（EdDSA + HTTPS Appcast + GitHub Releases）
@@ -26,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             userDriverDelegate: nil
         )
         super.init()
+        Self.shared = self
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -40,19 +46,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Sparkle
 
-    /// 阶段 7：启动 Sparkle 调度循环（后台定时检查 + 安装提示）。
-    /// Info.plist 配错（缺 SUFeedURL / SUPublicEDKey）时 Sparkle 会在数秒后弹窗提示用户。
+    /// 阶段 7：启动 Sparkle 调度循环（后台定时检查 + 静默下载 + 安装提示）。
+    /// 静默策略：SUEnableAutomaticDownloading=true → 静默拉新包；
+    ///          SUAllowsAutomaticUpdates=true → 提示用户重启安装（不强制）。
     private func startSparkleUpdater() {
         // 触发 lazy init（确保 backend 在 startUpdater 之前已建好）
         _ = appUpdater
-        #if DEBUG
-        // dev build：暂跳过 Sparkle。SUPublicEDKey 还是占位符、SUFeedURL 指向的
-        // GitHub Release 还没建，启动检查会必失败弹窗。v1.0.0 release 流程
-        // （填真公钥 + 推 appcast）前都不启用。
-        return
-        #else
         updaterController.startUpdater()
-        #endif
     }
 
     // MARK: - Menu Bar

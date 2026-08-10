@@ -64,11 +64,11 @@
 	<key>SUFeedURL</key>
 	<string>https://github.com/yancyfeng999-star/coding-tools/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>__SPARKLE_PUBLIC_KEY__</string>
+	<string>Utj+cIsQE5MVs9tD2lId3s4zvzHnPgThFD1JebEfcEA=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUEnableAutomaticDownloading</key>
-	<false/>
+	<true/>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 	<key>SUAllowsAutomaticUpdates</key>
