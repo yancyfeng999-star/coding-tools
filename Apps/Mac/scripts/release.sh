@@ -178,12 +178,21 @@ BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST")
 rm -rf "$APP_BUNDLE_PATH" "$APPCAST"
 
 if [[ -f "$ZIP_PATH" ]]; then
+  # Sparkle 2.x: --download-url-prefix **不会**自动插入 tag 段。
+  # 如果 prefix 嵌 $TAG (如 .../download/v1.0.0)，generate_appcast 拼出来是
+  #   .../download/v1.0.0CodingTools-1.0.0.zip （粘一起，没 /）
+  # 解法：prefix 用不带 tag 的根 URL .../download/，generate_appcast 写出来后
+  # 用 sed 在 prefix 后插入 ${TAG}/ 段。
+  PREFIX="https://github.com/yancyfeng999-star/coding-tools/releases/download/"
   "$GENERATE_APPCAST" \
     --ed-key-file "$SPARKLE_PRIVATE_KEY" \
-    --download-url-prefix "https://github.com/yancyfeng999-star/coding-tools/releases/download/$TAG" \
+    --download-url-prefix "$PREFIX" \
     "$OUT_DIR"
   if [[ -f "$APPCAST" ]]; then
+    # 把 <enclosure url="<PREFIX><filename>" 改成 <PREFIX><TAG>/<filename>
+    sed -i '' "s|${PREFIX}|${PREFIX}${TAG}/|g" "$APPCAST"
     echo "    ✅ $APPCAST ($(wc -l < "$APPCAST") lines, $(grep -c '<enclosure' "$APPCAST" || echo 0) items)"
+    echo "    (URLs patched to include ${TAG}/ segment)"
   else
     echo "    ❌ appcast.xml 未生成" >&2
     exit 1
