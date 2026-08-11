@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 暂未发布
+
+## [1.2.0] - 2026-08-11
+
+### Changed
+
+- v1.2.0 UI 打磨（第二批）：Settings 关于卡片（icon + 副标题 + GitHub + 致谢）+ 错误 Toast 系统（顶部 banner + 重试）+ 5 种语言（ja/ko/fr/de/es）+ 11 个新 .xcstrings key。
+
+
+
 ## [1.2.0] - 2026-08-11
 
 
