@@ -8,6 +8,12 @@
 
 - 暂未发布
 
+## [1.4.0] - 2026-08-11
+
+### Changed
+
+- v1.3.0 5 个新功能：ToolCard 视觉升级（chrome + hover-reveal + compound footer）+ latest version 拉取（brew info / npm view + 1h cache）+ 一键升级（installed → latest semver 比对 + 按钮文案动态化）+ 启动自动扫描 AI CLI config（Claude/Codex/Gemini/OpenCode/Grok/Hermes/OpenClaw）+ codingtools:// URL scheme（tool/install/home/update）。173 测试全绿。
+
 ## [1.2.5] - 2026-08-11
 
 ### Changed
