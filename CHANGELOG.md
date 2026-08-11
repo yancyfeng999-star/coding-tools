@@ -8,6 +8,12 @@
 
 - 暂未发布
 
+## [1.2.5] - 2026-08-11
+
+### Changed
+
+- v1.5.0-rc1 XPC Helper 架构就位：新增 CodingToolsHelper.xpc（NSXPCListener / 4 个 IPC 方法 / 共享 HelperProtocol）+ HelperClient 桥接（continuation 模式）+ 24 工具 Catalog（+14 vs v1.2.1）+ CrashReporter 本地落盘（NSException + 6 个 POSIX 信号 / 脱敏）+ 135 测试（67 → 135）。sandbox 暂不开启（等 Apple Developer ID 申请，阶段 10 阻塞）
+
 ## [1.2.4] - 2026-08-11
 
 ### Changed
