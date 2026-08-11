@@ -4,6 +4,7 @@ import Combine
 import Domain
 import Content
 import Installers
+import Detection
 import Updates
 
 /// UI 全局状态中枢。**所有 UI 状态都通过 AppState 暴露**，
@@ -33,6 +34,8 @@ public final class AppState: ObservableObject {
     @Published public var contentItems: [ContentItem] = []
     /// 加载错误信息
     @Published public var loadError: String?
+    /// 每个 tool 的安装探测结果（key: toolID）。空 = 还没探测或还没跑。
+    @Published public var probes: [String: InstallationProbe] = [:]
 
     // MARK: - Updates（订阅 Sparkle userDriver 状态机）
 
@@ -62,6 +65,8 @@ public final class AppState: ObservableObject {
     public var installerRegistry: AdapterRegistry = .defaultRegistry()
     /// 真实安装调用桥（默认走 AdapterRegistry）
     public var installer: ((Tool) async -> InstallResult)?
+    /// 安装探测器（默认 `InstallationDetector()`，可注入 mock）
+    public var detector: InstallationDetecting = InstallationDetector()
     /// 更新流状态机（从 AppDelegate 注入）。如果 nil，UI 用 NoOpUpdateFlowModel。
     public var updateFlowModel: UpdateFlowModel?
     /// AppUpdating 门面闭包（外部注入，避免 AppState 依赖 AppModel —— 跨 framework）。
@@ -113,6 +118,30 @@ public final class AppState: ObservableObject {
 
     public var tools: [Tool] {
         catalogSnapshot?.tools ?? Tool.placeholderTools
+    }
+
+    // MARK: - Detection
+
+    /// 探测所有当前 tools 的安装状态。结果存到 `probes`。
+    /// 触发时机：catalog 加载完成后 + 用户手动刷新。
+    public func refreshProbes() async {
+        let tools = self.tools
+        let results = await detector.probeAll(tools: tools)
+        var dict: [String: InstallationProbe] = [:]
+        for probe in results { dict[probe.toolID] = probe }
+        probes = dict
+    }
+
+    /// 探测单个 tool（详情页用）
+    public func refreshProbe(toolID: String) async {
+        guard let tool = tools.first(where: { $0.id == toolID }) else { return }
+        let probe = await detector.probe(tool: tool)
+        probes[toolID] = probe
+    }
+
+    /// 取某个 tool 的探测结果（UI 端常用）
+    public func probe(for toolID: String) -> InstallationProbe? {
+        probes[toolID]
     }
 
     // MARK: - Content

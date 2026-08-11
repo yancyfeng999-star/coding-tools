@@ -30,6 +30,8 @@ struct CodingToolsApp: App {
                         try? await LocalCatalogLoader().loadCatalog()
                     }
                     await appState.loadCatalogIfNeeded()
+                    // Catalog 加载完跑一遍 Detection，UI 立刻能看到 24 个工具的安装状态
+                    await appState.refreshProbes()
                 }
         }
         .windowResizability(.contentSize)

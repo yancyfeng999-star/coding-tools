@@ -75,7 +75,7 @@ struct ToolDetailView: View {
                     } label: {
                         // 用 Image + Text 而非 Label，缩短 toolbar 宽度
                         HStack(spacing: 4) {
-                            Image(systemName: "arrow.down.circle.fill")
+                            Image(systemName: "arrow.down.to.line.compact")
                             Text("tool.install")
                         }
                     }

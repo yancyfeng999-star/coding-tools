@@ -157,6 +157,7 @@ private struct ToolCard: View {
                 Spacer()
                 RiskBadge(level: tool.riskLevel)
             }
+            // 状态行：已安装 vX.Y.Z / 未安装 / 已过期 / 正在安装
             HStack(spacing: 6) {
                 if state.installingTool?.id == tool.id {
                     ProgressView()
@@ -165,11 +166,14 @@ private struct ToolCard: View {
                     Text("catalog.card.installing")
                         .font(.caption)
                         .foregroundStyle(.blue)
+                    Spacer()
                 } else {
-                    HealthBadge(status: .notInstalled)
+                    statusBadge
                     Spacer()
                 }
             }
+            // 安装 / 更新按钮（占满底部；圆角更小，区分于卡片外框）
+            installButton
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -187,6 +191,92 @@ private struct ToolCard: View {
         .animation(.easeInOut(duration: 0.12), value: isHovering)
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
+        .onTapGesture {
+            state.selectedTool = tool
+        }
+    }
+
+    /// 状态徽章：HealthBadge + 已安装版本号
+    @ViewBuilder
+    private var statusBadge: some View {
+        let probe = state.probe(for: tool.id)
+        HStack(spacing: 4) {
+            HealthBadge(status: probe?.healthStatus ?? .notInstalled)
+            if let v = probe?.installedVersion, !v.isEmpty {
+                Text("v\(v)")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// 底部安装按钮：根据已安装 / 未安装 / 正在安装 / 损坏 切换文案
+    @ViewBuilder
+    private var installButton: some View {
+        if state.installingTool?.id == tool.id {
+            HStack {
+                Spacer()
+                Text("catalog.card.installing")
+                    .font(.caption)
+                    .foregroundStyle(.blue)
+                Spacer()
+            }
+            .padding(.vertical, 6)
+        } else {
+            let probe = state.probe(for: tool.id)
+            let isInstalled = probe?.healthStatus == .installed || probe?.healthStatus == .outdated
+            Button {
+                state.installingTool = tool
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: buttonIcon)
+                    Text(buttonTitle)
+                }
+                .font(.caption)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(buttonTint)
+        }
+    }
+
+    private var buttonIcon: String {
+        let probe = state.probe(for: tool.id)
+        switch probe?.healthStatus {
+        case .installed:
+            return "arrow.clockwise"
+        case .outdated:
+            return "arrow.up.circle.fill"
+        case .broken:
+            return "wrench.adjustable"
+        default:
+            return "arrow.down.to.line.compact"
+        }
+    }
+
+    private var buttonTitle: String {
+        let probe = state.probe(for: tool.id)
+        switch probe?.healthStatus {
+        case .installed:
+            return "catalog.card.reinstall"
+        case .outdated:
+            return "catalog.card.update"
+        case .broken:
+            return "catalog.card.repair"
+        default:
+            return "catalog.card.install"
+        }
+    }
+
+    private var buttonTint: Color {
+        let probe = state.probe(for: tool.id)
+        switch probe?.healthStatus {
+        case .installed: return .secondary
+        case .outdated: return .orange
+        case .broken:   return .red
+        default:        return .blue
+        }
     }
 }
 
