@@ -5,8 +5,8 @@
 
 ## 当前状态
 
-- **阶段**：阶段 7 — Sparkle 自动更新（已上线）；v1.2.x 持续维护
-- **版本**：v1.2.1（build 16）
+- **阶段**：v1.5.0 阶段 9 + 12 起步；阶段 11 目录签名未开始
+- **版本**：v1.5.0-rc1（build，下一个）
 - **最近更新**：2026-08-11
 
 ## 阶段路线
@@ -21,11 +21,11 @@
 | 5 | 内容中心 | 1–1.5 w | ✅ 已完成 | 子代理 B |
 | 6 | 多语言、主题、可访问性 | 3–5 d | ✅ 已完成 | 子代理 B |
 | 7 | Sparkle 自动更新 | 1–2 w | ✅ 已完成 | 子代理 C |
-| 8 | 持续发布 v1.2.x | — | 🔄 进行中 | Coordinator |
-| 9 | Sandbox 重启 + XPC Helper | 2–3 w | ⬜ 未开始 | Coordinator |
+| 8 | 持续发布 v1.2.x | — | ✅ 已完成（v1.2.4 Latest） | Coordinator |
+| 9 | Sandbox + XPC Helper | 2–3 w | 🟡 **架构就位**（待 Apple ID 开 sandbox） | Coordinator |
 | 10 | Apple Developer ID + 签名 / 公证 | 1–2 w（依赖外部） | ⬜ 未开始 | Coordinator |
 | 11 | 目录签名接通（ManifestSecurity 接到 Catalog 加载链） | 1 w | ⬜ 未开始 | 子代理 A + C |
-| 12 | Post-release 闭环（遥测 / 反馈 / Crash） | 2 w | ⬜ 未开始 | 子代理 B |
+| 12 | Post-release 闭环（遥测 / 反馈 / Crash） | 2 w | 🟡 **Crash 本地落盘起步** | 子代理 B |
 
 ## 已完成（本轮 · 2026-08-11）
 
@@ -73,18 +73,24 @@
 
 ## 进行中
 
-- [ ] v1.2.x 持续打磨（UI / 国际化 / 工具数 / 测试覆盖率）
-- [ ] Catalog 工具数从 10 扩充到 README 承诺的 20–30
-- [ ] AppTests / CatalogTests / UpdatesTests 覆盖率补齐
-- [ ] 「反馈问题」菜单项接通 GitHub Issues（v1.2.2 计划）
+- [ ] v1.5.0-rc1 发版（XPC Helper 架构 + Crash 本地落盘 + Catalog 24 工具 + 135 测试）
+- [ ] Apple Developer ID 申请（外部流程，阶段 10 阻塞 sandbox + 公证 + 上架）
+- [ ] Sandbox 实际开启（等阶段 10 完成）
+- [ ] NpmGlobalAdapter 切换到走 HelperClient（阶段 9 二期）
+- [ ] HomebrewAdapter / MiseToolAdapter / OfficialArtifactAdapter 迁移到 Helper（阶段 9 三期）
 
 ## 未完成（按优先级）
 
-### 阶段 9（Sandbox + XPC Helper）
-- [ ] 设计 XPC Helper：把 brew / npm / curl 调用从 App 进程剥离
-- [ ] Helper 单独签名 + 沙盒
-- [ ] entitlements.plist 加回 `com.apple.security.app-sandbox`
-- [ ] 回归：所有现有 Installer Adapter 在 sandbox 下跑通
+### 阶段 9 二期（NpmGlobalAdapter → Helper）
+- [ ] `NpmGlobalAdapter.execute` 改为走 `HelperClient`
+- [ ] fallback：Helper 不可用时回到进程内 executor
+- [ ] 回归：在 sandbox 关的情况下跑通 npm install -g
+
+### 阶段 9 三期（其他 Adapter 迁移）
+- [ ] HomebrewAdapter → Helper
+- [ ] MiseToolAdapter → Helper
+- [ ] OfficialArtifactAdapter → Helper
+- [ ] 全 Adapter 走 Helper 后，App 进程可开 sandbox
 
 ### 阶段 10（签名 / 公证）
 - [ ] Apple Developer ID 申请 + 加入 Apple Developer Program
@@ -96,15 +102,14 @@
 ### 阶段 11（目录签名）
 - [ ] 生成 Ed25519 密钥对（管理 `Catalog/signing/key.priv`，公钥进 App）
 - [ ] 把 `ManifestCanonicalizer` 接到 `CatalogLoader`
-- [ ] 给现有 10 个 `tools/*.json` + `content/*.json` 签 Ed25519
+- [ ] 给现有 24 个 `tools/*.json` + `content/*.json` 签 Ed25519
 - [ ] Catalog 加载时验签 + 检查过期 + 检查撤销列表
 - [ ] `Catalog/revocations/` 维护流程
 
-### 阶段 12（Post-release 闭环）
-- [ ] 「反馈问题」菜单项（GitHub Issues new issue 模板）
-- [ ] 崩溃收集（Sentry 或 Crashpad，需选型）
-- [ ] 用户反馈通道（GitHub Discussions 或邮件）
-- [ ] 错误分级 + 热修复路径
+### 阶段 12 二期（Crash 报告访问 + Sentry 可选）
+- [ ] Settings 加「打开 crash log 文件夹」按钮
+- [ ] 关于页加「最近一次 crash 时间」指示
+- [ ] v2.0 路线：Sentry SDK 集成（云端 dedup / 告警 / 需新建 Sentry 账号 + DSN）
 
 ## 发布节点
 
@@ -117,7 +122,7 @@
 | v1.2.0 | 多语言扩展 + Settings 关于 + Toast | ✅ 已发布 |
 | v1.2.1 | 文档清理 patch | ✅ 已发布 |
 | v1.2.2 | UpdatesTests 修复 + 反馈问题 + 工具扩充 | 🔄 本轮目标 |
-| v1.5.0 | Sandbox 重启 + 目录签名接通 | ⬜ 待启动 |
+| v1.5.0 | Sandbox 重启 + 目录签名接通 | 🟡 架构就位，等 Apple ID |
 | v2.0.0 | Apple Developer ID + 公证 + App Store 上架 | ⬜ 待启动 |
 
 ## 风险登记
