@@ -5,8 +5,8 @@
 
 ## 当前状态
 
-- **阶段**：阶段 7 — Sparkle 自动更新（已上线）；阶段 8 待启动
-- **版本**：v1.2.1（build 16，文档清理 patch）
+- **阶段**：阶段 7 — Sparkle 自动更新（已上线）；v1.2.x 持续维护
+- **版本**：v1.2.1（build 16）
 - **最近更新**：2026-08-11
 
 ## 阶段路线
@@ -15,13 +15,17 @@
 | --- | --- | --- | --- | --- |
 | 0 | 产品和安全契约 | 3–5 d | ✅ 已完成 | Coordinator |
 | 1 | 工程骨架 | 3–5 d | ✅ 已完成 | Coordinator |
-| 2 | 目录与安全目录 | 1–2 w | ✅ 已完成 | 子代理 A |
+| 2 | 目录与安全目录 | 1–2 w | ✅ 已完成（**目录签名未接通**） | 子代理 A |
 | 3 | 安装、检测、启动 | 2–3 w | ✅ 已完成 | 子代理 A |
 | 4 | 主界面 | 1.5–2 w | ✅ 已完成 | 子代理 B |
 | 5 | 内容中心 | 1–1.5 w | ✅ 已完成 | 子代理 B |
 | 6 | 多语言、主题、可访问性 | 3–5 d | ✅ 已完成 | 子代理 B |
 | 7 | Sparkle 自动更新 | 1–2 w | ✅ 已完成 | 子代理 C |
-| 8 | 内部 Beta + 稳定版 | 1.5–2 w | 🔄 待启动 | Coordinator |
+| 8 | 持续发布 v1.2.x | — | 🔄 进行中 | Coordinator |
+| 9 | Sandbox 重启 + XPC Helper | 2–3 w | ⬜ 未开始 | Coordinator |
+| 10 | Apple Developer ID + 签名 / 公证 | 1–2 w（依赖外部） | ⬜ 未开始 | Coordinator |
+| 11 | 目录签名接通（ManifestSecurity 接到 Catalog 加载链） | 1 w | ⬜ 未开始 | 子代理 A + C |
+| 12 | Post-release 闭环（遥测 / 反馈 / Crash） | 2 w | ⬜ 未开始 | 子代理 B |
 
 ## 已完成（本轮 · 2026-08-11）
 
@@ -69,63 +73,76 @@
 
 ## 进行中
 
-- [ ] 子代理 A 启动 T001（Stage 0 工具真实参数补全）
-- [ ] 子代理 A 启动 T002（SECURITY_MODEL / CATALOG_SCHEMA 评审）
-- [ ] 子代理 C 启动 T009（已通过 → 关闭）
-- [ ] Apple Developer ID 申请状态确认（v0.5 之前）
+- [ ] v1.2.x 持续打磨（UI / 国际化 / 工具数 / 测试覆盖率）
+- [ ] Catalog 工具数从 10 扩充到 README 承诺的 20–30
+- [ ] AppTests / CatalogTests / UpdatesTests 覆盖率补齐
+- [ ] 「反馈问题」菜单项接通 GitHub Issues（v1.2.2 计划）
 
 ## 未完成（按优先级）
 
-### 阶段 0 剩余
-- [ ] PRODUCT_SPEC 验收评审
-- [ ] SECURITY_MODEL 验收评审
-- [ ] CATALOG_SCHEMA 验收评审
-- [ ] 8 个 Stage 0 工具详细参数表（每个工具的官方 URL、Homebrew 名称、版本规则、Bundle ID、Team ID、SHA-256、架构支持）
+### 阶段 9（Sandbox + XPC Helper）
+- [ ] 设计 XPC Helper：把 brew / npm / curl 调用从 App 进程剥离
+- [ ] Helper 单独签名 + 沙盒
+- [ ] entitlements.plist 加回 `com.apple.security.app-sandbox`
+- [ ] 回归：所有现有 Installer Adapter 在 sandbox 下跑通
 
-### 阶段 1（工程骨架）
-- [ ] CodingToolsApp 入口 + AppDelegate + AppModel
-- [ ] MenuBarExtra 入口占位
-- [ ] Settings 窗口占位
-- [ ] SQLite 初始化（GRDB 或 SQLite.swift）
-- [ ] CI 配置（build + test + lint）
+### 阶段 10（签名 / 公证）
+- [ ] Apple Developer ID 申请 + 加入 Apple Developer Program
+- [ ] `sign-release.sh` 接通 Developer ID Application + Installer
+- [ ] `notarize-release.sh` 接通 `xcrun notarytool`
+- [ ] 公证 staple 到 DMG / PKG
+- [ ] 替换 ad-hoc 签名为 Developer ID
 
-### 阶段 2（目录）
-- [ ] 远程目录下载 + 签名验证
-- [ ] 本地 SQLite 缓存
-- [ ] 撤销列表
-- [ ] 过期检测
+### 阶段 11（目录签名）
+- [ ] 生成 Ed25519 密钥对（管理 `Catalog/signing/key.priv`，公钥进 App）
+- [ ] 把 `ManifestCanonicalizer` 接到 `CatalogLoader`
+- [ ] 给现有 10 个 `tools/*.json` + `content/*.json` 签 Ed25519
+- [ ] Catalog 加载时验签 + 检查过期 + 检查撤销列表
+- [ ] `Catalog/revocations/` 维护流程
 
-### 阶段 3（安装）
-- [ ] Homebrew Adapter
-- [ ] mise Adapter
-- [ ] 官方安装包 Adapter
-- [ ] 安装队列 + 取消
-- [ ] 版本检测 + 架构检测
+### 阶段 12（Post-release 闭环）
+- [ ] 「反馈问题」菜单项（GitHub Issues new issue 模板）
+- [ ] 崩溃收集（Sentry 或 Crashpad，需选型）
+- [ ] 用户反馈通道（GitHub Discussions 或邮件）
+- [ ] 错误分级 + 热修复路径
 
 ## 发布节点
 
-| 版本 | 目标 |
-| --- | --- |
-| v0.1.0 | 工程原型（Debug 可启动） |
-| v0.5.0 | 内部可用版（Stage 0 工具全通过） |
-| v0.9.0 | 内部 Beta |
-| v1.0.0 | 第一版稳定发布 |
+| 版本 | 目标 | 状态 |
+| --- | --- | --- |
+| v0.1.0 | 工程原型（Debug 可启动） | ✅ 已发布 |
+| v0.5.0 | 内部可用版（Stage 0 工具全通过） | ⚠️ 跳过（路线已合并到 v1.0） |
+| v1.0.0 | 第一版稳定发布 | ✅ 已发布 |
+| v1.1.0 | UI 打磨（教程 / 菜单栏 / ToolCard） | ✅ 已发布 |
+| v1.2.0 | 多语言扩展 + Settings 关于 + Toast | ✅ 已发布 |
+| v1.2.1 | 文档清理 patch | ✅ 已发布 |
+| v1.2.2 | UpdatesTests 修复 + 反馈问题 + 工具扩充 | 🔄 本轮目标 |
+| v1.5.0 | Sandbox 重启 + 目录签名接通 | ⬜ 待启动 |
+| v2.0.0 | Apple Developer ID + 公证 + App Store 上架 | ⬜ 待启动 |
 
 ## 风险登记
 
 | 风险 | 状态 | 缓解 |
 | --- | --- | --- |
-| Apple Developer ID 申请 | 未开始 | v0.5 之前完成 |
-| Sparkle 2 集成复杂度 | 未评估 | 先做最小集成，再扩展 |
-| 远程目录分发方案 | 未决定 | 自建 GitHub Pages + Ed25519 |
-| YouTube Data API Key 不能放客户端 | 已知 | 服务端聚合元数据，客户端只读快照 |
+| Apple Developer ID 申请 | 🔴 未开始 | 阶段 10；外部流程阻塞（无 Apple ID） |
+| Sandbox 关闭 | 🔴 v1.0.0 起一直未恢复 | 阶段 9：引入 XPC Helper 后再开 |
+| 目录签名未接通 | 🔴 10 个 tools 全部 signature="" | 阶段 11：ManifestSecurity 代码已就绪，待接 CatalogLoader |
+| Post-release 闭环缺失 | 🔴 无崩溃收集、无用户反馈 | 阶段 12：v1.2.2 先加 GitHub Issues 入口 |
+| Catalog 工具数低于承诺 | 🟡 当前 10 / 承诺 20–30 | 持续扩充中 |
+| 测试覆盖率 ~22.5% | 🟡 偏低 | 关键模块补 AppTests / CatalogTests |
+| Sparkle 端到端更新未真实验证 | 🟡 release 成功 ≠ 用户装机成功 | 需要真实装机记录 |
+| CFBundleLocalizations 与 .xcstrings 不一致 | 🟢 已修复（v1.2.2） | Info.plist 补 5 种语言 |
+| LICENSE 决定 | 🟢 MIT | v1.2.2 README 已更新 |
+| Apple Silicon / Intel 兼容性 | 🟢 Universal Binary | Release 配置 `arm64+x86_64` |
+| macOS 14+ 兼容性 | 🟢 LSMinimumSystemVersion 14.0 | — |
+| 第三方依赖供应链（Sparkle 2.9.5 SPM） | 🟡 已知 | 锁定 commit hash；升级走 PR 评审 |
 
 ## 下一动作
 
-1. `tuist generate` 验证工程能起来
-2. 启动多代理协作 run-001（3 个子代理：Catalog+Installer / UI+Content+Localization / Release+Update+Security）
-3. 子代理 A 开始 Stage 0 工具参数表
-4. 评审 SECURITY_MODEL 草案
+1. 完成 v1.2.2 修复集（UpdatesTests / 反馈问题 / 工具扩充 / 测试）
+2. 发版 v1.2.2 → GitHub Latest
+3. 规划 v1.5.0：Sandbox 重启 + 目录签名接通
+4. 申请 Apple Developer ID（独立流程，外部阻塞）
 
 ## 维护规则
 
