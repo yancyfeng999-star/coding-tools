@@ -1,6 +1,7 @@
 import AppKit
 import Sparkle
 import Updates
+import ProcessExecution
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -39,6 +40,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 阶段 12：进程启动先装崩溃报告（NSException + POSIX 信号）
+        CrashReporter.shared.install()
         setupMenuBar()
         applyAppearance()
         startSparkleUpdater()
