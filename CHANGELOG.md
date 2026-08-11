@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 暂未发布
+
+## [1.2.1] - 2026-08-11
+
+### Changed
+
+- v1.2.1 文档清理：CHANGELOG 去重 + release.sh Python 段修复（每次发版不再追加重复块）
+
+
+
 ## [1.2.1] - 2026-08-11
 
 
