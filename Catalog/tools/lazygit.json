@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-lazygit",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "lazygit",
+      "slug": "lazygit",
+      "name": "Lazygit",
+      "localizedName": {
+        "en": "Lazygit",
+        "zh-Hans": "Lazygit"
+      },
+      "description": "Simple terminal UI for git commands. Stage, commit, push, branch, merge — all from a keyboard-driven TUI.",
+      "localizedDescription": {
+        "en": "Simple terminal UI for git commands. Stage, commit, push, branch, merge — all from a keyboard-driven TUI.",
+        "zh-Hans": "git 命令的简易终端 UI。Stage、commit、push、branch、merge 全在键盘驱动的 TUI 里。"
+      },
+      "category": "git-collaboration",
+      "tags": ["git", "lazygit", "tui", "cli"],
+      "homepageURL": "https://github.com/jesseduffield/lazygit",
+      "documentationURL": "https://github.com/jesseduffield/lazygit#usage",
+      "installOptions": [
+        {
+          "type": "homebrew-formula",
+          "packageName": "lazygit",
+          "versionRule": ">=0.40.0",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "lazygit",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

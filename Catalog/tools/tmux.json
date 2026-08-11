@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-tmux",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "tmux",
+      "slug": "tmux",
+      "name": "tmux",
+      "localizedName": {
+        "en": "tmux",
+        "zh-Hans": "tmux"
+      },
+      "description": "Terminal multiplexer. Run multiple terminal sessions inside a single window, detach and reattach, share sessions.",
+      "localizedDescription": {
+        "en": "Terminal multiplexer. Run multiple terminal sessions inside a single window, detach and reattach, share sessions.",
+        "zh-Hans": "终端复用器。在一个窗口里跑多个终端会话，可分离后重连，可共享会话。"
+      },
+      "category": "terminal",
+      "tags": ["tmux", "terminal", "multiplexer", "cli"],
+      "homepageURL": "https://github.com/tmux/tmux",
+      "documentationURL": "https://github.com/tmux/tmux/wiki",
+      "installOptions": [
+        {
+          "type": "homebrew-formula",
+          "packageName": "tmux",
+          "versionRule": ">=3.4.0",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "tmux",
+        "arguments": ["-V"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

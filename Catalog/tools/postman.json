@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-postman",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "postman",
+      "slug": "postman",
+      "name": "Postman",
+      "localizedName": {
+        "en": "Postman",
+        "zh-Hans": "Postman"
+      },
+      "description": "API client for designing, building, testing, and collaborating on APIs. Graphical alternative to curl.",
+      "localizedDescription": {
+        "en": "API client for designing, building, testing, and collaborating on APIs. Graphical alternative to curl.",
+        "zh-Hans": "API 客户端，用于设计、构建、测试与协作。curl 的图形替代品。"
+      },
+      "category": "api-debug",
+      "tags": ["postman", "api", "http", "rest"],
+      "homepageURL": "https://www.postman.com",
+      "documentationURL": "https://learning.postman.com",
+      "installOptions": [
+        {
+          "type": "homebrew-cask",
+          "packageName": "postman",
+          "riskLevel": "medium"
+        }
+      ],
+      "launchCapability": {
+        "type": "app",
+        "bundleID": "com.postmanlabs.mac"
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "medium"
+    }
+  ],
+  "revokedItems": []
+}

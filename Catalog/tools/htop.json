@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-htop",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "htop",
+      "slug": "htop",
+      "name": "htop",
+      "localizedName": {
+        "en": "htop",
+        "zh-Hans": "htop"
+      },
+      "description": "Interactive process viewer for Unix systems. Better top alternative with sorting, filtering, and tree view.",
+      "localizedDescription": {
+        "en": "Interactive process viewer for Unix systems. Better top alternative with sorting, filtering, and tree view.",
+        "zh-Hans": "Unix 系统的交互式进程查看器。比 top 更好，支持排序、过滤、树状视图。"
+      },
+      "category": "cli-utility",
+      "tags": ["htop", "process", "monitor", "cli"],
+      "homepageURL": "https://htop.dev",
+      "documentationURL": "https://github.com/htop-dev/htop",
+      "installOptions": [
+        {
+          "type": "homebrew-formula",
+          "packageName": "htop",
+          "versionRule": ">=3.3.0",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "htop",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-neovim",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "neovim",
+      "slug": "nvim",
+      "name": "Neovim",
+      "localizedName": {
+        "en": "Neovim",
+        "zh-Hans": "Neovim"
+      },
+      "description": "Hyperextensible Vim-based text editor. Built for Lua scripting, modern UIs, and better defaults than stock Vim.",
+      "localizedDescription": {
+        "en": "Hyperextensible Vim-based text editor. Built for Lua scripting, modern UIs, and better defaults than stock Vim.",
+        "zh-Hans": "超可扩展的 Vim 分支编辑器。为 Lua 脚本、现代 UI、优于 Vim 的默认配置而设计。"
+      },
+      "category": "editor",
+      "tags": ["neovim", "nvim", "editor", "lua", "cli"],
+      "homepageURL": "https://neovim.io",
+      "documentationURL": "https://neovim.io/doc/user/",
+      "installOptions": [
+        {
+          "type": "homebrew-formula",
+          "packageName": "neovim",
+          "versionRule": ">=0.10.0",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "nvim",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}
