@@ -383,6 +383,19 @@
         }
       }
     },
+    "catalog.card.updateTo %@" : {
+      "comment" : "按钮文案：%@ = 目标版本号（latestVersion）",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Update to %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "升到 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%@ に更新" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "%@(으)로 업데이트" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre à jour vers %@" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf %@ aktualisieren" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar a %@" } }
+      }
+    },
     "catalog.empty.description" : {
       "extractionState" : "manual",
       "localizations" : {

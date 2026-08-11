@@ -280,7 +280,13 @@ private struct ToolCard: View {
 
     private var buttonTitle: LocalizedStringKey {
         switch health {
-        case .installed:    return "catalog.card.reinstall"
+        case .installed:
+            // 已装且有 latest：升版用 "Update to vX.Y.Z"，否则 "Reinstall"
+            if state.isOutdated(toolID: tool.id),
+               let latest = state.latestVersion(for: tool.id) {
+                return "catalog.card.updateTo \(latest)"
+            }
+            return "catalog.card.reinstall"
         case .outdated:     return "catalog.card.update"
         case .broken:       return "catalog.card.repair"
         case .notInstalled: return "catalog.card.install"

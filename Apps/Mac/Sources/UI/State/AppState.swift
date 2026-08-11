@@ -182,6 +182,34 @@ public final class AppState: ObservableObject {
         latestVersions[toolID]
     }
 
+    /// 比较 installed vs latest 是否真的需要升级（installed < latest）
+    public func isOutdated(toolID: String) -> Bool {
+        guard let installed = probes[toolID]?.installedVersion,
+              let latest = latestVersions[toolID] else {
+            return false
+        }
+        return installed != latest && compareSemver(installed, latest) == .orderedAscending
+    }
+
+    // MARK: - Semver 简化比较
+
+    private enum SemverOrder { case orderedAscending, orderedSame, orderedDescending }
+
+    /// 简化版 semver 比较：`1.2.3` < `1.3.0` = ascending
+    /// 不支持 pre-release 后缀（-rc1 之类），按数字段比较。
+    private func compareSemver(_ a: String, _ b: String) -> SemverOrder {
+        let aParts = a.split(separator: ".").map { Int($0.prefix(while: { $0.isNumber })) ?? 0 }
+        let bParts = b.split(separator: ".").map { Int($0.prefix(while: { $0.isNumber })) ?? 0 }
+        let n = max(aParts.count, bParts.count)
+        for i in 0..<n {
+            let av = i < aParts.count ? aParts[i] : 0
+            let bv = i < bParts.count ? bParts[i] : 0
+            if av < bv { return .orderedAscending }
+            if av > bv { return .orderedDescending }
+        }
+        return .orderedSame
+    }
+
     /// 取某个 tool 的探测结果（UI 端常用）
     public func probe(for toolID: String) -> InstallationProbe? {
         probes[toolID]
