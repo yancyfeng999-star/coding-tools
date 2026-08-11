@@ -2,6 +2,7 @@ import SwiftUI
 import Updates
 import UI
 import Catalog
+import LatestVersion
 
 @main
 struct CodingToolsApp: App {
@@ -32,6 +33,8 @@ struct CodingToolsApp: App {
                     await appState.loadCatalogIfNeeded()
                     // Catalog 加载完跑一遍 Detection，UI 立刻能看到 24 个工具的安装状态
                     await appState.refreshProbes()
+                    // 探测完后再拉 latest version（依赖 installed version）
+                    await appState.refreshLatestVersions()
                 }
         }
         .windowResizability(.contentSize)

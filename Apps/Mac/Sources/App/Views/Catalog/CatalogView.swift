@@ -199,7 +199,7 @@ private struct ToolCard: View {
         }
     }
 
-    /// 状态徽章：HealthBadge + 已安装版本号
+    /// 状态徽章：HealthBadge + 已安装版本号 + latest version delta
     @ViewBuilder
     private var statusBadge: some View {
         HStack(spacing: 4) {
@@ -208,6 +208,19 @@ private struct ToolCard: View {
                 Text("v\(v)")
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
+                if let latest = state.latestVersion(for: tool.id), latest != v {
+                    Image(systemName: "arrow.right")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                    Text("v\(latest)")
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.orange)
+                }
+            } else if let latest = state.latestVersion(for: tool.id) {
+                // 未装但有 latest → 显示「目标版本」灰字
+                Text("v\(latest)")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.tertiary)
             }
         }
     }

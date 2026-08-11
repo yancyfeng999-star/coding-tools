@@ -5,6 +5,7 @@ import Domain
 import Content
 import Installers
 import Detection
+import LatestVersion
 import Updates
 
 /// UI 全局状态中枢。**所有 UI 状态都通过 AppState 暴露**，
@@ -36,6 +37,8 @@ public final class AppState: ObservableObject {
     @Published public var loadError: String?
     /// 每个 tool 的安装探测结果（key: toolID）。空 = 还没探测或还没跑。
     @Published public var probes: [String: InstallationProbe] = [:]
+    /// 每个 tool 的 latest version（key: toolID）。来自 Brew/Npm provider + cache。
+    @Published public var latestVersions: [String: String] = [:]
 
     // MARK: - Updates（订阅 Sparkle userDriver 状态机）
 
@@ -67,6 +70,14 @@ public final class AppState: ObservableObject {
     public var installer: ((Tool) async -> InstallResult)?
     /// 安装探测器（默认 `InstallationDetector()`，可注入 mock）
     public var detector: InstallationDetecting = InstallationDetector()
+    /// Latest version provider（默认 brew + npm + cache；可注入 mock）
+    public var latestVersionProvider: LatestVersionProvider =
+        CachedLatestVersionProvider(
+            inner: CompositeLatestVersionProvider(providers: [
+                BrewLatestVersionProvider(),
+                NpmLatestVersionProvider(),
+            ])
+        )
     /// 更新流状态机（从 AppDelegate 注入）。如果 nil，UI 用 NoOpUpdateFlowModel。
     public var updateFlowModel: UpdateFlowModel?
     /// AppUpdating 门面闭包（外部注入，避免 AppState 依赖 AppModel —— 跨 framework）。
@@ -137,6 +148,38 @@ public final class AppState: ObservableObject {
         guard let tool = tools.first(where: { $0.id == toolID }) else { return }
         let probe = await detector.probe(tool: tool)
         probes[toolID] = probe
+    }
+
+    // MARK: - Latest version
+
+    /// 拉所有 tool 的 latest version。结果存到 `latestVersions`。
+    /// 触发时机：catalog 加载完成后 + 探测完成后（installed version 已知）。
+    public func refreshLatestVersions() async {
+        let tools = self.tools
+        // 并行拉（cached provider 内部串行）
+        await withTaskGroup(of: (String, String?).self) { group in
+            for tool in tools {
+                let toolID = tool.id
+                let installed = probes[toolID]?.installedVersion
+                group.addTask { [latestVersionProvider] in
+                    let v = await latestVersionProvider.latestVersion(
+                        toolID: toolID,
+                        installedVersion: installed
+                    )
+                    return (toolID, v)
+                }
+            }
+            for await (toolID, v) in group {
+                if let v {
+                    latestVersions[toolID] = v
+                }
+            }
+        }
+    }
+
+    /// 取 tool 的 latest version（UI 端用）
+    public func latestVersion(for toolID: String) -> String? {
+        latestVersions[toolID]
     }
 
     /// 取某个 tool 的探测结果（UI 端常用）

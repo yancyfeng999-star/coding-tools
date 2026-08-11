@@ -34,6 +34,26 @@ let project = Project(
             sources: ["Sources/Domain/**"]
         ),
         .target(
+            name: "Persistence",
+            destinations: .macOS,
+            product: .framework,
+            bundleId: "com.codingtools.persistence",
+            deploymentTargets: .macOS("14.0"),
+            sources: ["Sources/Persistence/**"]
+        ),
+        .target(
+            name: "LatestVersion",
+            destinations: .macOS,
+            product: .framework,
+            bundleId: "com.codingtools.latestversion",
+            deploymentTargets: .macOS("14.0"),
+            sources: ["Sources/LatestVersion/**"],
+            dependencies: [
+                .target(name: "ProcessExecution"),
+                .target(name: "Domain"),
+            ]
+        ),
+        .target(
             name: "Catalog",
             destinations: .macOS,
             product: .framework,
@@ -111,17 +131,6 @@ let project = Project(
             ]
         ),
         .target(
-            name: "Persistence",
-            destinations: .macOS,
-            product: .framework,
-            bundleId: "com.codingtools.persistence",
-            deploymentTargets: .macOS("14.0"),
-            sources: ["Sources/Persistence/**"],
-            dependencies: [
-                .target(name: "Domain"),
-            ]
-        ),
-        .target(
             name: "Localization",
             destinations: .macOS,
             product: .framework,
@@ -193,6 +202,7 @@ let project = Project(
                 .target(name: "Installers"),
                 .target(name: "ProcessExecution"),
                 .target(name: "Detection"),
+                .target(name: "LatestVersion"),
                 .target(name: "Launching"),
                 .target(name: "Content"),
                 .target(name: "Persistence"),
@@ -335,6 +345,18 @@ let project = Project(
                 .target(name: "Domain"),
             ]
         ),
+        .target(
+            name: "LatestVersionTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "com.codingtools.latestversion-tests",
+            deploymentTargets: .macOS("14.0"),
+            sources: ["Tests/LatestVersionTests/**"],
+            dependencies: [
+                .target(name: "LatestVersion"),
+                .target(name: "ProcessExecution"),
+            ]
+        ),
     ],
     schemes: [
         .scheme(
@@ -394,6 +416,12 @@ let project = Project(
             shared: true,
             buildAction: .buildAction(targets: [.target("Installers")]),
             testAction: .targets([TestableTarget.testableTarget(target: "HelperTests")])
+        ),
+        .scheme(
+            name: "LatestVersionTests",
+            shared: true,
+            buildAction: .buildAction(targets: [.target("LatestVersion")]),
+            testAction: .targets([TestableTarget.testableTarget(target: "LatestVersionTests")])
         ),
     ]
 )
