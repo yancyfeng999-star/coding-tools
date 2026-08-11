@@ -54,6 +54,14 @@ let project = Project(
             ]
         ),
         .target(
+            name: "AIConfigDiscovery",
+            destinations: .macOS,
+            product: .framework,
+            bundleId: "com.codingtools.aiconfigdiscovery",
+            deploymentTargets: .macOS("14.0"),
+            sources: ["Sources/AIConfigDiscovery/**"]
+        ),
+        .target(
             name: "Catalog",
             destinations: .macOS,
             product: .framework,
@@ -203,6 +211,7 @@ let project = Project(
                 .target(name: "ProcessExecution"),
                 .target(name: "Detection"),
                 .target(name: "LatestVersion"),
+                .target(name: "AIConfigDiscovery"),
                 .target(name: "Launching"),
                 .target(name: "Content"),
                 .target(name: "Persistence"),
@@ -357,6 +366,17 @@ let project = Project(
                 .target(name: "ProcessExecution"),
             ]
         ),
+        .target(
+            name: "AIConfigDiscoveryTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "com.codingtools.aiconfigdiscovery-tests",
+            deploymentTargets: .macOS("14.0"),
+            sources: ["Tests/AIConfigDiscoveryTests/**"],
+            dependencies: [
+                .target(name: "AIConfigDiscovery"),
+            ]
+        ),
     ],
     schemes: [
         .scheme(
@@ -422,6 +442,12 @@ let project = Project(
             shared: true,
             buildAction: .buildAction(targets: [.target("LatestVersion")]),
             testAction: .targets([TestableTarget.testableTarget(target: "LatestVersionTests")])
+        ),
+        .scheme(
+            name: "AIConfigDiscoveryTests",
+            shared: true,
+            buildAction: .buildAction(targets: [.target("AIConfigDiscovery")]),
+            testAction: .targets([TestableTarget.testableTarget(target: "AIConfigDiscoveryTests")])
         ),
     ]
 )

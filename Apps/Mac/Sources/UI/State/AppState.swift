@@ -6,6 +6,7 @@ import Content
 import Installers
 import Detection
 import LatestVersion
+import AIConfigDiscovery
 import Updates
 
 /// UI 全局状态中枢。**所有 UI 状态都通过 AppState 暴露**，
@@ -39,6 +40,8 @@ public final class AppState: ObservableObject {
     @Published public var probes: [String: InstallationProbe] = [:]
     /// 每个 tool 的 latest version（key: toolID）。来自 Brew/Npm provider + cache。
     @Published public var latestVersions: [String: String] = [:]
+    /// 启动时在用户 home 扫到的 AI CLI 配置文件
+    @Published public var discoveredConfigs: [AIConfig] = []
 
     // MARK: - Updates（订阅 Sparkle userDriver 状态机）
 
@@ -78,6 +81,8 @@ public final class AppState: ObservableObject {
                 NpmLatestVersionProvider(),
             ])
         )
+    /// 启动时扫用户 home 找 AI CLI 配置（默认 FilesystemAIConfigDiscovery）
+    public var configDiscoverer: AIConfigDiscovering = FilesystemAIConfigDiscovery()
     /// 更新流状态机（从 AppDelegate 注入）。如果 nil，UI 用 NoOpUpdateFlowModel。
     public var updateFlowModel: UpdateFlowModel?
     /// AppUpdating 门面闭包（外部注入，避免 AppState 依赖 AppModel —— 跨 framework）。
@@ -180,6 +185,19 @@ public final class AppState: ObservableObject {
     /// 取 tool 的 latest version（UI 端用）
     public func latestVersion(for toolID: String) -> String? {
         latestVersions[toolID]
+    }
+
+    // MARK: - Config discovery
+
+    /// 扫 home 目录找 AI CLI 配置。触发时机：app 启动。
+    public func discoverAIConfigs() async {
+        let results = await configDiscoverer.discover()
+        discoveredConfigs = results
+    }
+
+    /// 把某个 discovered config 的 toolID 加入 favorites（用户点「收藏」时调）
+    public func adoptDiscoveredConfig(_ config: AIConfig) {
+        favorites.insert(config.toolID)
     }
 
     /// 比较 installed vs latest 是否真的需要升级（installed < latest）

@@ -31,6 +31,8 @@ struct CodingToolsApp: App {
                         try? await LocalCatalogLoader().loadCatalog()
                     }
                     await appState.loadCatalogIfNeeded()
+                    // 启动扫 AI CLI 配置（在用户 home 找 Claude/Codex/Gemini 等配置）
+                    await appState.discoverAIConfigs()
                     // Catalog 加载完跑一遍 Detection，UI 立刻能看到 24 个工具的安装状态
                     await appState.refreshProbes()
                     // 探测完后再拉 latest version（依赖 installed version）

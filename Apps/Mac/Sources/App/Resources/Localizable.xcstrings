@@ -1426,6 +1426,19 @@
         }
       }
     },
+    "home.section.discoveredConfigs" : {
+      "comment" : "HomeView 顶部 section：用户 home 里扫到的 AI CLI 配置",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Found on your Mac" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已发现的配置" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "検出された設定" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "감지된 설정" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Configurations détectées" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erkannte Konfigurationen" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Configuraciones detectadas" } }
+      }
+    },
     "home.section.recent" : {
       "extractionState" : "manual",
       "localizations" : {

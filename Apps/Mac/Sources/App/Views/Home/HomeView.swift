@@ -3,6 +3,7 @@ import Localization
 import Theme
 import UI
 import Domain
+import AIConfigDiscovery
 import Updates
 
 /// 首页：欢迎语 + 推荐 + 最近使用 + 可更新（接 Sparkle）。
@@ -19,6 +20,8 @@ struct HomeView: View {
                     if let snapshot = state.catalogSnapshot {
                         summaryStats(snapshot: snapshot)
                     }
+
+                    discoveredConfigsSection
 
                     updatesSection
                     recentSection
@@ -39,6 +42,36 @@ struct HomeView: View {
             Text("home.subtitle")
                 .font(.title2)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Discovered AI CLI configs
+
+    @ViewBuilder
+    private var discoveredConfigsSection: some View {
+        let configs = Array(state.discoveredConfigs.prefix(6))
+        if configs.isEmpty {
+            EmptyView()
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Image(systemName: "sparkle.magnifyingglass")
+                        .foregroundStyle(.purple)
+                    Text("home.section.discoveredConfigs")
+                        .font(.headline)
+                    Spacer()
+                    Text("(\(state.discoveredConfigs.count))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                LazyVGrid(columns: [
+                    GridItem(.adaptive(minimum: 220, maximum: 320), spacing: 10)
+                ], spacing: 10) {
+                    ForEach(configs) { cfg in
+                        DiscoveredConfigRow(config: cfg)
+                    }
+                }
+            }
         }
     }
 
@@ -373,5 +406,82 @@ struct UpdateFailedCard: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - DiscoveredConfigRow
+//
+// 显示用户 home 里扫到的 AI CLI 配置文件：
+// tool 名 · 路径截断 · model · "已收藏" toggle
+
+private struct DiscoveredConfigRow: View {
+    let config: AIConfig
+    @EnvironmentObject private var state: AppState
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: toolIcon(for: config.toolID))
+                .font(.title3)
+                .foregroundStyle(.purple)
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(toolDisplayName(config.toolID))
+                    .font(.subheadline)
+                    .lineLimit(1)
+                Text(config.configPath.path)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                HStack(spacing: 4) {
+                    if let model = config.model {
+                        Text(model)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                    if config.hasAPIKey {
+                        Image(systemName: "key.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.green)
+                            .help("home.discovered.hasKey")
+                    }
+                }
+            }
+            Spacer()
+            Button {
+                state.adoptDiscoveredConfig(config)
+            } label: {
+                Image(systemName: state.favorites.contains(config.toolID) ? "star.fill" : "star")
+                    .foregroundStyle(state.favorites.contains(config.toolID) ? .yellow : .secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(
+            Color.secondary.opacity(0.06),
+            in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+        )
+    }
+}
+
+private func toolIcon(for toolID: String) -> String {
+    switch toolID {
+    case "claude-code": return "sparkles"
+    case "codex":      return "chevron.left.slash.chevron.right"
+    case "gemini-cli":  return "sparkle"
+    default:            return "terminal.fill"
+    }
+}
+
+private func toolDisplayName(_ id: String) -> String {
+    switch id {
+    case "claude-code": return "Claude Code"
+    case "codex":      return "Codex"
+    case "gemini-cli":  return "Gemini CLI"
+    case "opencode":    return "OpenCode"
+    case "grok-build":  return "Grok Build"
+    case "hermes":      return "Hermes"
+    case "openclaw":    return "OpenClaw"
+    default:            return id
     }
 }
