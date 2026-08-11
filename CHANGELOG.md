@@ -8,6 +8,12 @@
 
 - 暂未发布
 
+## [1.2.4] - 2026-08-11
+
+### Changed
+
+- v1.2.2 修复集：UpdatesTests UpdaterBackend 协议补齐（CI 红→绿）+ CFBundleLocalizations 补 5 语言 + 菜单栏反馈入口（GitHub Issues）+ Catalog +5 工具（go / rust / gh / jq / ripgrep）+ ToastCenterTests + PROJECT_STATUS 阶段路线对齐
+
 ## [1.2.1] - 2026-08-11
 
 ### Changed
