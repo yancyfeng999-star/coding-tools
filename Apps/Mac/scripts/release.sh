@@ -31,11 +31,11 @@ PLIST="Sources/App/Info.plist"
 # 根目录 releases/<version>/：放 zip + pkg + dmg + appcast.xml
 #   单一目录（不分 build/release 与 build/dist），参考多数 macOS 项目的
 #   GitHub Releases 文件结构，gitignore。
-OUT_DIR="$REPO_ROOT/releases/$VERSION"
-DIST_DIR="$OUT_DIR"
+#   注意：VERSION / OUT_DIR 在步骤 1（bump-version.sh）跑完之后才赋值，
+#   下面用 placeholder；步骤 3 build 前会重新覆盖。
+OUT_DIR_PLACEHOLDER="$REPO_ROOT/releases/PLACEHOLDER"
 # 真实 bundle 名带空格（Info.plist: CFBundleName=Coding Tools）
 APP_BUNDLE_NAME="Coding Tools"
-APP_BUNDLE_PATH="$OUT_DIR/${APP_BUNDLE_NAME}.app"
 # 产物文件名无空格（GitHub release 友好、URL 干净）
 ARTIFACT_BASE="CodingTools"
 
@@ -112,6 +112,10 @@ fi
 VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST")
 BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST")
 TAG="v$VERSION"
+# 现在 VERSION 已知，把 OUT_DIR / DIST_DIR 落到真实路径
+OUT_DIR="$REPO_ROOT/releases/$VERSION"
+DIST_DIR="$OUT_DIR"
+APP_BUNDLE_PATH="$OUT_DIR/${APP_BUNDLE_NAME}.app"
 echo "    → $TAG (build $BUILD)"
 echo
 
