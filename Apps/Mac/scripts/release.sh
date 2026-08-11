@@ -170,19 +170,20 @@ if [[ "${SKIP_PKG:-0}" != "1" ]]; then
   echo "    ✅ $PKG_PATH (未签名 — 上 Apple ID 后加 --sign 'Developer ID Installer: ...')"
 fi
 if [[ "${SKIP_DMG:-0}" != "1" ]]; then
+  mkdir -p "$DIST_DIR"
   STAGE=$(mktemp -d)
   trap 'rm -rf "$STAGE"' EXIT
   cp -R "$APP_BUNDLE_PATH" "$STAGE/${APP_BUNDLE_NAME}.app"
   ln -s /Applications "$STAGE/Applications"
-  DMG_TMP="$OUT_DIR/.${ARTIFACT_BASE}-${VERSION}-temp.dmg"
+  DMG_TMP="$DIST_DIR/.${ARTIFACT_BASE}-${VERSION}-temp.dmg"
   hdiutil create \
     -volName "Coding Tools $VERSION" \
     -srcfolder "$STAGE" \
     -ov \
     -format UDZO \
     "$DMG_TMP" >/dev/null
-  mv "$DMG_TMP" "$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.dmg"
-  echo "    ✅ $OUT_DIR/${ARTIFACT_BASE}-${VERSION}.dmg"
+  mv "$DMG_TMP" "$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg"
+  echo "    ✅ $DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg"
 fi
 echo
 
@@ -309,7 +310,7 @@ $NOTES"
   )
   PKG_FULL="$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.pkg"
   [[ -f "$PKG_FULL" ]] && ASSETS+=("$PKG_FULL")
-  [[ -f "$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.dmg" ]] && ASSETS+=("$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.dmg")
+  [[ -f "$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg" ]] && ASSETS+=("$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg")
 
   run gh release create "$TAG" \
     "${ASSETS[@]}" \
