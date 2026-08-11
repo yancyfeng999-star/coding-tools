@@ -42,6 +42,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "069AB5248E42398FBBA571CA"
+               BuildableName = "CodingToolsHelper.xpc"
+               BlueprintName = "CodingToolsHelper"
+               ReferencedContainer = "container:CodingTools.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "6A2518221F00C9B30269FB99"
                BuildableName = "Content.framework"
                BlueprintName = "Content"
