@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-               BuildableName = "Installers.framework"
-               BlueprintName = "Installers"
+               BlueprintIdentifier = "3B35DDC3FA4FAE6C7C368D47"
+               BuildableName = "LatestVersion.framework"
+               BlueprintName = "LatestVersion"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,9 +33,9 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "43C772A10499BAFC1DCB3709"
-               BuildableName = "InstallerTests.xctest"
-               BlueprintName = "InstallerTests"
+               BlueprintIdentifier = "EA759314F0EA42510A19B475"
+               BuildableName = "LatestVersionTests.xctest"
+               BlueprintName = "LatestVersionTests"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -54,9 +54,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-            BuildableName = "Installers.framework"
-            BlueprintName = "Installers"
+            BlueprintIdentifier = "3B35DDC3FA4FAE6C7C368D47"
+            BuildableName = "LatestVersion.framework"
+            BlueprintName = "LatestVersion"
             ReferencedContainer = "container:CodingTools.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -70,9 +70,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-            BuildableName = "Installers.framework"
-            BlueprintName = "Installers"
+            BlueprintIdentifier = "3B35DDC3FA4FAE6C7C368D47"
+            BuildableName = "LatestVersion.framework"
+            BlueprintName = "LatestVersion"
             ReferencedContainer = "container:CodingTools.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

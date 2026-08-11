@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-               BuildableName = "Installers.framework"
-               BlueprintName = "Installers"
+               BlueprintIdentifier = "C789E5403E601208B087F111"
+               BuildableName = "AIConfigDiscovery.framework"
+               BlueprintName = "AIConfigDiscovery"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,9 +33,9 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "43C772A10499BAFC1DCB3709"
-               BuildableName = "InstallerTests.xctest"
-               BlueprintName = "InstallerTests"
+               BlueprintIdentifier = "E48CFC4DC652CF39EC608D02"
+               BuildableName = "AIConfigDiscoveryTests.xctest"
+               BlueprintName = "AIConfigDiscoveryTests"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -54,9 +54,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-            BuildableName = "Installers.framework"
-            BlueprintName = "Installers"
+            BlueprintIdentifier = "C789E5403E601208B087F111"
+            BuildableName = "AIConfigDiscovery.framework"
+            BlueprintName = "AIConfigDiscovery"
             ReferencedContainer = "container:CodingTools.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -70,9 +70,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-            BuildableName = "Installers.framework"
-            BlueprintName = "Installers"
+            BlueprintIdentifier = "C789E5403E601208B087F111"
+            BuildableName = "AIConfigDiscovery.framework"
+            BlueprintName = "AIConfigDiscovery"
             ReferencedContainer = "container:CodingTools.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
