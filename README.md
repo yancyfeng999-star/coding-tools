@@ -97,4 +97,4 @@ open CodingTools.xcworkspace
 
 ## 许可证
 
-待定（v0.5 之前决定）。
+[MIT License](./LICENSE)。Copyright © 2026 YancyFeng。

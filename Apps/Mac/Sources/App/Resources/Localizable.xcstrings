@@ -2790,6 +2790,32 @@
         }
       }
     },
+    "menubar.reportIssue": {
+      "comment": "Open GitHub Issues new issue template (bug_report.md)",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Report Issue" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "反馈问题" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "問題を報告" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "문제 신고" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Signaler un problème" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Problem melden" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Reportar problema" } }
+      }
+    },
+    "menubar.feedback": {
+      "comment": "Open GitHub Discussions for feedback / ideas",
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Send Feedback" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "提建议" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "フィードバック" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "피드백 보내기" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Envoyer des commentaires" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Feedback senden" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Enviar comentarios" } }
+      }
+    },
     "category.editor": {
       "extractionState": "manual",
       "localizations": {

@@ -162,6 +162,27 @@ public final class AppMenuBar: ObservableObject {
 
         menu.addItem(.separator())
 
+        // Report Issue / Send Feedback（GitHub Issues new issue + Discussions）
+        let report = NSMenuItem(
+            title: language.localized("menubar.reportIssue", fallback: "Report Issue"),
+            action: #selector(reportIssue),
+            keyEquivalent: ""
+        )
+        report.target = self
+        report.image = NSImage(systemSymbolName: "exclamationmark.bubble", accessibilityDescription: "Report")
+        menu.addItem(report)
+
+        let feedback = NSMenuItem(
+            title: language.localized("menubar.feedback", fallback: "Send Feedback"),
+            action: #selector(sendFeedback),
+            keyEquivalent: ""
+        )
+        feedback.target = self
+        feedback.image = NSImage(systemSymbolName: "envelope", accessibilityDescription: "Feedback")
+        menu.addItem(feedback)
+
+        menu.addItem(.separator())
+
         // Quit
         let quit = NSMenuItem(
             title: language.localized("menubar.quit", fallback: "Quit"),
@@ -267,5 +288,30 @@ public final class AppMenuBar: ObservableObject {
 
     @objc private func quit() {
         NSApp.terminate(nil)
+    }
+
+    // MARK: - Feedback / Issue
+
+    /// 打开 GitHub Issues new issue 页面（带模板：版本 / 系统 / 复现步骤）。
+    @objc private func reportIssue() {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        let sysVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        let title = "[v\(version)+\(build) · \(sysVersion)] "
+        var components = URLComponents(string: "https://github.com/yancyfeng999-star/coding-tools/issues/new")!
+        components.queryItems = [
+            URLQueryItem(name: "template", value: "bug_report.md"),
+            URLQueryItem(name: "title", value: title),
+        ]
+        if let url = components.url {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    /// 打开 GitHub Discussions（轻量反馈 / 想法）。
+    @objc private func sendFeedback() {
+        if let url = URL(string: "https://github.com/yancyfeng999-star/coding-tools/discussions/new?category=ideas") {
+            NSWorkspace.shared.open(url)
+        }
     }
 }
