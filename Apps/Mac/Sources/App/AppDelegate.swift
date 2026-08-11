@@ -19,7 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// 给 UI / AppModel 使用的更新门面。子代理 B 的设置页可直接调用。
     private(set) lazy var appUpdater: AppUpdating = {
-        SparkleAppUpdater(updater: updater)
+        SparkleAppUpdater(backend: SPUUpdaterBackend(updater: updater))
     }()
 
     override init() {

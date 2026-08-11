@@ -9,11 +9,11 @@ import Sparkle
 // 架构：
 //   AppUpdating  ← 公开协议（UI / Settings 调用）
 //        ↑
-//   SparkleAppUpdater ← 默认实现
+//   SparkleAppUpdater ← 默认实现（持有 UpdaterBackend）
 //        ↓
 //   UpdaterBackend  ← 内部协议（可被 mock）
 //        ↑
-//   SparkleUpdaterBackend  ← 包 SPUStandardUpdaterController
+//   SPUUpdaterBackend ← 包装 SPUUpdater（生产路径）
 //
 // 阶段 7 由子代理 C 完整接入。
 
@@ -35,28 +35,61 @@ public protocol AppUpdating: AnyObject {
     var isAutomaticDownloadEnabled: Bool { get }
 }
 
-/// 默认 `AppUpdating` 实现：直接包装 SPUUpdater。
+/// 内部协议：把 Sparkle `SPUUpdater` 抽象成可 mock 的接口。
+/// 测试可用 `MockUpdaterBackend` 注入，避开真实 Sparkle。
+@MainActor
+public protocol UpdaterBackend: AnyObject {
+    var automaticallyChecksForUpdates: Bool { get set }
+    var automaticallyDownloadsUpdates: Bool { get set }
+    func checkForUpdates()
+}
+
+/// 默认 `AppUpdating` 实现：委托给 `UpdaterBackend`。
 @MainActor
 public final class SparkleAppUpdater: AppUpdating {
+    private let backend: UpdaterBackend
+
+    public init(backend: UpdaterBackend) {
+        self.backend = backend
+    }
+
+    public var isAutomaticChecksEnabled: Bool { backend.automaticallyChecksForUpdates }
+    public var isAutomaticDownloadEnabled: Bool { backend.automaticallyDownloadsUpdates }
+
+    public func checkForUpdates() {
+        backend.checkForUpdates()
+    }
+
+    public func setAutomaticChecksEnabled(_ enabled: Bool) {
+        backend.automaticallyChecksForUpdates = enabled
+    }
+
+    public func setAutomaticDownloadEnabled(_ enabled: Bool) {
+        backend.automaticallyDownloadsUpdates = enabled
+    }
+}
+
+/// 生产路径：把 `SPUUpdater` 适配成 `UpdaterBackend`。
+@MainActor
+public final class SPUUpdaterBackend: UpdaterBackend {
     private let updater: SPUUpdater
 
     public init(updater: SPUUpdater) {
         self.updater = updater
     }
 
-    public var isAutomaticChecksEnabled: Bool { updater.automaticallyChecksForUpdates }
-    public var isAutomaticDownloadEnabled: Bool { updater.automaticallyDownloadsUpdates }
+    public var automaticallyChecksForUpdates: Bool {
+        get { updater.automaticallyChecksForUpdates }
+        set { updater.automaticallyChecksForUpdates = newValue }
+    }
+
+    public var automaticallyDownloadsUpdates: Bool {
+        get { updater.automaticallyDownloadsUpdates }
+        set { updater.automaticallyDownloadsUpdates = newValue }
+    }
 
     public func checkForUpdates() {
         updater.checkForUpdates()
-    }
-
-    public func setAutomaticChecksEnabled(_ enabled: Bool) {
-        updater.automaticallyChecksForUpdates = enabled
-    }
-
-    public func setAutomaticDownloadEnabled(_ enabled: Bool) {
-        updater.automaticallyDownloadsUpdates = enabled
     }
 }
 
