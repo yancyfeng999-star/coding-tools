@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-rust",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "rust",
+      "slug": "rust",
+      "name": "Rust",
+      "localizedName": {
+        "en": "Rust",
+        "zh-Hans": "Rust"
+      },
+      "description": "Rust toolchain (rustup + cargo). Memory-safe systems language with zero-cost abstractions.",
+      "localizedDescription": {
+        "en": "Rust toolchain (rustup + cargo). Memory-safe systems language with zero-cost abstractions.",
+        "zh-Hans": "Rust 工具链（rustup + cargo）。内存安全的系统级语言，零成本抽象。"
+      },
+      "category": "language-runtime",
+      "tags": ["rust", "cargo", "rustup", "cli", "language"],
+      "homepageURL": "https://www.rust-lang.org",
+      "documentationURL": "https://doc.rust-lang.org/",
+      "installOptions": [
+        {
+          "type": "homebrew-formula",
+          "packageName": "rustup-init",
+          "riskLevel": "medium"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "rustc",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

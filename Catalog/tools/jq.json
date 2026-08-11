@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-jq",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "jq",
+      "slug": "jq",
+      "name": "jq",
+      "localizedName": {
+        "en": "jq",
+        "zh-Hans": "jq"
+      },
+      "description": "Command-line JSON processor. Slice, filter, map, and transform structured data with a lightweight expression language.",
+      "localizedDescription": {
+        "en": "Command-line JSON processor. Slice, filter, map, and transform structured data with a lightweight expression language.",
+        "zh-Hans": "命令行 JSON 处理器。用轻量表达式语言切片、过滤、映射、转换结构化数据。"
+      },
+      "category": "cli-utility",
+      "tags": ["json", "cli", "data"],
+      "homepageURL": "https://jqlang.github.io/jq/",
+      "documentationURL": "https://jqlang.github.io/jq/manual/",
+      "installOptions": [
+        {
+          "type": "homebrew-formula",
+          "packageName": "jq",
+          "versionRule": ">=1.7.0",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "jq",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

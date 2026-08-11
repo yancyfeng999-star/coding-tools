@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-go",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "go",
+      "slug": "go",
+      "name": "Go",
+      "localizedName": {
+        "en": "Go",
+        "zh-Hans": "Go"
+      },
+      "description": "The Go programming language toolchain. Statically typed, compiled, with garbage collection and built-in concurrency.",
+      "localizedDescription": {
+        "en": "The Go programming language toolchain. Statically typed, compiled, with garbage collection and built-in concurrency.",
+        "zh-Hans": "Go 编程语言工具链。静态类型、编译型、带垃圾回收与内置并发。"
+      },
+      "category": "language-runtime",
+      "tags": ["go", "golang", "cli", "language"],
+      "homepageURL": "https://go.dev",
+      "documentationURL": "https://go.dev/doc/",
+      "installOptions": [
+        {
+          "type": "homebrew-formula",
+          "packageName": "go",
+          "versionRule": ">=1.23.0",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "go",
+        "arguments": ["version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}

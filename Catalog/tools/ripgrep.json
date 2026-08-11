@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "catalogVersion": "2026.08.11-001-ripgrep",
+  "createdAt": "2026-08-11T00:00:00Z",
+  "expiresAt": "2099-12-31T23:59:59Z",
+  "keyID": "0000000000000000",
+  "signature": "",
+  "tools": [
+    {
+      "id": "ripgrep",
+      "slug": "rg",
+      "name": "ripgrep",
+      "localizedName": {
+        "en": "ripgrep",
+        "zh-Hans": "ripgrep"
+      },
+      "description": "Fast recursive grep alternative that respects .gitignore by default. Built in Rust.",
+      "localizedDescription": {
+        "en": "Fast recursive grep alternative that respects .gitignore by default. Built in Rust.",
+        "zh-Hans": "快速递归 grep 替代工具，默认遵守 .gitignore。Rust 实现。"
+      },
+      "category": "cli-utility",
+      "tags": ["search", "grep", "cli", "rust"],
+      "homepageURL": "https://github.com/BurntSushi/ripgrep",
+      "documentationURL": "https://github.com/BurntSushi/ripgrep/blob/master/GUIDE.md",
+      "installOptions": [
+        {
+          "type": "homebrew-formula",
+          "packageName": "ripgrep",
+          "versionRule": ">=14.0.0",
+          "riskLevel": "low"
+        }
+      ],
+      "launchCapability": {
+        "type": "cli",
+        "command": "rg",
+        "arguments": ["--version"],
+        "openInTerminal": true
+      },
+      "supportedArchitectures": ["arm64", "x86_64"],
+      "minimumMacOS": "14.0",
+      "status": "active",
+      "riskLevel": "low"
+    }
+  ],
+  "revokedItems": []
+}
