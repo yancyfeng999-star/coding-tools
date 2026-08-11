@@ -113,8 +113,11 @@ VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST
 BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST")
 TAG="v$VERSION"
 # 现在 VERSION 已知，把 OUT_DIR / DIST_DIR 落到真实路径
+# 根目录 releases/<version>/：放 zip + pkg + appcast.xml（Sparkle 扫描这个目录）
+# 根目录 releases/<version>-dmg/：放 dmg（不进 Sparkle appcast — 同版本 zip+dmg
+#   共存会让 Sparkle 报 duplicate bundle version）
 OUT_DIR="$REPO_ROOT/releases/$VERSION"
-DIST_DIR="$OUT_DIR"
+DIST_DIR="$REPO_ROOT/releases/$VERSION-dmg"
 APP_BUNDLE_PATH="$OUT_DIR/${APP_BUNDLE_NAME}.app"
 echo "    → $TAG (build $BUILD)"
 echo
