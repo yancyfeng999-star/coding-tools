@@ -30,10 +30,13 @@ Apps/Mac/CodingTools.xcworkspace/xcuserdata/
 .build/
 Package.resolved.bak
 
-# 发版产物（不入仓；build/dist/ 集中放）
+# 发版产物（不入仓；本地副本；GitHub Releases 是正本）
 Apps/Mac/build/
+releases/
 *.dmg
 *.zip
+*.pkg
+*.delta
 *.dSYM
 *.dSYM.zip
 

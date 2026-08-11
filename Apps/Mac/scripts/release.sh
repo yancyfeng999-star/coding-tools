@@ -28,10 +28,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 REPO_ROOT="$(cd ../.. && pwd)"
 PLIST="Sources/App/Info.plist"
-# appcast/ 目录：只放 zip + appcast.xml（Sparkle 禁 zip+dmg 同版本共存）
-OUT_DIR="build/release"
-# dist/ 目录：放 dmg（人工下载，不进 appcast）
-DIST_DIR="build/dist"
+# 根目录 releases/<version>/：放 zip + pkg + dmg + appcast.xml
+#   单一目录（不分 build/release 与 build/dist），参考多数 macOS 项目的
+#   GitHub Releases 文件结构，gitignore。
+OUT_DIR="$REPO_ROOT/releases/$VERSION"
+DIST_DIR="$OUT_DIR"
 # 真实 bundle 名带空格（Info.plist: CFBundleName=Coding Tools）
 APP_BUNDLE_NAME="Coding Tools"
 APP_BUNDLE_PATH="$OUT_DIR/${APP_BUNDLE_NAME}.app"
@@ -141,9 +142,7 @@ echo
 
 # ============== 步骤 4: package (ZIP + DMG + PKG) ==============
 echo "==> Step 4/7  打包 ZIP + DMG + PKG"
-mkdir -p "$OUT_DIR" "$DIST_DIR"
-# OUT_DIR: ZIP + PKG（Sparkle appcast 引用；同版本 zip + pkg 共存，pkg 是另一个 enclosure）
-# DIST_DIR: DMG（人下载用，**不进** appcast）
+mkdir -p "$OUT_DIR"
 if [[ "${SKIP_ZIP:-0}" != "1" ]]; then
   ditto -c -k --sequesterRsrc --keepParent \
     "$APP_BUNDLE_PATH" \
@@ -168,15 +167,15 @@ if [[ "${SKIP_DMG:-0}" != "1" ]]; then
   trap 'rm -rf "$STAGE"' EXIT
   cp -R "$APP_BUNDLE_PATH" "$STAGE/${APP_BUNDLE_NAME}.app"
   ln -s /Applications "$STAGE/Applications"
-  DMG_TMP="$DIST_DIR/.${ARTIFACT_BASE}-${VERSION}-temp.dmg"
+  DMG_TMP="$OUT_DIR/.${ARTIFACT_BASE}-${VERSION}-temp.dmg"
   hdiutil create \
     -volName "Coding Tools $VERSION" \
     -srcfolder "$STAGE" \
     -ov \
     -format UDZO \
     "$DMG_TMP" >/dev/null
-  mv "$DMG_TMP" "$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg"
-  echo "    ✅ $DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg"
+  mv "$DMG_TMP" "$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.dmg"
+  echo "    ✅ $OUT_DIR/${ARTIFACT_BASE}-${VERSION}.dmg"
 fi
 echo
 
@@ -298,12 +297,12 @@ $NOTES"
   # ============== 步骤 7: gh release create ==============
   echo "==> Step 7/7  gh release create"
   ASSETS=(
-    "$REPO_ROOT/Apps/Mac/$ZIP_PATH"
-    "$REPO_ROOT/Apps/Mac/$APPCAST"
+    "$ZIP_PATH"
+    "$APPCAST"
   )
-  PKG_FULL="$REPO_ROOT/Apps/Mac/$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.pkg"
+  PKG_FULL="$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.pkg"
   [[ -f "$PKG_FULL" ]] && ASSETS+=("$PKG_FULL")
-  [[ -f "$REPO_ROOT/Apps/Mac/$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg" ]] && ASSETS+=("$REPO_ROOT/Apps/Mac/$DIST_DIR/${ARTIFACT_BASE}-${VERSION}.dmg")
+  [[ -f "$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.dmg" ]] && ASSETS+=("$OUT_DIR/${ARTIFACT_BASE}-${VERSION}.dmg")
 
   run gh release create "$TAG" \
     "${ASSETS[@]}" \
