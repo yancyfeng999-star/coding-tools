@@ -39,7 +39,10 @@ let project = Project(
             product: .framework,
             bundleId: "com.codingtools.persistence",
             deploymentTargets: .macOS("14.0"),
-            sources: ["Sources/Persistence/**"]
+            sources: ["Sources/Persistence/**"],
+            dependencies: [
+                .target(name: "Domain"),
+            ]
         ),
         .target(
             name: "LatestVersion",
