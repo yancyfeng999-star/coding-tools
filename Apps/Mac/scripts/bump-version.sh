@@ -88,24 +88,16 @@ echo "==> Bumping to v$TARGET (build $NEW_BUILD)"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $TARGET" "$PLIST"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" "$PLIST"
 
-# CHANGELOG 段
-DATE=$(date +%Y-%m-%d)
-NEW_HEADER="## [$TARGET] - $DATE"
-if grep -q "^## \[$TARGET\]" "$CHANGELOG" 2>/dev/null; then
-  echo "==> CHANGELOG 段 [$TARGET] 已存在，跳过"
-else
-  echo "==> Updating CHANGELOG"
-  awk -v h="$NEW_HEADER" '
-    /^## \[Unreleased\]/ { print; print ""; print h; print ""; next }
-    { print }
-  ' "$CHANGELOG" > "$CHANGELOG.new"
-  mv "$CHANGELOG.new" "$CHANGELOG"
-fi
+# CHANGELOG 段不再由本脚本写入：
+# - 旧逻辑会在 ## [Unreleased] 后插入裸 header（缺 ### Changed 与 - 暂未发布 body），
+#   与 release.sh 的 Python 段二次写入会产生重复段。
+# - 现在由 release.sh 的 Python 段统一负责（在标准 marker 之后一次性插入完整段落）。
+# - 若单独跑本脚本（如本地 dry-run），CHANGELOG 不会变；后续 release.sh 会补齐。
 
-# git commit
+# git commit（只提交 Info.plist）
 if [[ "${SKIP_GIT:-0}" != "1" ]]; then
   cd ../..
-  git add Apps/Mac/Sources/App/Info.plist CHANGELOG.md
+  git add Apps/Mac/Sources/App/Info.plist
   git commit -m "chore: bump version to v$TARGET (build $NEW_BUILD)"
 fi
 

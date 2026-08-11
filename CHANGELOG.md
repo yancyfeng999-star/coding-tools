@@ -12,16 +12,7 @@
 
 ### Changed
 
-- v1.2.1 文档清理：CHANGELOG 去重 + release.sh Python 段修复（每次发版不再追加重复块）
-
-
-
-## [1.2.1] - 2026-08-11
-
-
-### Changed
-
-- 暂未发布
+- v1.2.1 文档清理：CHANGELOG 去重 + release.sh Python 段修复（每次发版不再追加重复块）。
 
 ## [1.2.0] - 2026-08-11
 
@@ -120,7 +111,8 @@
 
 - 项目初始化：完整开发计划文档 `CODING_TOOLS_MACOS_DEVELOPMENT_PLAN.md`、14 个 Tuist 模块占位、Catalog 子目录（tools / content / schemas / revocations）、基线产品文档（README / PRODUCT / PROJECT_STATUS / AGENTS）、产品合同 `docs/PRODUCT_SPEC.md`、安全威胁模型 `docs/SECURITY_MODEL.md`、目录 JSON Schema `docs/CATALOG_SCHEMA.md`、8 个 Stage 0 工具验证表 `docs/STAGE0_TOOLS.md`、测试矩阵 `docs/QA_MATRIX.md`、发版流程 `docs/RELEASE_WORKFLOW.md`、Agent 发版详细步骤 `docs/AGENT_RELEASE_WORKFLOW.md`、多代理协作文档总线 `.multi-agent-collaboration/`。
 
-[Unreleased]: https://github.com/yancyfeng999-star/coding-tools/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/yancyfeng999-star/coding-tools/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/yancyfeng999-star/coding-tools/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/yancyfeng999-star/coding-tools/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/yancyfeng999-star/coding-tools/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/yancyfeng999-star/coding-tools/compare/v1.0.8...v1.0.9
