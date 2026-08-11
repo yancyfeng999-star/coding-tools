@@ -1,6 +1,7 @@
 import SwiftUI
 import Updates
 import UI
+import Catalog
 
 @main
 struct CodingToolsApp: App {
@@ -23,6 +24,12 @@ struct CodingToolsApp: App {
                     if let model = appModel.updateFlowModel {
                         appState.bindUpdates(model)
                     }
+                    // 加载本地 Catalog 资源（v1.5.0+）：从 Bundle 读 Catalog/tools/*.json
+                    // 阶段 11 切换到 RemoteCatalogLoader + Ed25519 验签后，这里替换 provider。
+                    appState.catalogProvider = {
+                        try? await LocalCatalogLoader().loadCatalog()
+                    }
+                    await appState.loadCatalogIfNeeded()
                 }
         }
         .windowResizability(.contentSize)

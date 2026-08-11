@@ -146,6 +146,133 @@ public struct FileSystemCatalogCache: CatalogCacheStoring, @unchecked Sendable {
     }
 }
 
+// MARK: - LocalCatalogLoader
+//
+// v1.5.0-rc 之前：App 启动后只看到 10 个 placeholder 工具（Tool.placeholderTools），
+// 24 个 Catalog/tools/*.json 完全没接入。LocalCatalogLoader 让 app 在没网络 / 没
+// 远程目录源时也能从 Bundle 加载本地 tools + content。
+//
+// Bundle layout（资源由 Tuist 注入）：
+//   App.app/Contents/Resources/Catalog/tools/*.json
+//   App.app/Contents/Resources/Catalog/content/*.json
+// 或开发模式（xcodebuild run）：
+//   Bundle.main 直接拿到源码树
+//
+// 阶段 11 路径：ManifestSecurity 验证接入后，LocalCatalogLoader 走 verify 后再返回。
+
+public final class LocalCatalogLoader: CatalogLoading, @unchecked Sendable {
+
+    private let bundle: Bundle
+    private let toolsDirectoryOverride: URL?
+
+    /// 默认从 Bundle.main 读 Catalog/tools/。生产 .app 走这条路径。
+    public init(bundle: Bundle = .main) {
+        self.bundle = bundle
+        self.toolsDirectoryOverride = nil
+    }
+
+    /// 测试用：直接指定 tools 目录（不依赖 Bundle.resourceURL 行为）。
+    public init(toolsDirectory: URL) {
+        self.bundle = .main
+        self.toolsDirectoryOverride = toolsDirectory
+    }
+
+    public func loadCatalog() async throws -> CatalogSnapshot {
+        let snapshots = try loadAllToolsFiles()
+        let merged = merge(snapshots)
+        return merged
+    }
+
+    public func loadCachedCatalog() async throws -> CatalogSnapshot? {
+        try? await loadCatalog()
+    }
+
+    public func cachedCatalogMetadata() async throws -> CachedCatalogMetadata? {
+        guard let url = firstToolsFileURL() else { return nil }
+        let data = try Data(contentsOf: url)
+        return CachedCatalogMetadata(
+            catalogVersion: "local-\(url.lastPathComponent)",
+            savedAt: Date(),
+            sourceURL: url,
+            bytes: data.count
+        )
+    }
+
+    // MARK: - Internals
+
+    private func firstToolsFileURL() -> URL? {
+        allToolsFileURLs().first
+    }
+
+    private func allToolsFileURLs() -> [URL] {
+        // 0) 显式 override（测试用）
+        if let override = toolsDirectoryOverride {
+            return listJSONFiles(in: override)
+        }
+        // 1) Bundle resources path（生产 .app — Tuist folderReference 把
+        //    Catalog/tools/ 直接挂到 Contents/Resources/tools/，没有 Catalog/ 前缀）
+        if let resourceURL = bundle.resourceURL {
+            let toolsDir = resourceURL.appendingPathComponent("tools", isDirectory: true)
+            let files = listJSONFiles(in: toolsDir)
+            if !files.isEmpty { return files }
+        }
+        // 2) 开发模式 fallback：源码树相对路径
+        let devRoots = [
+            URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+                .appendingPathComponent("Catalog/tools", isDirectory: true),
+            URL(fileURLWithPath: "/Users/yancyfeng/Desktop/Mac Dpxx项目/自研软件/Coding Tools/Catalog/tools", isDirectory: true),
+        ]
+        for dir in devRoots {
+            let files = listJSONFiles(in: dir)
+            if !files.isEmpty { return files }
+        }
+        return []
+    }
+
+    private func listJSONFiles(in dir: URL) -> [URL] {
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: dir, includingPropertiesForKeys: nil
+        ) else { return [] }
+        let jsonFiles = files.filter { $0.pathExtension == "json" }
+        return jsonFiles.sorted { $0.path < $1.path }
+    }
+
+    private func loadAllToolsFiles() throws -> [CatalogSnapshot] {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return allToolsFileURLs().compactMap { url in
+            guard let data = try? Data(contentsOf: url) else { return nil }
+            do {
+                return try decoder.decode(CatalogSnapshot.self, from: data)
+            } catch {
+                // 开发期打印解码错误（生产会写到日志）
+                #if DEBUG
+                print("[LocalCatalogLoader] failed to decode \(url.lastPathComponent): \(error)")
+                #endif
+                return nil
+            }
+        }
+    }
+
+    private func merge(_ snapshots: [CatalogSnapshot]) -> CatalogSnapshot {
+        let schemaVersion = snapshots.first?.schemaVersion ?? "1.0.0"
+        let now = Date()
+        let expires = now.addingTimeInterval(60 * 60 * 24 * 365)  // 1 年（本地信任）
+        let allTools = snapshots.flatMap { $0.tools }
+        let allRevoked = Array(Set(snapshots.flatMap { $0.revokedItems }))
+        return CatalogSnapshot(
+            schemaVersion: schemaVersion,
+            catalogVersion: "local-\(snapshots.count)-files-\(Int(now.timeIntervalSince1970))",
+            createdAt: now,
+            expiresAt: expires,
+            keyID: "local-no-signature",
+            signature: "",
+            tools: allTools,
+            revokedItems: allRevoked
+        )
+    }
+}
+
 // MARK: - RemoteCatalogLoader
 
 public actor RemoteCatalogLoader: CatalogLoading {

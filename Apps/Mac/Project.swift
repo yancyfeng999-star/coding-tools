@@ -182,6 +182,8 @@ let project = Project(
             sources: ["Sources/App/**"],
             resources: [
                 "Sources/App/Resources/**",
+                .folderReference(path: "../../Catalog/tools"),
+                .folderReference(path: "../../Catalog/content"),
             ],
             entitlements: .file(path: "Sources/App/entitlements.plist"),
             dependencies: [
