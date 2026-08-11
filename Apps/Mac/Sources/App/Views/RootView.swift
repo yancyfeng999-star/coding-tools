@@ -65,5 +65,10 @@ struct RootView: View {
                 window.makeKeyAndOrderFront(nil)
             }
         }
+        // 顶部 toast 覆盖层
+        .overlay(alignment: .top) {
+            ToastView(center: ToastCenter.shared)
+                .allowsHitTesting(true)
+        }
     }
 }

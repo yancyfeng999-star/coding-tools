@@ -15,10 +15,11 @@ struct CodingToolsApp: App {
                 .environmentObject(appState)
                 .frame(minWidth: 720, minHeight: 480)
                 .task {
-                    // 启动时把 AppState 连到 AppModel + UpdateFlowModel
+                    // 启动时把 AppState 连到 AppModel + UpdateFlowModel + ToastCenter
                     appState.appUpdatingProvider = { [weak appModel] in
                         appModel?.appUpdater
                     }
+                    appState.toastCenter = ToastCenter.shared
                     if let model = appModel.updateFlowModel {
                         appState.bindUpdates(model)
                     }

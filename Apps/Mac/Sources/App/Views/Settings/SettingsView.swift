@@ -18,6 +18,7 @@ struct SettingsView: View {
                 languageSection
                 updatesSection
                 generalSection
+                aboutCard
             }
             .formStyle(.grouped)
             .navigationTitle("settings.title")
@@ -105,6 +106,89 @@ struct SettingsView: View {
             }
         } header: {
             Text("settings.section.general")
+        }
+    }
+
+    // MARK: - About card (app icon + 名字 + 版本 + GitHub + 致谢)
+
+    @ViewBuilder
+    private var aboutCard: some View {
+        Section {
+            VStack(spacing: 12) {
+                HStack(spacing: 14) {
+                    // 临时 icon：SF Symbol "curlybraces" + 主题色背景
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(LinearGradient(
+                                colors: [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                        Image(systemName: "curlybraces")
+                            .font(.title)
+                            .foregroundStyle(.white)
+                    }
+                    .frame(width: 56, height: 56)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("app.name")
+                            .font(.title2.bold())
+                        Text("settings.about.subtitle")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                }
+                Divider()
+                HStack {
+                    Text("settings.version")
+                    Spacer()
+                    Text(appVersionString)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                HStack {
+                    Text("settings.about.minmacos")
+                    Spacer()
+                    Text("macOS 14.0+")
+                        .foregroundStyle(.secondary)
+                }
+                HStack {
+                    Text("settings.about.architecture")
+                    Spacer()
+                    Text("Universal (arm64 + x86_64)")
+                        .foregroundStyle(.secondary)
+                }
+                Divider()
+                Button {
+                    if let url = URL(string: "https://github.com/yancyfeng999-star/coding-tools") {
+                        NSWorkspace.shared.open(url)
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.up.right.square")
+                            .foregroundStyle(.secondary)
+                        Text("settings.about.github")
+                        Spacer()
+                        Text("yancyfeng999-star/coding-tools")
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                HStack {
+                    Text("settings.about.credits")
+                    Spacer()
+                    Text("Sparkle · Tuist · SwiftUI")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(.vertical, 8)
+        } header: {
+            Text("settings.section.about")
         }
     }
 

@@ -67,6 +67,8 @@ public final class AppState: ObservableObject {
     /// AppUpdating 门面闭包（外部注入，避免 AppState 依赖 AppModel —— 跨 framework）。
     /// 默认 nil；CodingToolsApp 启动时设上。
     public var appUpdatingProvider: (() -> AppUpdating?)?
+    /// ToastCenter 引用（CodingToolsApp 启动时设上）
+    public weak var toastCenter: ToastCenter?
 
     public init() {}
 
@@ -86,6 +88,14 @@ public final class AppState: ObservableObject {
             }
         } catch {
             loadError = String(describing: error)
+            toastCenter?.show(Toast(kind: .error, messageKey: "toast.networkError",
+                                     messageArg: error.localizedDescription,
+                                     retry: { [weak self] in
+                Task { @MainActor in
+                    self?.catalogSnapshot = nil
+                    await self?.loadCatalogIfNeeded()
+                }
+            }))
         }
     }
 
@@ -121,8 +131,10 @@ public final class AppState: ObservableObject {
                 contentItems = remote
             }
         } catch {
-            // 失败保持 BundledContent，不报错
+            // 失败保持 BundledContent，但 emit 提示
             _ = error
+            toastCenter?.show(Toast(kind: .warning, messageKey: "toast.networkError",
+                                     messageArg: error.localizedDescription))
         }
     }
 
