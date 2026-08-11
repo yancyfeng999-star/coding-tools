@@ -2,6 +2,7 @@ import AppKit
 import Sparkle
 import Updates
 import ProcessExecution
+import UI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -45,6 +46,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setupMenuBar()
         applyAppearance()
         startSparkleUpdater()
+        // 注册 codingtools:// URL handler
+        NSAppleEventManager.shared().setEventHandler(
+            self,
+            andSelector: #selector(handleURLEvent(_:withReplyEvent:)),
+            forEventClass: AEEventClass(kInternetEventClass),
+            andEventID: AEEventID(kAEGetURL)
+        )
         // 注入 AppMenuBar 的 provider（菜单栏显示更新 + Settings tab 入口）
         let menuBar = AppMenuBar.shared
         menuBar.updateStateProvider = { [weak self] in
@@ -92,6 +100,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func applyAppearance() {
         // 阶段 6 接入 Theme 模块；此处仅占位
     }
+
+    // MARK: - URL handler (codingtools:// deep link)
+
+    @objc func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent reply: NSAppleEventDescriptor) {
+        guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
+              let url = URL(string: urlString) else {
+            return
+        }
+        handleDeepLink(url)
+    }
+
+    private func handleDeepLink(_ url: URL) {
+        guard let link = DeepLinkRouter.parse(url) else { return }
+        pendingDeepLink = link
+    }
+
+    /// AppState / RootView 在 onChange 里 consume
+    var pendingDeepLink: DeepLink?
 }
 
 // Notification name for menu bar "open Settings" callback

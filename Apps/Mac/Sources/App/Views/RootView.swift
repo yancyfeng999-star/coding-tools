@@ -65,10 +65,41 @@ struct RootView: View {
                 window.makeKeyAndOrderFront(nil)
             }
         }
+        // codingtools:// deep link（v1.3.0）
+        .onChange(of: AppDelegate.shared?.pendingDeepLink) { _, new in
+            guard let link = new else { return }
+            handleDeepLink(link)
+            AppDelegate.shared?.pendingDeepLink = nil
+        }
         // 顶部 toast 覆盖层
         .overlay(alignment: .top) {
             ToastView(center: ToastCenter.shared)
                 .allowsHitTesting(true)
+        }
+    }
+
+    private func handleDeepLink(_ link: DeepLink) {
+        switch link {
+        case .openTool(let id, let autoInstall):
+            // 切到 Catalog tab + 打开 detail
+            appModel.selectedTab = .catalog
+            if let tool = state.tools.first(where: { $0.id == id || $0.slug == id }) {
+                state.selectedTool = tool
+                if autoInstall {
+                    state.installingTool = tool
+                }
+            }
+        case .home(let tab):
+            // 切到 home / catalog / content / settings
+            switch tab {
+            case "catalog":  appModel.selectedTab = .catalog
+            case "content":  appModel.selectedTab = .content
+            case "settings": appModel.selectedTab = .settings
+            default:         appModel.selectedTab = .home
+            }
+            NSApp.activate(ignoringOtherApps: true)
+        case .checkForUpdate:
+            state.checkForUpdates()
         }
     }
 }
