@@ -5,9 +5,9 @@
 
 ## 当前状态
 
-- **阶段**：阶段 0 — 产品和安全契约
-- **版本**：v0.0.0（工程原型，尚未发版）
-- **最近更新**：2026-08-09
+- **阶段**：阶段 7 — Sparkle 自动更新（已上线）；阶段 8 待启动
+- **版本**：v1.2.1（build 16，文档清理 patch）
+- **最近更新**：2026-08-11
 
 ## 阶段路线
 
@@ -15,47 +15,57 @@
 | --- | --- | --- | --- | --- |
 | 0 | 产品和安全契约 | 3–5 d | ✅ 已完成 | Coordinator |
 | 1 | 工程骨架 | 3–5 d | ✅ 已完成 | Coordinator |
-| 2 | 目录与安全目录 | 1–2 w | 🔄 进行中 | 子代理 A |
-| 3 | 安装、检测、启动 | 2–3 w | 🔄 进行中 | 子代理 A |
-| 4 | 主界面 | 1.5–2 w | 🔄 进行中 | 子代理 B |
-| 5 | 内容中心 | 1–1.5 w | 🔄 进行中 | 子代理 B |
-| 6 | 多语言、主题、可访问性 | 3–5 d | 🔄 进行中 | 子代理 B |
-| 7 | Sparkle 自动更新 | 1–2 w | 🔄 进行中 | 子代理 C |
-| 8 | 内部 Beta + 稳定版 | 1.5–2 w | ⬜ 未开始 | Coordinator |
+| 2 | 目录与安全目录 | 1–2 w | ✅ 已完成 | 子代理 A |
+| 3 | 安装、检测、启动 | 2–3 w | ✅ 已完成 | 子代理 A |
+| 4 | 主界面 | 1.5–2 w | ✅ 已完成 | 子代理 B |
+| 5 | 内容中心 | 1–1.5 w | ✅ 已完成 | 子代理 B |
+| 6 | 多语言、主题、可访问性 | 3–5 d | ✅ 已完成 | 子代理 B |
+| 7 | Sparkle 自动更新 | 1–2 w | ✅ 已完成 | 子代理 C |
+| 8 | 内部 Beta + 稳定版 | 1.5–2 w | 🔄 待启动 | Coordinator |
 
-## 已完成（本轮 · 2026-08-09）
+## 已完成（本轮 · 2026-08-11）
 
-### 阶段 0 — 产品和安全契约
-- [x] 完整开发计划 `CODING_TOOLS_MACOS_DEVELOPMENT_PLAN.md`
-- [x] 产品合同 `docs/PRODUCT_SPEC.md`
-- [x] 安全威胁模型 `docs/SECURITY_MODEL.md`（12 条 STRIDE 缓解）
-- [x] 目录 JSON Schema `docs/CATALOG_SCHEMA.md` + `Catalog/schemas/catalog.schema.json`
-- [x] 8 个 Stage 0 工具验证表 `docs/STAGE0_TOOLS.md`（待子代理 A 补全真实参数）
-- [x] 测试矩阵 `docs/QA_MATRIX.md`
-- [x] 发版流程 `docs/RELEASE_WORKFLOW.md` + Agent 详细步骤 `docs/AGENT_RELEASE_WORKFLOW.md`
+### 阶段 7 — Sparkle 自动更新 + 发版管道
+- [x] Sparkle 2.x appcast `xml:lang` 强要求适配（v1.0.3 → v1.0.9）
+- [x] 自定义 `SPUUserDriver` 静默更新（v1.0.2）
+- [x] ZIP + PKG 双 enclosure（v1.0.1 / v1.0.2）
+- [x] Settings 检查更新按钮 + 实时下载进度（v1.0.0 / v1.1.0）
+- [x] MenuBarExtra 检查更新快捷入口（v1.1.0）
+- [x] 端到端发版脚本 `release.sh`：bump → tests → build → DMG+ZIP+PKG → `sign_update` → `generate_appcast` → commit+tag+push → `gh release create`
+- [x] EdDSA appcast 签名（`.keys/ed25519_private_key` → `SUPublicEDKey`）
+
+### 阶段 6 — 多语言、主题、可访问性（v1.2.0）
+- [x] Localizable.xcstrings：7 种语言（en / zh-Hans / ja / ko / fr / de / es），452 条翻译
+- [x] 浅色 / 深色 / 跟随系统
+- [x] 顶部 Toast banner（info / success / warning / error）+ 自动消失 + 重试
+
+### 阶段 4 — 主界面（v1.1.0）
+- [x] ToolCard 视觉升级（风险标 / tool id / 进度环 / hover）
+- [x] Home 可更新区接 Sparkle
+- [x] Settings 关于卡片（app icon gradient + 名字 + 副标题 + 版本/最低系统/架构 + GitHub + 致谢）
+
+### 阶段 5 — 内容中心（v1.1.0）
+- [x] Content 教程 12 条（仅元数据 + 原文链接，不下载视频）
 
 ### 阶段 1 — 工程骨架
 - [x] Tuist 4 工程：14 个 framework + 5 个 unit test target + 1 个 .app
 - [x] Sparkle 2.9.5 依赖解析成功
 - [x] 14 个 framework 全部编译通过（arm64 / macOS 14+）
-- [x] `Coding Tools.app` 完整构建产物（沙盒开启 + entitlements）
-- [x] 4 个单元测试模块全部通过：DomainTests / CatalogTests / InstallerTests / ManifestSecurityTests
-- [x] 5 个 test target + 4 个显式 test scheme（AppTests 待阶段 3 子代理 B 处理）
-- [x] 9 个发布脚本（build / run-tests / bump-version / package-release / sign-release / notarize-release / generate-appcast / release / run-tests）
+- [x] `Coding Tools.app` 完整构建产物
+- [x] 单元测试模块：DomainTests / CatalogTests / InstallerTests / ManifestSecurityTests
+- [x] 9 个发布脚本
 - [x] CI workflow 占位：`.github/workflows/ci.yml` + `release.yml`
 
 ### 协作基础
 - [x] AGENTS.md（Agent 协作入口）
 - [x] `.multi-agent-collaboration/` v3 文档总线
-  - `project.yaml`（项目身份）
-  - `protocol.yaml`（事件 / 角色 / 治理）
-  - `runs/run-001/`（agents.yaml + 12 个任务 + state.yaml + next-action.md）
-  - 3 个子代理：A=Catalog+Installer / B=UI+Content+i18n / C=Release+Update+Security
-
-### 仓库
 - [x] `.gitignore`（Xcode / Tuist / Sparkle / 密钥）
 - [x] git 仓库初始化，初始 commit `f1b76c2`
-- [x] 默认分支 main
+
+### v1.2.1 文档清理 patch（本轮）
+- [x] CHANGELOG.md 去重：移除 `release.sh` 多次发版留下的「暂未发布」重复段，每版本只保留一条 `### Changed`；补全 `compare` 链接脚注
+- [x] `release.sh` Python 段修复：去掉重复生成 `## [Unreleased]` 模板的逻辑，每次发版只插入新版本段、不污染既有结构
+- [x] PROJECT_STATUS.md 阶段状态对齐：阶段 2–7 标 ✅，阶段 8 待启动；本轮 v1.2.1 记录到「已完成」
 
 ## 进行中
 

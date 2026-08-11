@@ -253,11 +253,11 @@ if [[ "${SKIP_PUBLISH:-0}" != "1" ]]; then
     echo "" >> "$TMP_CHANGELOG"
     # 在 ## [Unreleased] 后插入新段；如果不存在则追加到文件头
     if grep -q "## \[Unreleased\]" "$CHANGELOG"; then
-      awk '/^## \[Unreleased\]/{print; print ""; print "### Changed"; print ""; print "- 暂未发布"; print ""; next} /^## / && !/Unreleased/{system("cat '"$TMP_CHANGELOG"'"); print; next} {print}' "$CHANGELOG" > "$TMP_CHANGELOG.tmp"
-      # 简化：直接在 ## [Unreleased] 段下追加新版本
+      # 在已有 `## [Unreleased]\n\n### Changed\n\n- 暂未发布\n\n` 段后插入新版本段；
+      # 不再重复生成 `### Changed - 暂未发布`，避免每次发版累积重复块。
       python3 -c "
-import sys
-with open('$CHANGELOG') as f: content = f.read()
+with open('$CHANGELOG') as f:
+    content = f.read()
 new_section = '''## [$VERSION] - $DATE
 
 ### Changed
@@ -265,16 +265,24 @@ new_section = '''## [$VERSION] - $DATE
 - $NOTES
 
 '''
-content = content.replace('## [Unreleased]', '## [Unreleased]\n\n### Changed\n\n- 暂未发布\n', 1)
-content = content.replace('## [Unreleased]\n\n### Changed\n\n- 暂未发布\n', '## [Unreleased]\n\n### Changed\n\n- 暂未发布\n\n' + new_section)
-with open('$TMP_CHANGELOG', 'w') as f: f.write(content)
+marker = '## [Unreleased]\n\n### Changed\n\n- 暂未发布\n\n'
+if marker in content:
+    content = content.replace(marker, marker + new_section, 1)
+else:
+    # 兼容：CHANGELOG 还没有标准 Unreleased 段，就在标题后插入
+    content = content.replace(
+        '## [Unreleased]',
+        '## [Unreleased]\n\n### Changed\n\n- 暂未发布\n\n' + new_section,
+        1,
+    )
+with open('$TMP_CHANGELOG', 'w') as f:
+    f.write(content)
 "
       mv "$TMP_CHANGELOG" "$CHANGELOG"
     else
       # 文件没有 Unreleased 段，直接追加
       cat "$TMP_CHANGELOG" >> "$CHANGELOG"
     fi
-    rm -f "$TMP_CHANGELOG.tmp"
   fi
 
   git add -A
