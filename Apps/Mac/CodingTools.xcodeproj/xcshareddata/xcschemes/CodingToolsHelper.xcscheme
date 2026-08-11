@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-               BuildableName = "Installers.framework"
-               BlueprintName = "Installers"
+               BlueprintIdentifier = "069AB5248E42398FBBA571CA"
+               BuildableName = "CodingToolsHelper.xpc"
+               BlueprintName = "CodingToolsHelper"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -26,19 +26,9 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      disableMainThreadChecker = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "43C772A10499BAFC1DCB3709"
-               BuildableName = "InstallerTests.xctest"
-               BlueprintName = "InstallerTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -54,9 +44,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-            BuildableName = "Installers.framework"
-            BlueprintName = "Installers"
+            BlueprintIdentifier = "069AB5248E42398FBBA571CA"
+            BuildableName = "CodingToolsHelper.xpc"
+            BlueprintName = "CodingToolsHelper"
             ReferencedContainer = "container:CodingTools.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -70,9 +60,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
-            BuildableName = "Installers.framework"
-            BlueprintName = "Installers"
+            BlueprintIdentifier = "069AB5248E42398FBBA571CA"
+            BuildableName = "CodingToolsHelper.xpc"
+            BlueprintName = "CodingToolsHelper"
             ReferencedContainer = "container:CodingTools.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

@@ -2,13 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- v1.0.0 dev/sideload 模式：暂关沙盒，方便 brew/npm/curl 真跑；
-	     v1.1 路线：引入 XPC Privileged Helper 后再开回沙盒。 -->
+	<!-- 阶段 9（v1.5.0）路线：把 brew / npm / 文件写入交给 XPC Helper（com.codingtools.helper），
+	     主 App 开 sandbox 后通过 XPC 与 Helper 通信。
+
+	     本轮（v1.2.x → v1.5.0-rc）：架构就位（Helper target / protocol / HelperClient），
+	     但 sandbox 暂不开启 —— 开启后所有 installer 调用必须经 Helper，而 Helper 端到端验证
+	     需要 Apple Developer ID（公证书）+ launchd 服务注册。等待阶段 10 完成后再开 sandbox。 -->
 	<key>com.apple.security.network.client</key>
 	<true/>
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
 	<key>com.apple.security.files.downloads.read-write</key>
 	<true/>
+	<!-- 允许连接 com.codingtools.helper XPC service（即便 sandbox 关掉也要声明） -->
+	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+	<array>
+		<string>com.codingtools.helper</string>
+	</array>
 </dict>
 </plist>

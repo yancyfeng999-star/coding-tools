@@ -198,6 +198,7 @@ let project = Project(
                 .target(name: "Theme"),
                 .target(name: "Updates"),
                 .target(name: "UI"),
+                .target(name: "CodingToolsHelper"),  // 阶段 9：XPC Helper 嵌入 App
                 .external(name: "Sparkle"),
             ],
             settings: .settings(
@@ -210,6 +211,34 @@ let project = Project(
                     "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
                     "INFOPLIST_KEY_LSUIElement": "YES",
                     "INFOPLIST_KEY_LSApplicationCategoryType": "public.app-category.developer-tools",
+                ]
+            )
+        ),
+
+        // ============== XPC Helper (阶段 9) ==============
+        // 独立进程：brew / npm / 文件写入都在 Helper 里跑，主 App 开 sandbox 后
+        // 通过 XPC 与 Helper 通信。Helper 自己有按需 entitlements（不强制 sandbox）。
+        .target(
+            name: "CodingToolsHelper",
+            destinations: .macOS,
+            product: .xpc,
+            bundleId: "com.codingtools.helper",
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .file(path: "Helper/Info.plist"),
+            sources: ["Helper/**"],
+            entitlements: .file(path: "Helper/Helper.entitlements"),
+            dependencies: [
+                .target(name: "Installers"),
+                .target(name: "ProcessExecution"),
+                .target(name: "Domain"),
+            ],
+            settings: .settings(
+                base: [
+                    "PRODUCT_NAME": "CodingToolsHelper",
+                    "EXECUTABLE_NAME": "CodingToolsHelper",
+                    "CODE_SIGN_IDENTITY": "-",
+                    "CODE_SIGNING_ALLOWED": "YES",
+                    "SKIP_INSTALL": "YES",
                 ]
             )
         ),
@@ -292,6 +321,18 @@ let project = Project(
                 .target(name: "Updates"),
             ]
         ),
+        .target(
+            name: "HelperTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "com.codingtools.helper-tests",
+            deploymentTargets: .macOS("14.0"),
+            sources: ["Tests/HelperTests/**"],
+            dependencies: [
+                .target(name: "Installers"),
+                .target(name: "Domain"),
+            ]
+        ),
     ],
     schemes: [
         .scheme(
@@ -345,6 +386,12 @@ let project = Project(
             shared: true,
             buildAction: .buildAction(targets: [.target("Updates")]),
             testAction: .targets([TestableTarget.testableTarget(target: "UpdatesTests")])
+        ),
+        .scheme(
+            name: "HelperTests",
+            shared: true,
+            buildAction: .buildAction(targets: [.target("Installers")]),
+            testAction: .targets([TestableTarget.testableTarget(target: "HelperTests")])
         ),
     ]
 )
