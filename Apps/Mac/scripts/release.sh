@@ -70,6 +70,8 @@ release.sh — Coding Tools 完整发版（端到端）
   SKIP_DMG / SKIP_ZIP   1 = 跳过对应产物
   NO_BUMP               1 = 跳过版本号 bump
   DRY_RUN               1 = 打印命令但不执行
+
+打包完成后会删除本地 .app，只保留 zip / pkg / dmg，避免启动台出现多份 App。
 EOF
 }
 
@@ -199,7 +201,15 @@ VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST
 BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST")
 
 # 清掉 OUT_DIR 里残留的 .app 和上次失败的 appcast.xml（避免 generate_appcast 解析坏文件）
-rm -rf "$APP_BUNDLE_PATH" "$APPCAST"
+# 本地只保留安装包（zip/pkg/dmg），不要留下会进启动台的 .app。
+if [[ "${DRY_RUN:-0}" != "1" ]]; then
+  rm -rf "$APP_BUNDLE_PATH" "$APPCAST"
+  rm -rf "build/DerivedData/Build/Products/Release/${APP_BUNDLE_NAME}.app"
+  SWEEP=0 ./scripts/cleanup-local-app-products.sh \
+    "build/DerivedData/Build/Products" \
+    "$OUT_DIR" \
+    "$DIST_DIR"
+fi
 
 if [[ -f "$ZIP_PATH" ]]; then
   # Sparkle 2.x: --download-url-prefix **不会**自动插入 tag 段。

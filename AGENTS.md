@@ -150,9 +150,9 @@ Apps/Mac/Sources/
 
 ---
 
-## 9. 已知坑（占位）
+## 9. 已知坑
 
-> 本节将在开发过程中积累。当前项目尚未启动实现，暂无记录。
+- `xcodebuild -destination 'platform=macOS'` 会把 DerivedData 里的 `.app` 注册进 Launch Services，启动台会出现多份「Coding Tools」。打包用 `generic/platform=macOS`；打完包立刻删掉 `.app`，本地只留 `pkg` / `zip` / `dmg`。不要把构建产物拷到 `/Applications` 或打开来当验收。
 
 ---
 

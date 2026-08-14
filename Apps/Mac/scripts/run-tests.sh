@@ -94,3 +94,6 @@ if [[ ${#FAILED_SCHEMES[@]} -gt 0 ]]; then
 fi
 
 echo "✅ All tests OK"
+
+# xcodebuild test 会把 Debug .app 注册进 Launch Services；测完立刻注销并删除。
+SWEEP=0 ./scripts/cleanup-local-app-products.sh "$DERIVED_DATA/Build/Products"
