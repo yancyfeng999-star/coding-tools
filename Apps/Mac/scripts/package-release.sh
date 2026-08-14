@@ -58,7 +58,7 @@ xcodebuild \
   -workspace CodingTools.xcworkspace \
   -scheme CodingTools \
   -configuration "$CONFIG" \
-  -destination 'platform=macOS' \
+  -destination "${DESTINATION:-generic/platform=macOS}" \
   -derivedDataPath ./build/DerivedData \
   build
 
@@ -120,6 +120,11 @@ if [[ -n "${SPARKLE_PRIVATE_KEY:-}" && -f "${SPARKLE_PRIVATE_KEY}" && "${SKIP_ZI
     echo "    ⚠️  sign_update not found at $SPARKLE_BIN/sign_update；跳过签名"
   fi
 fi
+
+# 打完包只留 dmg/zip，删除会进启动台的 .app。
+SWEEP=0 ./scripts/cleanup-local-app-products.sh \
+  "$(dirname "$APP_PATH")" \
+  "$OUT_DIR"
 
 echo
 echo "✅ Release artifacts:"
