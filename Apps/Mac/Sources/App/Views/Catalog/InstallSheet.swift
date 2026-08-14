@@ -4,24 +4,21 @@ import Theme
 import UI
 import Domain
 
-/// 安装进度：实时输出（脱敏后）+ 取消。
-///
-/// 阶段 11 修复（P0-G2-3 / G4-4）：不再写死 Homebrew + low + brew install <slug>。
-/// 真实读取 tool.installOptions.first 并按 type 渲染：
-/// - 来源 = `opt.type` 翻译（homebrew-formula / homebrew-cask / mise-tool / official-artifact / npm-global）
-/// - 风险 = `opt.riskLevel`
-/// - 操作 = 真实命令预览（brew install <packageName> / mise use <tool>@<version> 等）
+/// 安装确认 / 运行。必须拿到真实可信 option，不得合成默认安装命令。
 struct InstallSheet: View {
     let tool: Tool
     let installOption: InstallOption
     @EnvironmentObject private var state: AppState
     @Environment(\.dismiss) private var dismiss
+    @State private var confirmCloseRunning = false
+    @State private var logExpanded = false
 
-    init(tool: Tool, installOption: InstallOption? = nil) {
+    init(tool: Tool, installOption: InstallOption) {
         self.tool = tool
-        self.installOption = installOption ?? tool.installOptions.first
-            ?? InstallOption(type: .npmGlobal, riskLevel: .low)
+        self.installOption = installOption
     }
+
+    private var presentation: ToolPresentation { state.presentation(for: tool) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -34,6 +31,22 @@ struct InstallSheet: View {
             }
         }
         .frame(minWidth: 520, idealWidth: 600, minHeight: 400)
+        .confirmationDialog(
+            "install.close.running.title",
+            isPresented: $confirmCloseRunning,
+            titleVisibility: .visible
+        ) {
+            Button("install.close.running.confirm", role: .destructive) {
+                state.closeInstall()
+                dismiss()
+            }
+            Button("common.cancel", role: .cancel) {}
+        } message: {
+            Text("install.close.running.message")
+        }
+        .onExitCommand {
+            requestClose()
+        }
     }
 
     private var header: some View {
@@ -41,15 +54,22 @@ struct InstallSheet: View {
             ToolIconView(toolID: tool.id, category: tool.category, size: 36)
             VStack(alignment: .leading, spacing: 2) {
                 Text(LocalizedStringKey("install.sheet.title \(tool.name)"))
-                    .font(.headline)
+                    .tokenFont(.sectionTitle)
                 Text(sourceKey)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .tokenFont(.tinyMetadata)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
             Spacer()
             RiskBadge(level: installOption.riskLevel)
+            Button(action: requestClose) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
+            }
+            .buttonStyle(.borderless)
+            .help("common.close")
+            .accessibilityLabel(Text("common.close"))
         }
-        .padding(16)
+        .padding(DesignTokens.Space.space4)
     }
 
     private var sourceKey: LocalizedStringKey {
@@ -64,19 +84,24 @@ struct InstallSheet: View {
 
     @ViewBuilder
     private var preview: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: DesignTokens.Space.space4) {
             Text("install.preview.title")
-                .font(.headline)
+                .tokenFont(.sectionTitle)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: DesignTokens.Space.space2) {
                 row(LocalizedStringKey("install.preview.tool"), value: tool.name)
+                row(LocalizedStringKey("tool.local.version"), value: localVersionText)
+                row(LocalizedStringKey("tool.latest.version"), value: latestVersionText)
                 row(LocalizedStringKey("install.preview.source"), value: sourceDescription)
                 row(LocalizedStringKey("install.preview.privilege"), value: privilegeDescription)
                 row(LocalizedStringKey("install.preview.command"), value: commandPreview)
                 row(LocalizedStringKey("install.preview.effect"), value: effectDescription)
             }
-            .padding(12)
-            .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .padding(DesignTokens.Space.space3)
+            .background(
+                DesignTokens.Palette.contentBackground,
+                in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
+            )
 
             HStack {
                 Spacer()
@@ -87,9 +112,26 @@ struct InstallSheet: View {
                 }
                 .keyboardShortcut(.defaultAction)
                 .buttonStyle(.borderedProminent)
+                .disabled(InstallConfirmation.resolvedOption(tool: tool, preferred: installOption) == nil)
             }
         }
-        .padding(16)
+        .padding(DesignTokens.Space.space4)
+    }
+
+    private var localVersionText: String {
+        switch presentation.localDisplay {
+        case .known(let value): return value
+        case .unreadable: return String(localized: "tool.local.unreadable")
+        case .none: return "—"
+        }
+    }
+
+    private var latestVersionText: String {
+        switch presentation.latestDisplay {
+        case .known(let value): return value
+        case .notQueried: return String(localized: "tool.latest.notQueried")
+        case .unavailable: return String(localized: "tool.latest.unavailable")
+        }
     }
 
     private var sourceDescription: String {
@@ -103,12 +145,9 @@ struct InstallSheet: View {
     }
 
     private var privilegeDescription: String {
-        // 当前阶段所有 adapter 都用当前用户权限；将来 brew/mise 需要 admin
-        // 会自动检测 brew 路径再升级文案。
-        "当前用户权限"
+        String(localized: "install.privilege.currentUser")
     }
 
-    /// 真实命令预览（P0-G2-3 修复）：从 InstallOption 字段生成实际命令。
     private var commandPreview: String {
         switch installOption.type {
         case .homebrewFormula:
@@ -119,8 +158,7 @@ struct InstallSheet: View {
             let v = installOption.version.map { "@\($0)" } ?? "@latest"
             return "mise use \(installOption.toolName ?? tool.id)\(v)"
         case .officialArtifact:
-            let url = installOption.url?.absoluteString ?? "<missing url>"
-            return "download \(url)"
+            return "download \(installOption.url?.absoluteString ?? "<missing url>")"
         case .npmGlobal:
             let pkg = installOption.packageName ?? tool.id
             if let v = installOption.versionRule, !v.isEmpty {
@@ -132,17 +170,17 @@ struct InstallSheet: View {
 
     private var effectDescription: String {
         switch installOption.type {
-        case .homebrewFormula: return "安装 CLI 到 /opt/homebrew/bin"
-        case .homebrewCask:    return "安装 App 到 /Applications"
-        case .miseTool:        return "通过 mise 切换 runtime"
-        case .officialArtifact: return "下载并打开官方包"
-        case .npmGlobal:       return "安装到 npm 全局目录"
+        case .homebrewFormula: return String(localized: "install.effect.formula")
+        case .homebrewCask:    return String(localized: "install.effect.cask")
+        case .miseTool:        return String(localized: "install.effect.mise")
+        case .officialArtifact: return String(localized: "install.effect.artifact")
+        case .npmGlobal:       return String(localized: "install.effect.npm")
         }
     }
 
     @ViewBuilder
     private var running: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.Space.space3) {
             HStack {
                 stateView
                 Spacer()
@@ -160,50 +198,62 @@ struct InstallSheet: View {
                 }
             }
 
-            ScrollView {
-                Text(state.installLog.isEmpty ? "common.loading" : state.installLog)
-                    .font(.system(.body, design: .monospaced))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(12)
-                    .textSelection(.enabled)
+            DisclosureGroup(isExpanded: $logExpanded) {
+                ScrollView {
+                    Text(state.installLog.isEmpty ? String(localized: "common.loading") : state.installLog)
+                        .tokenFont(.code)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(DesignTokens.Space.space3)
+                        .textSelection(.enabled)
+                }
+                .background(
+                    DesignTokens.Palette.hoverSurface,
+                    in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
+                )
+                .frame(maxHeight: .infinity)
+            } label: {
+                Text("install.log.toggle")
+                    .tokenFont(.supporting)
             }
-            .background(Color.black.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .frame(maxHeight: .infinity)
         }
-        .padding(16)
+        .padding(DesignTokens.Space.space4)
     }
 
     @ViewBuilder
     private var stateView: some View {
         switch state.installState {
         case .running:
-            HStack(spacing: 6) {
-                ProgressView()
-                    .controlSize(.small)
+            HStack(spacing: DesignTokens.Space.space2) {
+                ProgressView().controlSize(.small)
                 Text("install.running")
             }
         case .cancelling:
-            HStack(spacing: 6) {
-                ProgressView()
-                    .controlSize(.small)
+            HStack(spacing: DesignTokens.Space.space2) {
+                ProgressView().controlSize(.small)
                 Text("install.cancelling")
             }
         case .completed:
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Space.space2) {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(DesignTokens.Palette.success)
                 Text("install.success")
             }
+        case .completedPendingConfirmation:
+            HStack(spacing: DesignTokens.Space.space2) {
+                Image(systemName: "checkmark.circle")
+                    .foregroundStyle(DesignTokens.Palette.warning)
+                Text("tool.status.installPendingConfirm")
+            }
         case .failed:
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Space.space2) {
                 Image(systemName: "xmark.octagon.fill")
-                    .foregroundStyle(.red)
+                    .foregroundStyle(DesignTokens.Palette.danger)
                 Text("install.failed")
             }
         case .cancelled:
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Space.space2) {
                 Image(systemName: "stop.circle.fill")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
                 Text("install.cancel")
             }
         case .idle:
@@ -211,12 +261,22 @@ struct InstallSheet: View {
         }
     }
 
+    private func requestClose() {
+        if state.installState == .running || state.installState == .cancelling {
+            confirmCloseRunning = true
+        } else {
+            state.closeInstall()
+            dismiss()
+        }
+    }
+
     private func row(_ label: LocalizedStringKey, value: String) -> some View {
         HStack(alignment: .top) {
             Text(label)
-                .foregroundStyle(.secondary)
-                .frame(width: 80, alignment: .leading)
+                .foregroundStyle(DesignTokens.Palette.secondaryText)
+                .frame(width: 96, alignment: .leading)
             Text(value)
+                .tokenFont(.code)
                 .textSelection(.enabled)
         }
     }

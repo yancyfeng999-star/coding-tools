@@ -3,6 +3,7 @@ import Sparkle
 import Updates
 import ProcessExecution
 import UI
+import Theme
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -98,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func applyAppearance() {
-        // 阶段 6 接入 Theme 模块；此处仅占位
+        ThemeManager.shared.applyAppearancePreference()
     }
 
     // MARK: - URL handler (codingtools:// deep link)

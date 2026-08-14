@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import Theme
 
 // MARK: - Toast
 //
@@ -66,6 +67,7 @@ public final class ToastCenter: ObservableObject {
 
 public struct ToastView: View {
     @ObservedObject public var center: ToastCenter
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(center: ToastCenter) {
         self.center = center
@@ -74,21 +76,20 @@ public struct ToastView: View {
     public var body: some View {
         Group {
             if let toast = center.current {
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: DesignTokens.Space.space3) {
                     Image(systemName: icon(for: toast.kind))
-                        .font(.title3)
+                        .tokenFont(.sectionTitle)
                         .foregroundStyle(tint(for: toast.kind))
-                    VStack(alignment: .leading, spacing: 4) {
-                        // LocalizedStringKey 渲染（带 %@ 参数）
+                    VStack(alignment: .leading, spacing: DesignTokens.Space.space1) {
                         if let arg = toast.messageArg {
                             Text(LocalizedStringKey(stringLiteral: formatMessage(key: toast.messageKey, arg: arg)))
                         } else {
                             Text(toast.messageKey)
                         }
                     }
-                    .font(.subheadline)
+                    .tokenFont(.supporting)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    HStack(spacing: 6) {
+                    HStack(spacing: DesignTokens.Space.space2) {
                         if let retry = toast.retry {
                             Button {
                                 retry()
@@ -102,24 +103,24 @@ public struct ToastView: View {
                             center.dismiss()
                         } label: {
                             Image(systemName: "xmark")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(DesignTokens.Palette.secondaryText)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(Text("common.close"))
                     }
                 }
-                .padding(12)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(DesignTokens.Space.space3)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(tint(for: toast.kind).opacity(0.4), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
+                        .stroke(tint(for: toast.kind).opacity(0.35), lineWidth: 1)
                 )
-                .shadow(color: .black.opacity(0.12), radius: 8, y: 2)
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .transition(.move(edge: .top).combined(with: .opacity))
+                .padding(.horizontal, DesignTokens.Space.space4)
+                .padding(.top, DesignTokens.Space.space3)
+                .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: center.current?.id)
+        .animation(DesignTokens.animation(reduceMotion: reduceMotion), value: center.current?.id)
     }
 
     private func icon(for kind: Toast.Kind) -> String {
@@ -141,10 +142,10 @@ public struct ToastView: View {
 
     private func tint(for kind: Toast.Kind) -> Color {
         switch kind {
-        case .info: return .blue
-        case .success: return .green
-        case .warning: return .orange
-        case .error: return .red
+        case .info: return DesignTokens.Palette.accent
+        case .success: return DesignTokens.Palette.success
+        case .warning: return DesignTokens.Palette.warning
+        case .error: return DesignTokens.Palette.danger
         }
     }
 }

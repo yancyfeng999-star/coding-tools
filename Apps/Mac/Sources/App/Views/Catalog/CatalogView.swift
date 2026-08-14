@@ -94,8 +94,8 @@ struct CatalogView: View {
             } else {
                 ScrollView {
                     LazyVGrid(columns: [
-                        GridItem(.adaptive(minimum: 220, maximum: 280), spacing: 14)
-                    ], spacing: 14) {
+                        GridItem(.adaptive(minimum: 220, maximum: 280), spacing: DesignTokens.Space.space4)
+                    ], spacing: DesignTokens.Space.space4) {
                         ForEach(filtered) { tool in
                             ToolCard(tool: tool)
                                 .onTapGesture {
@@ -103,7 +103,7 @@ struct CatalogView: View {
                                 }
                         }
                     }
-                    .padding(20)
+                    .padding(DesignTokens.Space.space5)
                 }
             }
         }
@@ -134,171 +134,138 @@ private struct ToolCard: View {
     @EnvironmentObject private var state: AppState
     @State private var isHovering = false
 
-    private var probe: InstallationProbe? { state.probe(for: tool.id) }
-    private var health: HealthStatus { probe?.healthStatus ?? .notInstalled }
+    private var presentation: ToolPresentation { state.presentation(for: tool) }
+    private var health: HealthStatus { state.probe(for: tool.id)?.healthStatus ?? .notInstalled }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // 头部：icon + name + hover-reveal action tray
+        VStack(alignment: .leading, spacing: DesignTokens.Space.space3) {
             HStack(alignment: .top) {
                 ToolIconView(toolID: tool.id, category: tool.category, size: 40)
                 Spacer()
-                ToolCardActionTray(isHovering: isHovering) {
-                    Button {
-                        state.toggleFavorite(tool.id)
-                    } label: {
-                        Image(systemName: state.isFavorite(tool.id) ? "star.fill" : "star")
-                            .foregroundStyle(state.isFavorite(tool.id) ? .yellow : .secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .help("tool.favorite")
+                Button {
+                    state.toggleFavorite(tool.id)
+                } label: {
+                    Image(systemName: state.isFavorite(tool.id) ? "star.fill" : "star")
+                        .foregroundStyle(state.isFavorite(tool.id) ? DesignTokens.Palette.warning : DesignTokens.Palette.secondaryText)
                 }
+                .buttonStyle(.plain)
+                .help(LocalizedStringKey(state.isFavorite(tool.id) ? "tool.unfavorite" : "tool.favorite"))
+                .accessibilityLabel(Text(state.isFavorite(tool.id) ? "tool.unfavorite" : "tool.favorite"))
             }
             Text(tool.name)
-                .font(.headline)
+                .tokenFont(.itemTitle)
+                .foregroundStyle(DesignTokens.Palette.primaryText)
                 .lineLimit(1)
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Space.space2) {
                 Text(tool.id)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.tertiary)
+                    .tokenFont(.compactCode)
+                    .foregroundStyle(DesignTokens.Palette.tertiaryText)
                 Spacer()
-                RiskBadge(level: tool.riskLevel)
+                CategoryLabel(category: tool.category)
+                    .tokenFont(.tinyMetadata)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
-            // 状态行：已安装 vX.Y.Z / 未安装 / 已过期 / 正在安装
             statusRow
-            // compound footer（按 kind 分化）
-            compoundFooter
+            primaryRow
         }
         .toolCardChrome(status: health, isHovering: isHovering)
-        .scaleEffect(isHovering ? 1.015 : 1.0)
-        .animation(.easeInOut(duration: 0.12), value: isHovering)
         .contentShape(Rectangle())
         .onHover { isHovering = $0 }
-        .onTapGesture {
-            state.selectedTool = tool
-        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text(tool.name))
+        .accessibilityValue(Text(LocalizedStringKey(presentation.statusKey)))
     }
-
-    // MARK: - 状态行
 
     @ViewBuilder
     private var statusRow: some View {
-        HStack(spacing: 6) {
-            if state.installingTool?.id == tool.id {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .controlSize(.small)
-                Text("catalog.card.installing")
-                    .font(.caption)
-                    .foregroundStyle(.blue)
-                Spacer()
-            } else {
-                statusBadge
-                Spacer()
-            }
+        HStack(spacing: DesignTokens.Space.space2) {
+            presentation.badge
+            versionCaption
+            Spacer()
         }
     }
 
-    /// 状态徽章：HealthBadge + 已安装版本号 + latest version delta
     @ViewBuilder
-    private var statusBadge: some View {
-        HStack(spacing: 4) {
-            HealthBadge(status: health)
-            if let v = probe?.installedVersion, !v.isEmpty {
-                Text("v\(v)")
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-                if let latest = state.latestVersion(for: tool.id), latest != v {
-                    Image(systemName: "arrow.right")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                    Text("v\(latest)")
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.orange)
-                }
-            } else if let latest = state.latestVersion(for: tool.id) {
-                // 未装但有 latest → 显示「目标版本」灰字
+    private var versionCaption: some View {
+        switch presentation.localDisplay {
+        case .known(let local):
+            Text("v\(local)")
+                .tokenFont(.compactCode)
+                .foregroundStyle(DesignTokens.Palette.secondaryText)
+                .monospacedDigit()
+        case .unreadable:
+            Text("tool.local.unreadable")
+                .tokenFont(.tinyMetadata)
+                .foregroundStyle(DesignTokens.Palette.secondaryText)
+        case .none:
+            EmptyView()
+        }
+        switch presentation.latestDisplay {
+        case .known(let latest):
+            if presentation.showsUpdateAction {
+                Image(systemName: "arrow.right")
+                    .font(.caption2)
+                    .foregroundStyle(DesignTokens.Palette.tertiaryText)
+                    .accessibilityHidden(true)
                 Text("v\(latest)")
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.tertiary)
+                    .tokenFont(.compactCode)
+                    .foregroundStyle(DesignTokens.Palette.warning)
+                    .monospacedDigit()
             }
+        case .notQueried, .unavailable:
+            EmptyView()
         }
     }
-
-    // MARK: - Compound footer
 
     @ViewBuilder
-    private var compoundFooter: some View {
-        if state.installingTool?.id == tool.id {
-            HStack {
-                Spacer()
-                Text("catalog.card.installing")
-                    .font(.caption)
-                    .foregroundStyle(.blue)
-                Spacer()
-            }
-            .padding(.vertical, 6)
-        } else {
-            HStack(spacing: 6) {
-                Button {
-                    state.installingTool = tool
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: buttonIcon)
-                        Text(buttonTitle)
-                    }
-                    .font(.caption.weight(.medium))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
+    private var primaryRow: some View {
+        HStack(spacing: DesignTokens.Space.space2) {
+            Button {
+                performPrimary()
+            } label: {
+                HStack(spacing: DesignTokens.Space.space1) {
+                    Image(systemName: presentation.primarySystemImage)
+                    Text(primaryTitle)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(buttonTint)
-
-                // 详情按钮（hover-reveal）
-                if isHovering {
-                    Button {
-                        state.selectedTool = tool
-                    } label: {
-                        Image(systemName: "arrow.up.right.square")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.bordered)
-                    .help("tool.detail")
-                }
+                .tokenFont(.metadata)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DesignTokens.Space.space2)
             }
-        }
-    }
+            .buttonStyle(.borderedProminent)
+            .disabled(!presentation.primaryEnabled)
+            .accessibilityLabel(Text(LocalizedStringKey(presentation.primaryLabelKey)))
 
-    private var buttonIcon: String {
-        switch health {
-        case .installed:    return "arrow.clockwise"
-        case .outdated:     return "arrow.up.circle.fill"
-        case .broken:       return "wrench.adjustable"
-        case .notInstalled: return "arrow.down.to.line.compact"
-        }
-    }
-
-    private var buttonTitle: LocalizedStringKey {
-        switch health {
-        case .installed:
-            // 已装且有 latest：升版用 "Update to vX.Y.Z"，否则 "Reinstall"
-            if state.isOutdated(toolID: tool.id),
-               let latest = state.latestVersion(for: tool.id) {
-                return "catalog.card.updateTo \(latest)"
+            Button {
+                state.selectedTool = tool
+            } label: {
+                Image(systemName: "arrow.up.right.square")
             }
-            return "catalog.card.reinstall"
-        case .outdated:     return "catalog.card.update"
-        case .broken:       return "catalog.card.repair"
-        case .notInstalled: return "catalog.card.install"
+            .buttonStyle(.bordered)
+            .help("tool.detail")
+            .accessibilityLabel(Text("tool.detail"))
         }
     }
 
-    private var buttonTint: Color {
-        switch health {
-        case .installed:    return .secondary
-        case .outdated:     return .orange
-        case .broken:       return .red
-        case .notInstalled: return .blue
+    private var primaryTitle: LocalizedStringKey {
+        switch presentation.primaryAction {
+        case .update(let version):
+            return "catalog.card.updateTo \(version)"
+        default:
+            return LocalizedStringKey(presentation.primaryLabelKey)
+        }
+    }
+
+    private func performPrimary() {
+        switch presentation.primaryAction {
+        case .install, .update, .repair, .reinstall, .retry:
+            guard InstallConfirmation.resolvedOption(tool: tool) != nil else { return }
+            state.installingTool = tool
+        case .refresh:
+            Task { await state.refreshProbe(toolID: tool.id) }
+        case .open:
+            state.launch(tool)
+        case .unavailable, .none:
+            break
         }
     }
 }
@@ -326,25 +293,7 @@ func icon(for category: ToolCategory) -> String {
 }
 
 func color(for category: ToolCategory) -> Color {
-    switch category {
-    case .editor: return .indigo
-    case .terminal: return .gray
-    case .gitCollaboration: return .orange
-    case .node: return .green
-    case .python: return .blue
-    case .go: return .cyan
-    case .rust: return .brown
-    case .java: return .red
-    case .database: return .teal
-    case .apiDebug: return .purple
-    case .docker: return .blue
-    case .aiCoding: return .pink
-    case .frontend: return .pink
-    case .backend: return .mint
-    case .devops: return .gray
-    case .cliUtility: return .secondary
-    case .languageRuntime: return .indigo
-    }
+    CategoryTint.color(for: category)
 }
 
 /// 共享的分类标签。**走 `LocalizedStringKey` 直接字面量**，避免

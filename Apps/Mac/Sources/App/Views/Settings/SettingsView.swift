@@ -4,12 +4,15 @@ import Theme
 import UI
 import Updates
 
-/// 设置：主题 / 语言 / 更新（Sparkle 静默流 + 进度条）/ 通用。
+/// 设置：外观 / 语言 / 应用更新 / 通用 / 支持与反馈 / 诊断与恢复 / 关于。
 struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
     @EnvironmentObject private var appState: AppState
     @ObservedObject private var language = LanguageManager.shared
     @ObservedObject private var theme = ThemeManager.shared
+    @State private var showDiagnosticPreview = false
+
+    private var updateEntry: AppUpdateEntry { AppUpdateEntry.forSettings(appState.updateState) }
 
     var body: some View {
         NavigationStack {
@@ -18,11 +21,21 @@ struct SettingsView: View {
                 languageSection
                 updatesSection
                 generalSection
+                supportSection
+                diagnosticsSection
                 aboutCard
             }
             .formStyle(.grouped)
             .navigationTitle("settings.title")
+            .sheet(isPresented: $showDiagnosticPreview) {
+                DiagnosticPreviewSheet(summary: diagnosticSummary) {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(diagnosticSummary.previewText, forType: .string)
+                    showDiagnosticPreview = false
+                }
+            }
         }
+        .background(DesignTokens.Palette.appBackground)
     }
 
     // MARK: - Sections
@@ -52,8 +65,6 @@ struct SettingsView: View {
         }
     }
 
-    /// Sparkle 更新区：本地版本 / 远端版本 / 状态 / 进度条 / 操作按钮。
-    /// 全部数据来自 AppState.updateState（订阅 UpdateFlowModel），不弹窗。
     private var updatesSection: some View {
         Section {
             versionRow(label: "settings.update.local",
@@ -71,20 +82,28 @@ struct SettingsView: View {
                 Text("settings.update.channel")
                 Spacer()
                 Text("settings.update.channel.stable")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
             HStack {
                 Text("settings.update.feed")
                 Spacer()
                 Text(feedURL)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
+                    .tokenFont(.compactCode)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .textSelection(.enabled)
             }
+
+            Button {
+                appState.checkForUpdates()
+            } label: {
+                Label("settings.update.check", systemImage: "arrow.triangle.2.circlepath")
+            }
+            .disabled(!updateEntry.isEnabled)
+            .accessibilityLabel(Text("settings.update.check"))
         } header: {
-            Text("settings.section.update")
+            Text("settings.section.appUpdate")
         } footer: {
             Text("settings.update.footer")
         }
@@ -92,100 +111,126 @@ struct SettingsView: View {
 
     private var generalSection: some View {
         Section {
+            Toggle(isOn: autoCheckBinding) {
+                Text("settings.general.autoCheck")
+            }
+            Toggle(isOn: autoDownloadBinding) {
+                Text("settings.general.autoDownload")
+            }
             HStack {
                 Text("settings.version")
                 Spacer()
                 Text(appVersionString)
-                    .foregroundStyle(.secondary)
-            }
-            HStack {
-                Text("settings.about")
-                Spacer()
-                Text("app.name")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
+                    .monospacedDigit()
             }
         } header: {
             Text("settings.section.general")
         }
     }
 
-    // MARK: - About card (app icon + 名字 + 版本 + GitHub + 致谢)
+    private var supportSection: some View {
+        Section {
+            Button {
+                openURL(IssueURLBuilder.bugReportURL(metadata: issueMetadata))
+            } label: {
+                Label("settings.support.reportIssue", systemImage: "exclamationmark.bubble")
+            }
+            Button {
+                openURL(IssueURLBuilder.featureIdeaURL())
+            } label: {
+                Label("settings.support.featureIdea", systemImage: "lightbulb")
+            }
+            Button {
+                openURL(URL(string: IssueURLBuilder.homepageURL)!)
+            } label: {
+                Label("settings.support.homepage", systemImage: "globe")
+            }
+            Button {
+                openURL(URL(string: IssueURLBuilder.helpURL)!)
+            } label: {
+                Label("settings.support.help", systemImage: "questionmark.circle")
+            }
+            Button {
+                showDiagnosticPreview = true
+            } label: {
+                Label("settings.support.copyDiagnostics", systemImage: "doc.on.clipboard")
+            }
+        } header: {
+            Text("settings.section.support")
+        } footer: {
+            Text("settings.support.footer")
+        }
+    }
+
+    private var diagnosticsSection: some View {
+        Section {
+            Button("settings.diagnostics.clearHistory") {
+                Task { await appState.clearOperationHistory() }
+            }
+            Button("settings.support.copyDiagnostics") {
+                showDiagnosticPreview = true
+            }
+        } header: {
+            Text("settings.section.diagnostics")
+        } footer: {
+            Text("settings.diagnostics.footer")
+        }
+    }
 
     @ViewBuilder
     private var aboutCard: some View {
         Section {
-            VStack(spacing: 12) {
-                HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: DesignTokens.Space.space3) {
+                HStack(spacing: DesignTokens.Space.space3) {
                     Image("CodingToolsLogo")
                         .resizable()
                         .scaledToFit()
                         .padding(4)
-                        .frame(width: 56, height: 56)
+                        .frame(width: 44, height: 44)
                         .accessibilityLabel(Text("app.name"))
-
                     VStack(alignment: .leading, spacing: 2) {
                         Text("app.name")
-                            .font(.title2.bold())
+                            .tokenFont(.itemTitle)
                         Text("settings.about.subtitle")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .tokenFont(.tinyMetadata)
+                            .foregroundStyle(DesignTokens.Palette.secondaryText)
                             .lineLimit(2)
                     }
                     Spacer()
                 }
-                Divider()
-                HStack {
-                    Text("settings.version")
-                    Spacer()
-                    Text(appVersionString)
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-                HStack {
-                    Text("settings.about.minmacos")
-                    Spacer()
-                    Text("macOS 14.0+")
-                        .foregroundStyle(.secondary)
-                }
-                HStack {
-                    Text("settings.about.architecture")
-                    Spacer()
-                    Text("Universal (arm64 + x86_64)")
-                        .foregroundStyle(.secondary)
-                }
-                Divider()
+                labeled("settings.version", value: appVersionString)
+                labeled("settings.about.minmacos", value: "macOS 14.0+")
+                labeled("settings.about.architecture", value: "Universal (arm64 + x86_64)")
                 Button {
-                    if let url = URL(string: "https://github.com/yancyfeng999-star/coding-tools") {
-                        NSWorkspace.shared.open(url)
-                    }
+                    openURL(URL(string: IssueURLBuilder.homepageURL)!)
                 } label: {
                     HStack {
-                        Image(systemName: "arrow.up.right.square")
-                            .foregroundStyle(.secondary)
                         Text("settings.about.github")
                         Spacer()
                         Text("yancyfeng999-star/coding-tools")
-                            .font(.caption.monospaced())
-                            .foregroundStyle(.tertiary)
+                            .tokenFont(.compactCode)
+                            .foregroundStyle(DesignTokens.Palette.tertiaryText)
                     }
                 }
                 .buttonStyle(.plain)
-
-                HStack {
-                    Text("settings.about.credits")
-                    Spacer()
-                    Text("Sparkle · Tuist · SwiftUI")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
+                labeled("settings.about.credits", value: "Sparkle · Tuist · SwiftUI")
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, DesignTokens.Space.space2)
         } header: {
             Text("settings.section.about")
         }
     }
 
-    // MARK: - Sub-views
+    private func labeled(_ key: LocalizedStringKey, value: String) -> some View {
+        HStack {
+            Text(key)
+            Spacer()
+            Text(value)
+                .foregroundStyle(DesignTokens.Palette.secondaryText)
+                .monospacedDigit()
+        }
+    }
 
     private func versionRow(label: LocalizedStringKey, value: String, build: Int) -> some View {
         HStack {
@@ -193,11 +238,11 @@ struct SettingsView: View {
             Spacer()
             if build > 0 {
                 Text("\(value) (\(build))")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
                     .monospacedDigit()
             } else {
                 Text(value)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
                     .monospacedDigit()
             }
         }
@@ -217,57 +262,52 @@ struct SettingsView: View {
         switch appState.updateState {
         case .idle:
             Text("settings.update.status.idle")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DesignTokens.Palette.secondaryText)
         case .checking:
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Space.space2) {
                 ProgressView().controlSize(.small)
                 Text("settings.update.status.checking")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
         case .upToDate(let remote):
             Label("settings.update.status.upToDate \(remote)", systemImage: "checkmark.circle.fill")
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(.green)
+                .foregroundStyle(DesignTokens.Palette.success)
         case .available(let remote, _, let size):
             VStack(alignment: .trailing, spacing: 2) {
                 Label("settings.update.status.available \(remote)", systemImage: "arrow.down.circle.fill")
-                    .labelStyle(.titleAndIcon)
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(DesignTokens.Palette.accent)
                 Text(byteString(size))
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(.secondary)
+                    .tokenFont(.tinyMetadata)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
         case .downloading(let progress, let bytes, let total):
             VStack(alignment: .trailing, spacing: 2) {
                 Text("settings.update.status.downloading \(Int(progress * 100))")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(DesignTokens.Palette.accent)
                     .monospacedDigit()
                 Text("\(byteString(bytes)) / \(byteString(total))")
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(.secondary)
+                    .tokenFont(.tinyMetadata)
+                    .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
         case .extracting(let progress):
             Text("settings.update.status.extracting \(Int(progress * 100))")
-                .foregroundStyle(.blue)
+                .foregroundStyle(DesignTokens.Palette.accent)
                 .monospacedDigit()
         case .readyToInstall(let remote):
             Label("settings.update.status.readyToInstall \(remote)", systemImage: "arrow.up.circle.fill")
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(.orange)
+                .foregroundStyle(DesignTokens.Palette.warning)
         case .installing:
-            HStack(spacing: 6) {
+            HStack(spacing: DesignTokens.Space.space2) {
                 ProgressView().controlSize(.small)
                 Text("settings.update.status.installing")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(DesignTokens.Palette.accent)
             }
         case .installed:
             Label("settings.update.status.installed", systemImage: "checkmark.seal.fill")
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(.green)
+                .foregroundStyle(DesignTokens.Palette.success)
         case .failed(let reason, _):
             Label(reason, systemImage: "exclamationmark.triangle.fill")
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(.red)
+                .foregroundStyle(DesignTokens.Palette.danger)
                 .lineLimit(1)
         }
     }
@@ -277,28 +317,13 @@ struct SettingsView: View {
         if case .downloading(let progress, _, _) = appState.updateState {
             ProgressView(value: progress)
                 .progressViewStyle(.linear)
-                .tint(.blue)
+                .tint(DesignTokens.Palette.accent)
         } else if case .extracting(let progress) = appState.updateState {
             ProgressView(value: progress)
                 .progressViewStyle(.linear)
-                .tint(.blue)
-        } else {
-            // 不显示进度条占空间
-            EmptyView()
+                .tint(DesignTokens.Palette.accent)
         }
     }
-
-    @ViewBuilder
-    private var actionButton: some View {
-        // 旧的「检查更新」按钮：被 actionRow 取代，保留入口方便 grep
-        Button {
-            appState.checkForUpdates()
-        } label: {
-            Label("settings.update.check", systemImage: "arrow.triangle.2.circlepath")
-        }
-    }
-
-    // MARK: - Helpers
 
     private var remoteVersionDisplay: String {
         switch appState.updateState {
@@ -338,10 +363,97 @@ struct SettingsView: View {
         )
     }
 
+    private var autoCheckBinding: Binding<Bool> {
+        Binding(
+            get: { appState.appUpdatingProvider?()?.isAutomaticChecksEnabled ?? true },
+            set: { appState.appUpdatingProvider?()?.setAutomaticChecksEnabled($0) }
+        )
+    }
+
+    private var autoDownloadBinding: Binding<Bool> {
+        Binding(
+            get: { appState.appUpdatingProvider?()?.isAutomaticDownloadEnabled ?? false },
+            set: { appState.appUpdatingProvider?()?.setAutomaticDownloadEnabled($0) }
+        )
+    }
+
     private var appVersionString: String {
         let dict = Bundle.main.infoDictionary
         let short = (dict?["CFBundleShortVersionString"] as? String) ?? "0.0.0"
         let build = (dict?["CFBundleVersion"] as? String) ?? "1"
         return "\(short) (\(build))"
+    }
+
+    private var issueMetadata: IssueReportMetadata {
+        IssueURLBuilder.currentMetadata(
+            version: (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? appState.localVersion,
+            build: (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "\(appState.localBuild)"
+        )
+    }
+
+    private var diagnosticSummary: DiagnosticSummary {
+        let meta = issueMetadata
+        return DiagnosticSummaryBuilder.make(
+            version: meta.version,
+            build: meta.build,
+            macOSVersion: meta.macOSVersion,
+            architecture: meta.architecture,
+            theme: theme.mode.rawValue,
+            language: language.current.rawValue,
+            catalogStatus: appState.catalogSnapshot == nil ? "unloaded" : "loaded",
+            appUpdateState: appState.updateState.statusTextKey,
+            selectedToolStatus: appState.selectedTool.map { "\($0.id):\($0.status.rawValue)" }
+        )
+    }
+
+    private func openURL(_ url: URL) {
+        if !NSWorkspace.shared.open(url) {
+            appState.toastCenter?.show(Toast(kind: .warning, messageKey: "settings.support.urlFailed", messageArg: url.absoluteString))
+        }
+    }
+}
+
+private struct DiagnosticPreviewSheet: View {
+    let summary: DiagnosticSummary
+    let onCopy: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Space.space4) {
+            HStack {
+                Text("settings.diagnostics.previewTitle")
+                    .tokenFont(.sectionTitle)
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(Text("common.close"))
+            }
+            Text("settings.diagnostics.previewBody")
+                .tokenFont(.supporting)
+                .foregroundStyle(DesignTokens.Palette.secondaryText)
+            Text(summary.previewText)
+                .tokenFont(.code)
+                .textSelection(.enabled)
+                .padding(DesignTokens.Space.space3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    DesignTokens.Palette.contentBackground,
+                    in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
+                )
+            HStack {
+                Spacer()
+                Button("common.cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("settings.diagnostics.confirmCopy", action: onCopy)
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(DesignTokens.Space.space5)
+        .frame(minWidth: 420, minHeight: 280)
     }
 }

@@ -4,7 +4,9 @@
 
 Coding Tools 把 Homebrew、mise、官方安装包、官方文档和精选教程整合到一个签名化的目录中，帮助开发者安全安装、启动和持续更新开发工具。
 
-> 当前源码版本：v1.5.1（build 24）；最近公开 Release 为 v1.5.0（build 23）。本次仅更新开源文档、许可证和版本元数据，v1.5.1 尚未构建、签名、公证或创建 GitHub Release。已接通 24 个工具目录、Ed25519 验签、安装链、持久化收藏/最近使用、菜单栏入口和 Coding Tools 品牌资源。
+> 当前源码版本：v1.5.1（build 24）；最近公开 Release 为 v1.5.0（build 23）。源码已纳入统一界面令牌、工具展示状态映射、应用更新固定入口和支持反馈；v1.5.1 尚未构建、签名、公证或创建 GitHub Release。已接通 24 个工具目录、Ed25519 验签、安装链、持久化收藏/最近使用、菜单栏入口和 Coding Tools 品牌资源。
+
+中文说明见 [`README.zh-CN.md`](./README.zh-CN.md)。
 
 ---
 
@@ -61,6 +63,16 @@ open CodingTools.xcworkspace
 ```
 
 纯文档贡献不要求在本地构建或打开 macOS App。不要提交 `.app`、`build/`、DerivedData、临时截图、用户配置、原始日志或凭证；贡献流程见 [`CONTRIBUTING.md`](./CONTRIBUTING.md)。
+
+---
+
+## Interface, updates, feedback, and privacy
+
+- Four tabs stay **Home / Tools / Content / Settings**. Shared design tokens cover type, spacing, color, and surfaces. Tool cards do not use gradient fills, heavy drop shadows, or hover scale.
+- Tool cards, tool detail, the install sheet, and the menu bar render one presentation mapping. Missing latest version is never “up to date”; a failed probe is never “not installed”.
+- **App Updates** (Sparkle) and **tool updates** are separate copy and separate state. Settings and the menu bar always expose **Check for Updates**; a check already in flight cannot start another.
+- Settings → Support & Feedback includes report issue, feature idea, homepage, help, and copy diagnostic summary. Issue URLs prefill only app version, build, macOS version, and CPU architecture. Logs and diagnostics are never uploaded automatically; copy-diagnostics shows a preview first.
+- Appearance supports Light, Dark, and Follow System. Switching back to Follow System clears a previously pinned app/window appearance so new system changes apply.
 
 ---
 

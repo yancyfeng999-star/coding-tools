@@ -1,61 +1,34 @@
 import SwiftUI
 import Domain
+import Theme
 
 // MARK: - ToolCardChrome
 //
-// ToolCard 状态视觉规范：边框色 + 渐变 overlay + 内边距。
-// 参考 cc-switch (farion1231/cc-switch) 的 ProviderCard 设计。
-//
-// 4 个状态对应 4 种 chrome：
-//   .notInstalled  蓝（默认，未装）
-//   .installed    灰（已装，up to date）
-//   .outdated      橙（已装，有新版）
-//   .broken        红（已装但 binary 坏）
-//   .installing    蓝 + 转圈
+// 克制表面：内容底、1px 语义边框、悬停仅改边框/浅底。无渐变、无重阴影、无缩放。
 
 public struct ToolCardChrome: ViewModifier {
     public let status: HealthStatus
     public let isHovering: Bool
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public func body(content: Content) -> some View {
+        let increaseContrast = contrast == .increased
         content
-            .padding(14)
+            .padding(DesignTokens.Space.space4)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                Color(nsColor: .controlBackgroundColor),
-                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                isHovering ? DesignTokens.Palette.hoverSurface : DesignTokens.Palette.contentBackground,
+                in: RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(borderColor, lineWidth: isHovering ? 1.5 : 1)
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
+                    .stroke(
+                        DesignTokens.Palette.border(increaseContrast: increaseContrast || isHovering),
+                        lineWidth: DesignTokens.Palette.borderWidth(increaseContrast: increaseContrast)
+                    )
             )
-            .overlay(alignment: .topLeading) {
-                // 微弱渐变高亮
-                LinearGradient(
-                    colors: [chromeColor.opacity(isHovering ? 0.08 : 0.04), .clear],
-                    startPoint: .top,
-                    endPoint: .center
-                )
-                .frame(maxWidth: .infinity, maxHeight: 60)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .allowsHitTesting(false)
-            }
-            .shadow(color: .black.opacity(isHovering ? 0.10 : 0.0),
-                    radius: isHovering ? 8 : 0, y: 3)
-    }
-
-    private var borderColor: Color {
-        if isHovering { return chromeColor.opacity(0.6) }
-        return Color.primary.opacity(0.06)
-    }
-
-    private var chromeColor: Color {
-        switch status {
-        case .notInstalled: return .blue
-        case .installed:    return .green
-        case .outdated:     return .orange
-        case .broken:       return .red
-        }
+            .animation(DesignTokens.animation(reduceMotion: reduceMotion), value: isHovering)
     }
 }
 
@@ -64,11 +37,6 @@ public extension View {
         modifier(ToolCardChrome(status: status, isHovering: isHovering))
     }
 }
-
-// MARK: - ActionTray
-//
-// 工具卡片右侧按钮组：默认 opacity 0，hover/focus-within 显示。
-// 工具：Favorite + Install/Update/Reinstall + 详情箭头。
 
 public struct ToolCardActionTray<Content: View>: View {
     public let isHovering: Bool
@@ -80,10 +48,10 @@ public struct ToolCardActionTray<Content: View>: View {
     }
 
     public var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DesignTokens.Space.space2) {
             content()
         }
-        .opacity(isHovering ? 1 : 0)
-        .animation(.easeInOut(duration: 0.15), value: isHovering)
+        .opacity(1)
+        .onAppear { _ = isHovering }
     }
 }

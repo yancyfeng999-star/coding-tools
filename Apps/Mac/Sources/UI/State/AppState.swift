@@ -10,6 +10,7 @@ import AIConfigDiscovery
 import Updates
 import Persistence
 import ProcessExecution
+import Launching
 import AppKit
 
 /// UI 全局状态中枢。**所有 UI 状态都通过 AppState 暴露**，
@@ -41,10 +42,18 @@ public final class AppState: ObservableObject {
     @Published public var loadError: String?
     /// 每个 tool 的安装探测结果（key: toolID）。空 = 还没探测或还没跑。
     @Published public var probes: [String: InstallationProbe] = [:]
+    @Published public var failedProbeIDs: Set<String> = []
+    @Published public var probingToolIDs: Set<String> = []
     /// 每个 tool 的 latest version（key: toolID）。来自 Brew/Npm provider + cache。
     @Published public var latestVersions: [String: String] = [:]
+    @Published public var latestQueriedIDs: Set<String> = []
     /// 启动时在用户 home 扫到的 AI CLI 配置文件
     @Published public var discoveredConfigs: [AIConfig] = []
+    /// Last Open/launch resolution. Views and the menu bar share `launch(_:)`.
+    public private(set) var lastLaunchResult: Result<LaunchTarget, ToolLaunchFailure>?
+    /// Invalidated when the user closes the install sheet so a late task cannot revive it.
+    public private(set) var installGeneration: UInt64 = 0
+    public var toolLauncher: any Launching = MacLauncher()
 
     // MARK: - Updates（订阅 Sparkle userDriver 状态机）
 
@@ -158,17 +167,28 @@ public final class AppState: ObservableObject {
     /// 触发时机：catalog 加载完成后 + 用户手动刷新。
     public func refreshProbes() async {
         let tools = self.tools
+        probingToolIDs = Set(tools.map(\.id))
         let results = await detector.probeAll(tools: tools)
         var dict: [String: InstallationProbe] = [:]
         for probe in results { dict[probe.toolID] = probe }
         probes = dict
+        probingToolIDs = []
+        failedProbeIDs = []
     }
 
     /// 探测单个 tool（详情页用）
     public func refreshProbe(toolID: String) async {
         guard let tool = tools.first(where: { $0.id == toolID }) else { return }
+        probingToolIDs.insert(toolID)
         let probe = await detector.probe(tool: tool)
         probes[toolID] = probe
+        failedProbeIDs.remove(toolID)
+        probingToolIDs.remove(toolID)
+    }
+
+    public func markProbeFailed(toolID: String) {
+        failedProbeIDs.insert(toolID)
+        probes[toolID] = nil
     }
 
     // MARK: - Latest version
@@ -191,11 +211,53 @@ public final class AppState: ObservableObject {
                 }
             }
             for await (toolID, v) in group {
+                latestQueriedIDs.insert(toolID)
                 if let v {
                     latestVersions[toolID] = v
+                } else {
+                    latestVersions[toolID] = nil
                 }
             }
         }
+    }
+
+    public func latestFact(for tool: Tool) -> LatestVersionFact {
+        if !TrustedInstallOption.canQueryLatest(tool.installOptions) {
+            return .unavailable
+        }
+        if let value = latestVersions[tool.id] {
+            return .known(value)
+        }
+        if latestQueriedIDs.contains(tool.id) {
+            return .unavailable
+        }
+        return .notQueried
+    }
+
+    public func probeOutcome(for toolID: String) -> ToolProbeOutcome {
+        if probingToolIDs.contains(toolID) { return .checking }
+        if failedProbeIDs.contains(toolID) { return .failed }
+        if let probe = probes[toolID] { return .result(probe) }
+        return .missing
+    }
+
+    public func operationFact(for toolID: String) -> ToolOperationFact {
+        guard installingTool?.id == toolID else { return .idle }
+        switch installState {
+        case .running, .cancelling: return .running
+        case .failed: return .failed
+        case .completedPendingConfirmation: return .completedPendingConfirmation
+        default: return .idle
+        }
+    }
+
+    public func presentation(for tool: Tool) -> ToolPresentation {
+        ToolPresentationMapper.map(
+            options: tool.installOptions,
+            probe: probeOutcome(for: tool.id),
+            latest: latestFact(for: tool),
+            operation: operationFact(for: tool.id)
+        )
     }
 
     /// 取 tool 的 latest version（UI 端用）
@@ -216,32 +278,10 @@ public final class AppState: ObservableObject {
         favorites.insert(config.toolID)
     }
 
-    /// 比较 installed vs latest 是否真的需要升级（installed < latest）
+    /// 比较 installed vs latest 是否真的需要升级。缺少 latest 时不得当作已是最新。
     public func isOutdated(toolID: String) -> Bool {
-        guard let installed = probes[toolID]?.installedVersion,
-              let latest = latestVersions[toolID] else {
-            return false
-        }
-        return installed != latest && compareSemver(installed, latest) == .orderedAscending
-    }
-
-    // MARK: - Semver 简化比较
-
-    private enum SemverOrder { case orderedAscending, orderedSame, orderedDescending }
-
-    /// 简化版 semver 比较：`1.2.3` < `1.3.0` = ascending
-    /// 不支持 pre-release 后缀（-rc1 之类），按数字段比较。
-    private func compareSemver(_ a: String, _ b: String) -> SemverOrder {
-        let aParts = a.split(separator: ".").map { Int($0.prefix(while: { $0.isNumber })) ?? 0 }
-        let bParts = b.split(separator: ".").map { Int($0.prefix(while: { $0.isNumber })) ?? 0 }
-        let n = max(aParts.count, bParts.count)
-        for i in 0..<n {
-            let av = i < aParts.count ? aParts[i] : 0
-            let bv = i < bParts.count ? bParts[i] : 0
-            if av < bv { return .orderedAscending }
-            if av > bv { return .orderedDescending }
-        }
-        return .orderedSame
+        guard let tool = tools.first(where: { $0.id == toolID }) else { return false }
+        return presentation(for: tool).showsUpdateAction
     }
 
     /// 取某个 tool 的探测结果（UI 端常用）
@@ -344,41 +384,34 @@ public final class AppState: ObservableObject {
     private var installTask: Task<Void, Never>?
 
     public func startInstall(_ tool: Tool) {
-        // 已经在跑：忽略重复点击（P1-G2-3）
-        if installState == .running || installState == .cancelling { return }
-        installingTool = tool
-        installLog = ""
-        installState = .running
-        let toolRef = tool
-        installTask = Task { @MainActor [weak self] in
-            await self?.runInstall(tool: toolRef)
-        }
+        startInstall(tool, option: nil)
     }
 
-    /// 接收具体 InstallOption 的版本 — ToolDetailView / CatalogView 选择
-    /// 多个 installOptions 时使用。
-    public func startInstall(_ tool: Tool, option: InstallOption) {
+    /// 接收具体 InstallOption 的版本。缺少可信 option 时拒绝启动。
+    public func startInstall(_ tool: Tool, option: InstallOption?) {
         if installState == .running || installState == .cancelling { return }
+        guard let resolved = InstallConfirmation.resolvedOption(tool: tool, preferred: option) else {
+            installingTool = nil
+            installLog = ""
+            installState = .idle
+            return
+        }
         installingTool = tool
         installLog = ""
         installState = .running
+        installGeneration += 1
+        let generation = installGeneration
         let toolRef = tool
-        let optRef = option
+        let optRef = resolved
         installTask = Task { @MainActor [weak self] in
-            await self?.runInstall(tool: toolRef, option: optRef)
+            await self?.runInstall(tool: toolRef, option: optRef, generation: generation)
         }
     }
 
     @MainActor
-    private func runInstall(tool: Tool) async {
-        await runInstall(tool: tool, option: tool.installOptions.first)
-    }
-
-    @MainActor
-    private func runInstall(tool: Tool, option: InstallOption?) async {
-        guard let opt = option else {
-            installLog += "==> \(tool.name) 暂未提供安装来源（仅展示）\n"
-            installState = .completed
+    private func runInstall(tool: Tool, option: InstallOption?, generation: UInt64) async {
+        guard let opt = option, TrustedInstallOption.isTrusted(opt) else {
+            finishInstallIfCurrent(generation: generation, .failed)
             return
         }
         installLog += "==> 准备安装 \(tool.name) [\(opt.type.rawValue)]\n"
@@ -399,33 +432,65 @@ public final class AppState: ObservableObject {
                 progress: progress
             )
             if result.exitCode == 0 {
-                installLog += "==> 安装完成 ✅\n"
-                installState = .completed
-                // P1-G2-2：安装成功后立刻刷新探测，让 UI 看到 installed version
                 await refreshProbe(toolID: tool.id)
-                if let store = persistStore {
-                    let probe = InstallationProbe(
-                        toolID: tool.id,
-                        installedVersion: result.resolvedVersion,
-                        detectedPath: nil,
-                        architecture: nil,
-                        healthStatus: .installed,
-                        lastCheckedAt: Date()
-                    )
-                    try? await store.saveInstallation(probe)
+                let probe = probes[tool.id]
+                let probeLooksInstalled = probe?.healthStatus == .installed || probe?.healthStatus == .outdated
+                if probeLooksInstalled {
+                    installLog += "==> 安装完成\n"
+                    finishInstallIfCurrent(generation: generation, .completed)
+                    if let store = persistStore, let probe {
+                        try? await store.saveInstallation(probe)
+                    }
+                } else {
+                    installLog += "==> 安装完成，状态待确认\n"
+                    finishInstallIfCurrent(generation: generation, .completedPendingConfirmation)
                 }
             } else {
                 installLog += "==> 安装失败，退出码 \(result.exitCode)\n"
-                installState = .failed
+                finishInstallIfCurrent(generation: generation, .failed)
             }
         } catch is CancellationError {
             installLog += "\n[用户取消] 已停止底层进程\n"
-            installState = .cancelled
+            finishInstallIfCurrent(generation: generation, .cancelled)
         } catch {
             installLog += "==> 失败: \(error)\n"
-            installState = .failed
+            finishInstallIfCurrent(generation: generation, .failed)
         }
+    }
+
+    /// Late outcomes after the user closed the sheet must not change `installState`.
+    public func finishInstallIfCurrent(generation: UInt64, _ newState: InstallRunState) {
+        guard generation == installGeneration else { return }
+        installState = newState
         installTask = nil
+    }
+
+    /// Shared Open/启动 entry used by the menu bar, catalog cards, and tool detail.
+    public func launch(_ tool: Tool) {
+        markRecent(tool.id)
+        let result = ToolLaunchPlanner.makeTarget(for: tool)
+        lastLaunchResult = result
+        switch result {
+        case .success(let target):
+            let launcher = toolLauncher
+            Task {
+                try? await launcher.launch(target)
+            }
+        case .failure(let failure):
+            let arg: String
+            switch failure {
+            case .noCapability: arg = "no launch capability"
+            case .binaryNotFound(let name): arg = "binary not found: \(name)"
+            case .appNotFound(let name): arg = "app not found: \(name)"
+            case .noURL: arg = "no url"
+            case .urlBlocked(let host): arg = host
+            }
+            let key: LocalizedStringKey = {
+                if case .urlBlocked = failure { return "content.url_blocked" }
+                return "menubar.launch_error"
+            }()
+            toastCenter?.show(Toast(kind: .warning, messageKey: key, messageArg: arg))
+        }
     }
 
     /// P0-G2-5：先尝试 HelperClient，失败回退到 in-process AdapterRegistry。
@@ -481,35 +546,41 @@ public final class AppState: ObservableObject {
     }
 
     public func cancelInstall() {
-    // P0-G2-6 / G4-7：取消时真正停掉底层 Task + 调用 adapter.cancel
-    installState = .cancelling
-    if let task = installTask {
-        task.cancel()
-    }
-    // 也尝试 cancel 当前 adapter 的 plan（防止 user 用其他入口调起）
-    if let tool = installingTool,
-       let opt = tool.installOptions.first,
-       let action = try? opt.toInstallAction() {
-        let actionType: InstallActionType = {
-            switch action {
-            case .formula: return .homebrewFormula
-            case .cask:    return .homebrewCask
-            case .mise:    return .miseTool
-            case .artifact: return .officialArtifact
-            case .npm:     return .npmGlobal
-            }
-        }()
-        Task { [installerRegistry] in
-            await installerRegistry.adapter(for: actionType)?.cancel(planID: "")
+        // P0-G2-6 / G4-7：取消时真正停掉底层 Task + 调用 adapter.cancel
+        if installState == .running {
+            installState = .cancelling
         }
+        if let task = installTask {
+            task.cancel()
+        }
+        if let tool = installingTool,
+           let opt = InstallConfirmation.resolvedOption(tool: tool) ?? tool.installOptions.first,
+           let action = try? opt.toInstallAction() {
+            let actionType: InstallActionType = {
+                switch action {
+                case .formula: return .homebrewFormula
+                case .cask:    return .homebrewCask
+                case .mise:    return .miseTool
+                case .artifact: return .officialArtifact
+                case .npm:     return .npmGlobal
+                }
+            }()
+            Task { [installerRegistry] in
+                await installerRegistry.adapter(for: actionType)?.cancel(planID: "")
+            }
+        }
+        installLog += "\n[用户取消]"
     }
-    installLog += "\n[用户取消]"
-}
 
     public func closeInstall() {
+        if installState == .running || installState == .cancelling {
+            cancelInstall()
+        }
+        installGeneration += 1
         installingTool = nil
         installLog = ""
         installState = .idle
+        installTask = nil
     }
 
     /// 清除操作历史（仅 installations 表；不影响 favorites / catalog）。
@@ -531,6 +602,7 @@ public final class AppState: ObservableObject {
 
     /// 触发 Sparkle 检查更新（拉 appcast + 验签 + emit 状态到 UI）
     public func checkForUpdates() {
+        guard AppUpdateCheckGuard.canStartCheck(updateState) else { return }
         appUpdatingProvider?()?.checkForUpdates()
     }
 
@@ -563,6 +635,7 @@ public enum InstallRunState: Equatable, Sendable {
     case running
     case cancelling      // P0-G2-6：取消请求已发出，等待底层 Task 退出
     case completed
+    case completedPendingConfirmation
     case failed
     case cancelled
 }

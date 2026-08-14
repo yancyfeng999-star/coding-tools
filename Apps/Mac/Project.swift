@@ -342,6 +342,8 @@ let project = Project(
                 .target(name: "Content"),
                 .target(name: "UI"),
                 .target(name: "Domain"),
+                .target(name: "Updates"),
+                .target(name: "Launching"),
             ]
         ),
         .target(
