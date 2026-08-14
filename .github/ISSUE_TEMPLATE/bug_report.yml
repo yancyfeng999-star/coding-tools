@@ -1,0 +1,77 @@
+name: Bug report
+description: 报告一个可以复现的问题
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请不要在公开 Issue 中提交安全漏洞、Token、私钥、Cookie、用户配置或原始日志。
+        安全问题请使用 [SECURITY.md](../../SECURITY.md) 中的私密报告入口。
+  - type: input
+    id: version
+    attributes:
+      label: Coding Tools version
+      description: 请填写应用版本或提交号。
+      placeholder: v1.5.0 或 commit SHA
+    validations:
+      required: true
+  - type: input
+    id: macos_version
+    attributes:
+      label: macOS version
+      description: 请填写完整的 macOS 版本。
+      placeholder: macOS 14.6.1
+    validations:
+      required: true
+  - type: dropdown
+    id: architecture
+    attributes:
+      label: Architecture
+      options:
+        - Apple Silicon
+        - Intel
+        - Universal / unknown
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: 请按顺序写出最小复现步骤，不要粘贴未经脱敏的日志。
+      placeholder: |
+        1. 打开……
+        2. 选择……
+        3. 点击……
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: 你期望发生什么？
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: 实际发生了什么？请删除凭证、用户数据和绝对路径。
+    validations:
+      required: true
+  - type: dropdown
+    id: logs_redacted
+    attributes:
+      label: Logs and sensitive data
+      description: 请确认附加信息已经脱敏。
+      options:
+        - 已脱敏，未包含凭证或用户数据
+        - 没有附加日志
+    validations:
+      required: true
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: 可提供截图、相关文档链接或补充上下文；请勿上传私有内容。

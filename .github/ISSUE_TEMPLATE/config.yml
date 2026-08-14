@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/yancyfeng999-star/coding-tools/security/advisories/new
+    about: Please report security vulnerabilities privately.
+  - name: User support
+    url: https://github.com/yancyfeng999-star/coding-tools/blob/main/SUPPORT.md
+    about: Read the support and troubleshooting routes first.

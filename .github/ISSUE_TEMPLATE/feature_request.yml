@@ -1,0 +1,55 @@
+name: Feature request
+description: 提议一个可验证的产品或开发体验改进
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先说明真实使用场景和替代方案。安全漏洞、凭证或可利用细节不要提交到功能 Issue；请转到 [SECURITY.md](../../SECURITY.md)。
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: 谁在什么场景下遇到什么问题？
+      placeholder: 作为……我希望……以便……
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_change
+    attributes:
+      label: Proposed change
+      description: 请描述你建议的行为、界面或文档变化。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: 当前如何解决？为什么现有方式不足？
+    validations:
+      required: true
+  - type: textarea
+    id: privacy_impact
+    attributes:
+      label: Permission and privacy impact
+      description: 是否需要新权限、远程服务、诊断信息或用户数据？如果没有，请明确写无。
+      placeholder: 无新增权限；设置、日志和安装状态仍保存在本机。
+    validations:
+      required: true
+  - type: textarea
+    id: third_party_content
+    attributes:
+      label: Third-party content and licensing
+      description: 是否涉及第三方依赖、工具名称、Logo、教程、视频、安装包或商标？请提供来源和许可边界；如果没有，请明确写无。
+      placeholder: 无；或填写上游项目、版本和许可证入口。
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope_check
+    attributes:
+      label: Scope confirmation
+      options:
+        - label: 我确认这不是安全漏洞披露，也没有附加 Token、私钥、Cookie 或用户数据。
+          required: true
