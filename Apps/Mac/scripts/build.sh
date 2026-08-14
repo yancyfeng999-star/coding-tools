@@ -61,4 +61,4 @@ if [[ "${KEEP_APP_REGISTERED:-0}" != "1" && -d "$APP_PRODUCT" ]]; then
 fi
 
 echo "✅ Build ($CONFIG) OK"
-echo "   产物：$APP_PRODUCT（未注册到启动台）"
+echo "   产物：${APP_PRODUCT}（未注册到启动台）"
