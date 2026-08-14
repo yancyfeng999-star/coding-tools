@@ -18,6 +18,9 @@
 - 安装动作必须显示来源、版本和风险，并由用户明确确认；不得静默执行 `sudo`。
 - 不自动修改 `.zshrc` 或 `PATH`，不把 API Key 放入客户端。
 - 代码变更应由 CI 执行既有测试；若本地具备工具链，可按 `Apps/Mac/scripts/run-tests.sh` 的说明运行对应测试。
+- 视觉改动必须使用 `DesignTokens`（Theme 模块），不要在四个标签页上直接写 `.title` / `.blue` / 渐变 / 悬停缩放。
+- 工具是否安装、是否可更新、主按钮文案必须走 `ToolPresentationMapper`。不要在卡片、详情、安装弹窗或菜单栏各自判断。
+- 新增用户文案必须同时提供 `zh-Hans` 和 `en`，不能把英文 fallback 当作正式中文翻译。「应用更新」和「工具更新」必须使用不同 key。
 
 ### Catalog 与外部内容
 

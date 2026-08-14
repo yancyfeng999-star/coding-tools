@@ -14,6 +14,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             content
+                .background(DesignTokens.Palette.appBackground)
                 .navigationTitle("content.title")
                 .toolbar {
                     ToolbarItemGroup(placement: .primaryAction) {
@@ -99,11 +100,20 @@ private struct ContentRow: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.title)
-                        .font(.subheadline.bold())
+                        .tokenFont(.itemTitle)
                     if let author = item.author {
                         Text(author)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .tokenFont(.tinyMetadata)
+                            .foregroundStyle(DesignTokens.Palette.secondaryText)
+                    }
+                    if let host = item.sourceURL.host {
+                        HStack(spacing: DesignTokens.Space.space1) {
+                            Image(systemName: "arrow.up.right.square")
+                            Text(host)
+                                .tokenFont(.tinyMetadata)
+                        }
+                        .foregroundStyle(DesignTokens.Palette.tertiaryText)
+                        .accessibilityLabel(Text("content.externalLink"))
                     }
                     HStack(spacing: 6) {
                         typeBadge
@@ -130,10 +140,10 @@ private struct ContentRow: View {
 
     private var badgeColor: Color {
         switch item.type {
-        case .article: return .blue
-        case .video: return .red
-        case .docs: return .green
-        case .rss: return .orange
+        case .article: return DesignTokens.Palette.accent
+        case .video: return DesignTokens.Palette.danger
+        case .docs: return DesignTokens.Palette.success
+        case .rss: return DesignTokens.Palette.warning
         }
     }
 

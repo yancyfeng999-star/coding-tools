@@ -52,6 +52,19 @@ struct CodingToolsApp: App {
         .windowResizability(.contentSize)
         .commands {
             CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .appSettings) {
+                Button("tab.settings") {
+                    NotificationCenter.default.post(name: .codingToolsOpenSettings, object: nil)
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
+            CommandGroup(after: .appInfo) {
+                Button("settings.update.check") {
+                    appState.checkForUpdates()
+                }
+                .keyboardShortcut("u", modifiers: .command)
+                .disabled(!AppUpdateCheckGuard.canStartCheck(appState.updateState))
+            }
         }
     }
 }

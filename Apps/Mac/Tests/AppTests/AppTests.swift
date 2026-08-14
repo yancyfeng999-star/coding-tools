@@ -7,6 +7,7 @@ import ObjectiveC
 @testable import UI
 import Domain
 import ProcessExecution
+import Updates
 
 @MainActor
 final class AppModelTests: XCTestCase {
@@ -274,5 +275,38 @@ final class AppStateTests: XCTestCase {
         let resolved = state.recentTools()
         XCTAssertEqual(resolved.count, 1)
         XCTAssertEqual(resolved.first?.id, "git")
+    }
+
+    func testCheckForUpdatesIsNoOpWhileChecking() {
+        final class CountingUpdater: AppUpdating {
+            var count = 0
+            var isAutomaticChecksEnabled: Bool = true
+            var isAutomaticDownloadEnabled: Bool = false
+            func checkForUpdates() { count += 1 }
+            func setAutomaticChecksEnabled(_ enabled: Bool) {}
+            func setAutomaticDownloadEnabled(_ enabled: Bool) {}
+        }
+        let updater = CountingUpdater()
+        let state = AppState()
+        state.appUpdatingProvider = { updater }
+        state.updateState = .checking
+        state.checkForUpdates()
+        XCTAssertEqual(updater.count, 0)
+        state.updateState = .idle
+        state.checkForUpdates()
+        XCTAssertEqual(updater.count, 1)
+    }
+
+    func testStartInstallRefusesToolWithoutTrustedOption() {
+        let state = AppState()
+        let tool = Tool(
+            id: "none",
+            slug: "none",
+            name: "None",
+            category: .cliUtility
+        )
+        state.startInstall(tool)
+        XCTAssertEqual(state.installState, .idle)
+        XCTAssertNil(state.installingTool)
     }
 }

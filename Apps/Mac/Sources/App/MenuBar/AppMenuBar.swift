@@ -92,11 +92,10 @@ public final class AppMenuBar: ObservableObject {
 
         menu.addItem(.separator())
 
-        // Updates
-        if let updateItem = makeUpdateMenuItem() {
-            menu.addItem(updateItem)
-            menu.addItem(.separator())
+        for item in makeUpdateMenuItems() {
+            menu.addItem(item)
         }
+        menu.addItem(.separator())
 
         // Recent
         if let state = state, !state.recentTools().isEmpty {
@@ -208,22 +207,29 @@ public final class AppMenuBar: ObservableObject {
         return item
     }
 
-    /// 根据 Sparkle updateState 构造菜单项：
-    /// - .available / .readyToInstall → 蓝色"可更新到 v1.x.y"
-    /// - .downloading / .installing → 灰色"下载中/安装中 N%"
-    /// - 其他 → 不显示
-    private func makeUpdateMenuItem() -> NSMenuItem? {
-        guard let state = updateStateProvider?() else { return nil }
-        switch state {
+    /// 始终提供「检查更新」；忙碌状态禁用重复点击。
+    private func makeUpdateMenuItems() -> [NSMenuItem] {
+        let updateState = updateStateProvider?() ?? .idle
+        let entry = AppUpdateEntry.forMenuBar(updateState)
+        let check = NSMenuItem(
+            title: language.localized(entry.titleKey, fallback: "Check for Updates…"),
+            action: #selector(checkForUpdates),
+            keyEquivalent: "u"
+        )
+        check.target = self
+        check.isEnabled = entry.isEnabled
+        check.image = NSImage(systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: "Check for Updates")
+
+        var items: [NSMenuItem] = [check]
+        switch updateState {
         case .available(let remote, _, _):
             let item = NSMenuItem(
                 title: language.localized("menubar.availableUpdate \(remote)", fallback: "Update available: \(remote)"),
                 action: #selector(checkForUpdates),
-                keyEquivalent: "u"
+                keyEquivalent: ""
             )
             item.target = self
-            item.image = NSImage(systemSymbolName: "arrow.down.circle.fill", accessibilityDescription: "Update")
-            return item
+            items.append(item)
         case .downloading(let progress, _, _):
             let item = NSMenuItem(
                 title: language.localized("home.update.downloading \(Int(progress * 100))",
@@ -231,31 +237,29 @@ public final class AppMenuBar: ObservableObject {
                 action: nil,
                 keyEquivalent: ""
             )
-            item.image = NSImage(systemSymbolName: "arrow.down.circle", accessibilityDescription: "Downloading")
             item.isEnabled = false
-            return item
+            items.append(item)
         case .readyToInstall(let remote):
             let item = NSMenuItem(
                 title: language.localized("home.update.readyToInstall \(remote)",
                                         fallback: "\(remote) ready to install"),
                 action: #selector(checkForUpdates),
-                keyEquivalent: "u"
+                keyEquivalent: ""
             )
             item.target = self
-            item.image = NSImage(systemSymbolName: "arrow.up.circle.fill", accessibilityDescription: "Ready to install")
-            return item
+            items.append(item)
         case .installing:
             let item = NSMenuItem(
                 title: language.localized("home.update.installing", fallback: "Installing…"),
                 action: nil,
                 keyEquivalent: ""
             )
-            item.image = NSImage(systemSymbolName: "arrow.down.circle", accessibilityDescription: "Installing")
             item.isEnabled = false
-            return item
+            items.append(item)
         default:
-            return nil
+            break
         }
+        return items
     }
 
     // MARK: - Actions
@@ -273,113 +277,15 @@ public final class AppMenuBar: ObservableObject {
     }
 
     @objc private func checkForUpdates() {
+        let updateState = updateStateProvider?() ?? .idle
+        guard AppUpdateCheckGuard.canStartCheck(updateState) else { return }
         checkForUpdatesProvider?()
     }
 
     @objc private func launchTool(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String,
               let tool = state?.tools.first(where: { $0.id == id }) else { return }
-        state?.markRecent(id)
-        // P0-G4-1 修复：分发到 tool.launchCapability（cli / app / url+白名单）
-        guard let cap = tool.launchCapability else {
-            state?.toastCenter?.show(Toast(
-                kind: .warning,
-                messageKey: "menubar.launch_error",
-                messageArg: "no launch capability"
-            ))
-            return
-        }
-        switch cap.type {
-        case .cli:
-            launchCLI(command: cap.command ?? tool.slug, arguments: cap.arguments, openInTerminal: cap.openInTerminal)
-        case .app:
-            launchApp(bundleID: cap.bundleID ?? tool.id)
-        case .url:
-            launchURL(cap.url?.absoluteString ?? tool.homepageURL.absoluteString)
-        case .none:
-            launchURL(tool.homepageURL.absoluteString)
-        }
-    }
-
-    /// CLI 工具启动：用 `/usr/bin/env` 跑二进制并把输出重定向到 /dev/null，
-    /// 或在 Terminal 打开（如果 openInTerminal = true）。
-    private func launchCLI(command: String, arguments: [String], openInTerminal: Bool) {
-        // PATH 搜索最常见路径
-        let candidates = [
-            "/opt/homebrew/bin/\(command)",
-            "/usr/local/bin/\(command)",
-            "/usr/bin/\(command)",
-            "\(NSHomeDirectory())/.local/bin/\(command)",
-            "\(NSHomeDirectory())/.cargo/bin/\(command)",
-        ]
-        let pathEnv = ProcessInfo.processInfo.environment["PATH"] ?? ""
-        let pathCandidates = pathEnv.split(separator: ":").map { "\($0)/\(command)" }
-        let allCandidates = candidates + pathCandidates
-        guard let exe = allCandidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) })
-        else {
-            state?.toastCenter?.show(Toast(
-                kind: .warning,
-                messageKey: "menubar.launch_error",
-                messageArg: "binary not found: \(command)"
-            ))
-            return
-        }
-        if openInTerminal {
-            let script = "'\(exe)'" + arguments.map { " '\\(\($0))'" }.joined()
-            NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications/Utilities/Terminal.app"))
-            _ = script  // 真实路径需要 AppleScript 桥；此处降级到直接 open
-            return
-        }
-        let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: exe)
-        proc.arguments = arguments
-        proc.standardOutput = Pipe()
-        proc.standardError = Pipe()
-        try? proc.run()
-    }
-
-    /// App 工具启动：按 bundle id 找 .app 然后 open。
-    private func launchApp(bundleID: String) {
-        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
-            state?.toastCenter?.show(Toast(
-                kind: .warning,
-                messageKey: "menubar.launch_error",
-                messageArg: "app not found: \(bundleID)"
-            ))
-            return
-        }
-        NSWorkspace.shared.open(url)
-    }
-
-    /// URL 启动：仅允许白名单 host（与 ContentLinkRow 同一白名单）。
-    private func launchURL(_ urlString: String?) {
-        guard let urlString,
-              let url = URL(string: urlString),
-              let host = url.host?.lowercased() else {
-            state?.toastCenter?.show(Toast(
-                kind: .warning,
-                messageKey: "menubar.launch_error",
-                messageArg: "no url"
-            ))
-            return
-        }
-        let trusted: Set<String> = [
-            "github.com", "docs.docker.com", "git-scm.com",
-            "nodejs.org", "python.org", "go.dev", "rust-lang.org",
-            "npmjs.com", "brew.sh", "mise.jdx.dev", "opencode.ai",
-            "anthropic.com", "openai.com", "google.dev", "x.ai",
-            "hermes-agent.nousresearch.com", "openclaw.ai", "developer.apple.com",
-        ]
-        let allowed = trusted.contains(host) || trusted.contains(where: { host.hasSuffix(".\($0)") })
-        guard allowed else {
-            state?.toastCenter?.show(Toast(
-                kind: .warning,
-                messageKey: "content.url_blocked",
-                messageArg: host
-            ))
-            return
-        }
-        NSWorkspace.shared.open(url)
+        state?.launch(tool)
     }
 
     @objc private func switchTheme(_ sender: NSMenuItem) {
@@ -399,16 +305,8 @@ public final class AppMenuBar: ObservableObject {
     @objc private func reportIssue() {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        let sysVersion = ProcessInfo.processInfo.operatingSystemVersionString
-        let title = "[v\(version)+\(build) · \(sysVersion)] "
-        var components = URLComponents(string: "https://github.com/yancyfeng999-star/coding-tools/issues/new")!
-        components.queryItems = [
-            URLQueryItem(name: "template", value: "bug_report.md"),
-            URLQueryItem(name: "title", value: title),
-        ]
-        if let url = components.url {
-            NSWorkspace.shared.open(url)
-        }
+        let metadata = IssueURLBuilder.currentMetadata(version: version, build: build)
+        NSWorkspace.shared.open(IssueURLBuilder.bugReportURL(metadata: metadata))
     }
 
     /// 打开 GitHub Discussions（轻量反馈 / 想法）。

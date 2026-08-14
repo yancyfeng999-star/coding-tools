@@ -1,5 +1,6 @@
 import SwiftUI
 import Domain
+import Theme
 
 /// 通用工具图标：用 SF Symbol 暂代。真实 Logo 由 Catalog 阶段提供。
 public struct ToolIconView: View {
@@ -55,36 +56,6 @@ public struct ToolIconView: View {
     }
 
     private var backgroundColor: Color {
-        switch toolID {
-        case "git": return .orange
-        case "nodejs": return .green
-        case "python": return .blue
-        case "go": return .cyan
-        case "rust": return .brown
-        case "vscode": return .indigo
-        case "docker-desktop": return .blue
-        case "iterm2": return .gray
-        default:
-            switch category {
-            case .editor: return .indigo
-            case .terminal: return .gray
-            case .gitCollaboration: return .orange
-            case .node: return .green
-            case .python: return .blue
-            case .go: return .cyan
-            case .rust: return .brown
-            case .java: return .red
-            case .database: return .teal
-            case .apiDebug: return .purple
-            case .docker: return .blue
-            case .aiCoding: return .pink
-            case .frontend: return .pink
-            case .backend: return .mint
-            case .devops: return .gray
-            case .cliUtility: return .secondary
-            case .languageRuntime: return .indigo
-            case nil: return .gray
-            }
-        }
+        CategoryTint.color(toolID: toolID, category: category)
     }
 }

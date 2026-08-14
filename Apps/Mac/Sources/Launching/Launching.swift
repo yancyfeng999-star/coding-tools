@@ -34,8 +34,25 @@ public actor MacLauncher: Launching {
     }
 
     private func launchCLI(command: String, arguments: [String], openInTerminal: Bool) async throws {
-        // 阶段 3 占位：使用 NSWorkspace 或 Process
-        throw LaunchError.notImplemented
+        guard let exe = ToolLaunchPlanner.locateExecutable(named: command) else {
+            throw LaunchError.appNotFound(command)
+        }
+        if openInTerminal {
+            let invocation = TerminalLaunchCommand.processInvocation(executable: exe, arguments: arguments)
+            let process = Process()
+            process.executableURL = invocation.executableURL
+            process.arguments = invocation.arguments
+            process.standardOutput = Pipe()
+            process.standardError = Pipe()
+            try process.run()
+            return
+        }
+        let process = Process()
+        process.executableURL = exe
+        process.arguments = arguments
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+        try process.run()
     }
 
     private func launchApp(bundleID: String) async throws {

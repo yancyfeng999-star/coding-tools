@@ -1,5 +1,6 @@
 import SwiftUI
 import Domain
+import Theme
 
 /// 风险等级徽标。
 public struct RiskBadge: View {
@@ -16,17 +17,19 @@ public struct RiskBadge: View {
             Text(labelKey)
                 .font(.caption2)
         }
-        .padding(.horizontal, 6)
+        .padding(.horizontal, DesignTokens.Space.space2)
         .padding(.vertical, 3)
         .background(color.opacity(0.15), in: Capsule(style: .continuous))
         .foregroundStyle(color)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(labelKey))
     }
 
     private var color: Color {
         switch level {
-        case .low: return .green
-        case .medium: return .orange
-        case .high: return .red
+        case .low: return DesignTokens.Palette.success
+        case .medium: return DesignTokens.Palette.warning
+        case .high: return DesignTokens.Palette.danger
         }
     }
 

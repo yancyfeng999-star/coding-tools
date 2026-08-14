@@ -65,11 +65,12 @@ public final class ThemeManager: ObservableObject {
         } else {
             self.mode = .system
         }
+        // didSet does not run during init; apply the persisted mode now.
+        applyAppearancePreference()
 
-        // 监听系统外观变化（用户从系统设置切换时，.system 模式跟随）
-        // observer 是 non-Sendable，存为 nonisolated(unsafe)；仅在 MainActor 上访问
+        // 系统外观变化时，跟随系统模式必须重新应用 inherit（nil）。
         let token = NotificationCenter.default.addObserver(
-            forName: NSApplication.didChangeScreenParametersNotification,
+            forName: Notification.Name("AppleInterfaceThemeChangedNotification"),
             object: nil,
             queue: .main
         ) { [weak self] _ in
@@ -89,23 +90,11 @@ public final class ThemeManager: ObservableObject {
         self.mode = mode
     }
 
-    /// 同步到 NSApp + 所有窗口的 appearance。
+    /// 同步到 NSApp + 所有窗口的 appearance。跟随系统时必须清成 inherit。
     public func applyAppearancePreference() {
-        // NSApp 是 NSApplication!，测试环境下可能没初始化。
-        // 通过 NSApplication.shared 安全获取；NSApp 为 nil 时跳过。
         guard NSApp != nil else { return }
         let app = NSApplication.shared
-        let windows = app.windows
-        // 注意：NSApplication.appearance / NSWindow.appearance 是 NSAppearance!
-        // （隐式解包 optional），赋 nil 在某些 macOS 版本上会崩溃；只设非 nil 值。
-        let appearance: NSAppearance? = mode.appearanceName.flatMap { NSAppearance(named: $0) }
-        if let appearance = appearance {
-            app.appearance = appearance
-            for window in windows {
-                window.appearance = appearance
-            }
-        }
-        // else: 跟随系统模式 — 不修改 appearance，让系统接管
+        AppearancePreference.apply(mode, application: app, windows: app.windows)
     }
 
     // MARK: - Menu Bar icon
@@ -128,5 +117,97 @@ public extension View {
     /// 当 ThemeManager.mode 变化时，SwiftUI 自动重新求值。
     func bindTheme(_ manager: ThemeManager) -> some View {
         self.preferredColorScheme(manager.mode.preferredColorScheme)
+    }
+
+    func tokenFont(_ role: DesignTokens.TypeRole) -> some View {
+        font(role.font)
+    }
+}
+
+// MARK: - Appearance restore
+
+/// 把 ThemeMode 应用到 App 和已有窗口。`.system` 必须赋 `nil` 才能恢复继承。
+public enum AppearancePreference {
+    public static func apply(_ mode: ThemeMode, application: NSApplication, windows: [NSWindow]) {
+        let appearance = mode.appearanceName.flatMap { NSAppearance(named: $0) }
+        application.appearance = appearance
+        for window in windows {
+            window.appearance = appearance
+        }
+    }
+}
+
+// MARK: - Design tokens
+
+public enum DesignTokens {
+    public enum Space {
+        public static let space1: CGFloat = 4
+        public static let space2: CGFloat = 8
+        public static let space3: CGFloat = 12
+        public static let space4: CGFloat = 16
+        public static let space5: CGFloat = 20
+        public static let space6: CGFloat = 24
+        public static let space8: CGFloat = 32
+    }
+
+    public enum Radius {
+        public static let badge: CGFloat = 6
+        public static let card: CGFloat = 8
+        public static let panel: CGFloat = 10
+    }
+
+    public enum TypeRole {
+        case pageTitle
+        case sectionTitle
+        case itemTitle
+        case body
+        case supporting
+        case metadata
+        case tinyMetadata
+        case code
+        case compactCode
+
+        public var font: Font {
+            switch self {
+            case .pageTitle: return .title2.weight(.semibold)
+            case .sectionTitle: return .headline.weight(.semibold)
+            case .itemTitle: return .body.weight(.semibold)
+            case .body: return .body
+            case .supporting: return .callout
+            case .metadata: return .caption
+            case .tinyMetadata: return .caption2
+            case .code: return .system(.body, design: .monospaced)
+            case .compactCode: return .system(.caption, design: .monospaced)
+            }
+        }
+    }
+
+    public enum Palette {
+        public static var appBackground: Color { Color(nsColor: .windowBackgroundColor) }
+        public static var contentBackground: Color { Color(nsColor: .controlBackgroundColor) }
+        public static var elevatedSurface: Color { Color(nsColor: .underPageBackgroundColor) }
+        public static var selectedSurface: Color { Color.accentColor.opacity(0.12) }
+        public static var hoverSurface: Color { Color.primary.opacity(0.05) }
+        public static var subtleBorder: Color { Color.primary.opacity(0.10) }
+        public static var strongBorder: Color { Color.primary.opacity(0.32) }
+        public static var primaryText: Color { Color.primary }
+        public static var secondaryText: Color { Color.secondary }
+        public static var tertiaryText: Color { Color.secondary.opacity(0.75) }
+        public static var accent: Color { Color.accentColor }
+        public static var success: Color { Color(nsColor: .systemGreen) }
+        public static var warning: Color { Color(nsColor: .systemOrange) }
+        public static var danger: Color { Color(nsColor: .systemRed) }
+
+        public static func border(increaseContrast: Bool) -> Color {
+            increaseContrast ? strongBorder : subtleBorder
+        }
+
+        public static func borderWidth(increaseContrast: Bool) -> CGFloat {
+            increaseContrast ? 2 : 1
+        }
+    }
+
+    public static func animation(reduceMotion: Bool, duration: Double = 0.15) -> Animation? {
+        reduceMotion ? nil : .easeInOut(duration: min(max(duration, 0.12), 0.18))
     }
 }
