@@ -60,6 +60,8 @@ open CodingTools.xcworkspace
 ./scripts/run-tests.sh
 ```
 
+纯文档贡献不要求在本地构建或打开 macOS App。不要提交 `.app`、`build/`、DerivedData、临时截图、用户配置、原始日志或凭证；贡献流程见 [`CONTRIBUTING.md`](./CONTRIBUTING.md)。
+
 ---
 
 ## 核心约束（铁律）
@@ -92,9 +94,15 @@ open CodingTools.xcworkspace
 | [docs/QA_MATRIX.md](./docs/QA_MATRIX.md) | 测试矩阵 |
 | [docs/RELEASE_WORKFLOW.md](./docs/RELEASE_WORKFLOW.md) | 发版流程 |
 | [docs/AGENT_RELEASE_WORKFLOW.md](./docs/AGENT_RELEASE_WORKFLOW.md) | Agent 发版详细步骤 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献流程、验证和安全边界 |
+| [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) | 社区行为准则 |
+| [SECURITY.md](./SECURITY.md) | 私密安全报告和支持版本 |
+| [SUPPORT.md](./SUPPORT.md) | 用户支持与问题分流 |
+| [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) | Sparkle、Catalog 和外部内容边界 |
+| [docs/OPEN_SOURCE_GUIDE.md](./docs/OPEN_SOURCE_GUIDE.md) | 维护者开源协作与证据指南 |
 
 ---
 
 ## 许可证
 
-[MIT License](./LICENSE)。Copyright © 2026 YancyFeng。
+[Apache License 2.0](./LICENSE)。Copyright © 2026 YancyFeng；第一方归属见 [`NOTICE`](./NOTICE)。Apache-2.0 适用于本项目明确创作并随仓库发布的第一方源代码、脚本和文档，不会重新授权 Sparkle、Homebrew、mise、Catalog 中的第三方内容、工具名称、Logo、教程、安装包或商标。相关来源与分发边界见 [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md)。
