@@ -5,8 +5,8 @@
 
 ## 当前状态
 
-- **阶段**：v1.5.2 为最近公开 Release（build 25）；阶段 9 架构就位、阶段 11 目录签名已接通、阶段 12 本地 Crash 落盘已起步
-- **版本**：v1.5.2（build 25）
+- **阶段**：v1.5.3 为最近公开 Release（build 26）；阶段 9 架构就位、阶段 11 目录签名已接通、阶段 12 本地 Crash 落盘已起步
+- **版本**：v1.5.3（build 26）
 - **最近更新**：2026-08-14
 
 ## 阶段路线
@@ -28,6 +28,11 @@
 | 12 | Post-release 闭环（遥测 / 反馈 / Crash） | 2 w | 🟡 **Crash 本地落盘起步** | 子代理 B |
 
 ## 已完成（本轮 · 2026-08-14）
+
+### v1.5.3 GitHub Release（本地只留安装包）
+- [x] 打包/测试后删除 DerivedData `.app`，不再把构建产物注册进启动台；本地只留 pkg / zip / dmg。
+- [x] GitHub Release v1.5.3（build 26）已发布：ZIP / PKG / DMG / appcast。PKG 未用 Developer ID 签名，公证未做。
+- [x] 发版测试 113 通过；Release 构建为 ad-hoc「Sign to Run Locally」。
 
 ### v1.5.2 GitHub Release（UI foundation P0）
 - [x] 统一设计令牌、工具展示状态映射、检查更新固定入口、反馈预填与终端 CLI 启动。
@@ -140,6 +145,7 @@
 | v1.5.0 | 目录安全、安装链、持久化、菜单栏与品牌资源收口 | ✅ 已发布（GitHub Release） |
 | v1.5.1 | Apache-2.0 开源文档与版本元数据 | ⏭️ 并入 v1.5.2 发布 |
 | v1.5.2 | UI foundation P0 + GitHub Release | ✅ 已发布（未公证） |
+| v1.5.3 | 打包后只留安装包，不注册多余本地 App | ✅ 已发布（未公证） |
 | v2.0.0 | Apple Developer ID + 公证 + App Store 上架 | ⬜ 待启动 |
 
 ## 风险登记
