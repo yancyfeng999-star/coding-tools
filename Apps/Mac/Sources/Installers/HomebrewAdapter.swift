@@ -37,11 +37,13 @@ public struct HomebrewPathResolver: Sendable {
     }
 }
 
-public final class HomebrewAdapter: InstallAdapter, @unchecked Sendable {
+public final class HomebrewAdapter: InstallAdapter, InstallAdapterWithAction, @unchecked Sendable {
     public let type: InstallActionType
     private let executor: any ProcessExecuting
     private let pathResolver: HomebrewPathResolver
     private let brewPath: URL?
+    private var pendingActions: [String: InstallAction] = [:]
+    private let actionsLock = NSLock()
 
     public init(
         type: InstallActionType,
@@ -66,7 +68,51 @@ public final class HomebrewAdapter: InstallAdapter, @unchecked Sendable {
         }
     }
 
+    /// 旧入口（plan-only）。保留 ABI 兼容；生产路径走 executeWithAction。
     public func execute(_ plan: InstallPlan, progress: InstallProgressHandler?) async throws -> InstallResult {
+        let action = actionsLock.withLock { pendingActions.removeValue(forKey: plan.id) }
+        guard let action else {
+            throw InstallError.preconditionFailed("HomebrewAdapter requires executeWithAction for action context")
+        }
+        return try await runBrewInstall(action: action, plan: plan, progress: progress)
+    }
+
+    /// P0-G2-2 修复：把 action 显式传给 adapter，从 action 取真实 package name
+    /// 而不是从 plan.toolID 推断（之前 docker-desktop / nodejs / rust 等 4 个
+    /// Homebrew tool 必失败）。
+    public func executeWithAction(
+        _ action: InstallAction,
+        plan: InstallPlan,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult {
+        actionsLock.withLock { pendingActions[plan.id] = action }
+        return try await runBrewInstall(action: action, plan: plan, progress: progress)
+    }
+
+    public func cancel(planID: String) async {
+        actionsLock.withLock { _ = pendingActions.removeValue(forKey: planID) }
+    }
+
+    // MARK: - Helpers
+
+    private func runBrewInstall(
+        action: InstallAction,
+        plan: InstallPlan,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult {
+        let packageName: String
+        switch (type, action) {
+        case (.homebrewFormula, .homebrewFormula(let n)):
+            packageName = n
+        case (.homebrewCask, .homebrewCask(let n)):
+            packageName = n
+        default:
+            throw InstallError.unsupported(type)
+        }
+        guard !packageName.isEmpty else {
+            throw InstallError.preconditionFailed("HomebrewAdapter requires non-empty package name")
+        }
+
         let brew: URL
         if let provided = brewPath {
             brew = provided
@@ -76,30 +122,19 @@ public final class HomebrewAdapter: InstallAdapter, @unchecked Sendable {
             throw InstallError.toolNotFound("Homebrew not found. Install from https://brew.sh first.")
         }
 
-        let (args, _): ([String], String) = {
-            switch plan.action {
-            case .homebrewFormula:
-                return (["install"], "?")  // overridden below
-            case .homebrewCask:
-                return (["install", "--cask"], "?")
-            default:
-                return ([], "?")
-            }
-        }()
+        var args: [String]
+        switch type {
+        case .homebrewFormula: args = ["install"]
+        case .homebrewCask:    args = ["install", "--cask"]
+        default:               args = []
+        }
+        args.append(packageName)
 
-        // 真正的 package name 需要在调用方传入；这里 plan 阶段没收，所以再走
-        // 一次 InstallAction 拿不到。简化：plan 阶段已经接 InstallAction，
-        // 缓存 name 到 plan。但 plan 是 Codable struct，不应加可变字段。
-        // 解决：plan.toolID = toolID；package name 通过 toolID 反查（约定
-        // toolID == packageName）。对 Stage 0 8 个工具都成立。
-        var fullArgs = args
-        fullArgs.append(plan.toolID)
-
-        progress?(InstallProgress(planID: plan.id, stage: .installing, message: "Running \(brew.path) \(fullArgs.joined(separator: " "))"))
+        progress?(InstallProgress(planID: plan.id, stage: .installing, message: "Running \(brew.path) \(args.joined(separator: " "))"))
 
         let request = ProcessRequest(
             executableURL: brew,
-            arguments: fullArgs,
+            arguments: args,
             timeout: .seconds(1800)  // brew install 可能很慢
         )
 
@@ -122,15 +157,9 @@ public final class HomebrewAdapter: InstallAdapter, @unchecked Sendable {
             }
         }
     }
-
-    public func cancel(planID: String) async {
-        // 取消通过调用方 Task 传播：执行 install 的 Task 被 cancel 时，
-        // ProcessExecutor.onCancel 会 terminate 子进程。
-        // 这里保留 API 但不维护本地状态。
-    }
 }
 
-public final class HomebrewFormulaAdapter: InstallAdapter, @unchecked Sendable {
+public final class HomebrewFormulaAdapter: InstallAdapter, InstallAdapterWithAction, @unchecked Sendable {
     public let type: InstallActionType = .homebrewFormula
     private let inner: HomebrewAdapter
 
@@ -150,12 +179,20 @@ public final class HomebrewFormulaAdapter: InstallAdapter, @unchecked Sendable {
         try await inner.execute(plan, progress: progress)
     }
 
+    public func executeWithAction(
+        _ action: InstallAction,
+        plan: InstallPlan,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult {
+        try await inner.executeWithAction(action, plan: plan, progress: progress)
+    }
+
     public func cancel(planID: String) async {
         await inner.cancel(planID: planID)
     }
 }
 
-public final class HomebrewCaskAdapter: InstallAdapter, @unchecked Sendable {
+public final class HomebrewCaskAdapter: InstallAdapter, InstallAdapterWithAction, @unchecked Sendable {
     public let type: InstallActionType = .homebrewCask
     private let inner: HomebrewAdapter
 
@@ -173,6 +210,14 @@ public final class HomebrewCaskAdapter: InstallAdapter, @unchecked Sendable {
 
     public func execute(_ plan: InstallPlan, progress: InstallProgressHandler?) async throws -> InstallResult {
         try await inner.execute(plan, progress: progress)
+    }
+
+    public func executeWithAction(
+        _ action: InstallAction,
+        plan: InstallPlan,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult {
+        try await inner.executeWithAction(action, plan: plan, progress: progress)
     }
 
     public func cancel(planID: String) async {

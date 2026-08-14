@@ -93,7 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Menu Bar
 
     private func setupMenuBar() {
-        // AppMenuBar 自己创建 statusItem（"curlybraces" SF Symbol），不用 AppDelegate 这个 "CT" 占位
+        // AppMenuBar 自己创建 statusItem，并使用 CodingToolsLogo 作为状态栏图标。
         // AppDelegate 的 statusItem 字段保留作 future use
     }
 

@@ -1,47 +1,59 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.11-001-fzf",
-  "createdAt": "2026-08-11T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.11-001-fzf",
+  "createdAt" : "2026-08-11T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "CIR4qF/eGDIBVy2mM8ptHXkmkXYZG8nNJJ+zQRffayKv+ZZ48kp+sgVTEYBwwX0qVGGEKGiMfJU0rjT3SjfmBw==",
+  "tools" : [
     {
-      "id": "fzf",
-      "slug": "fzf",
-      "name": "fzf",
-      "localizedName": {
-        "en": "fzf",
-        "zh-Hans": "fzf"
-      },
-      "description": "Command-line fuzzy finder. Pipe any list into fzf and select items with an interactive filter.",
-      "localizedDescription": {
-        "en": "Command-line fuzzy finder. Pipe any list into fzf and select items with an interactive filter.",
-        "zh-Hans": "命令行模糊查找工具。把任意列表管道到 fzf，交互式过滤选择。"
-      },
-      "category": "cli-utility",
-      "tags": ["fzf", "search", "fuzzy", "cli"],
-      "homepageURL": "https://github.com/junegunn/fzf",
-      "documentationURL": "https://github.com/junegunn/fzf#usage",
-      "installOptions": [
+      "category" : "cli-utility",
+      "description" : "Command-line fuzzy finder. Pipe any list into fzf and select items with an interactive filter.",
+      "documentationURL" : "https://github.com/junegunn/fzf#usage",
+      "homepageURL" : "https://github.com/junegunn/fzf",
+      "id" : "fzf",
+      "installOptions" : [
         {
-          "type": "homebrew-formula",
-          "packageName": "fzf",
-          "versionRule": ">=0.55.0",
-          "riskLevel": "low"
+          "packageName" : "fzf",
+          "riskLevel" : "low",
+          "type" : "homebrew-formula",
+          "versionRule" : ">=0.55.0"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "fzf",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "fzf",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "Command-line fuzzy finder. Pipe any list into fzf and select items with an interactive filter.",
+        "zh-Hans" : "命令行模糊查找工具。把任意列表管道到 fzf，交互式过滤选择。"
+      },
+      "localizedName" : {
+        "en" : "fzf",
+        "zh-Hans" : "fzf"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "fzf",
+      "riskLevel" : "low",
+      "slug" : "fzf",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "fzf",
+        "search",
+        "fuzzy",
+        "cli"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

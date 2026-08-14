@@ -1,47 +1,59 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.11-001-gh",
-  "createdAt": "2026-08-11T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.11-001-gh",
+  "createdAt" : "2026-08-11T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "8psiqGA+7r1/uaaLmaRJA/wGqMfN7bNCTEDAuEzFoUKtQZ6CwfitznHK/gHXqjP4rY7v43WJAvPjYHfQHUvwAw==",
+  "tools" : [
     {
-      "id": "gh",
-      "slug": "gh",
-      "name": "GitHub CLI",
-      "localizedName": {
-        "en": "GitHub CLI",
-        "zh-Hans": "GitHub CLI"
-      },
-      "description": "Official GitHub command-line tool. Manage pull requests, issues, releases, and Actions from the terminal.",
-      "localizedDescription": {
-        "en": "Official GitHub command-line tool. Manage pull requests, issues, releases, and Actions from the terminal.",
-        "zh-Hans": "官方 GitHub 命令行工具。在终端管理 Pull Request、Issue、Release 与 Actions。"
-      },
-      "category": "git-collaboration",
-      "tags": ["github", "gh", "cli", "git"],
-      "homepageURL": "https://cli.github.com",
-      "documentationURL": "https://cli.github.com/manual/",
-      "installOptions": [
+      "category" : "git-collaboration",
+      "description" : "Official GitHub command-line tool. Manage pull requests, issues, releases, and Actions from the terminal.",
+      "documentationURL" : "https://cli.github.com/manual/",
+      "homepageURL" : "https://cli.github.com",
+      "id" : "gh",
+      "installOptions" : [
         {
-          "type": "homebrew-formula",
-          "packageName": "gh",
-          "versionRule": ">=2.50.0",
-          "riskLevel": "low"
+          "packageName" : "gh",
+          "riskLevel" : "low",
+          "type" : "homebrew-formula",
+          "versionRule" : ">=2.50.0"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "gh",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "gh",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "Official GitHub command-line tool. Manage pull requests, issues, releases, and Actions from the terminal.",
+        "zh-Hans" : "官方 GitHub 命令行工具。在终端管理 Pull Request、Issue、Release 与 Actions。"
+      },
+      "localizedName" : {
+        "en" : "GitHub CLI",
+        "zh-Hans" : "GitHub CLI"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "GitHub CLI",
+      "riskLevel" : "low",
+      "slug" : "gh",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "github",
+        "gh",
+        "cli",
+        "git"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

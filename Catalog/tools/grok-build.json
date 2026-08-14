@@ -1,46 +1,59 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.10-002-grok-build",
-  "createdAt": "2026-08-10T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.10-002-grok-build",
+  "createdAt" : "2026-08-10T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "fQOxK/rZmBZXxEs0pK8UW6Dq+vp3/OCz2hzovVHAr6XHUBPJx8MwLIMfrOS9wL1/pZmRIP6dnJhmQRV9BR5OCA==",
+  "tools" : [
     {
-      "id": "grok-build",
-      "slug": "grok-build",
-      "name": "Grok Build",
-      "localizedName": {
-        "en": "Grok Build",
-        "zh-Hans": "Grok Build"
-      },
-      "description": "xAI 官方终端 AI 编码代理。基于 grok-build-0.1，专为 Agent 化软件工程工作流训练，256K 上下文，支持 8 个并行子 Agent。",
-      "localizedDescription": {
-        "en": "xAI's official terminal AI coding agent. Powered by grok-build-0.1, optimized for software engineering workflows. 256K context, up to 8 parallel sub-agents.",
-        "zh-Hans": "xAI 官方终端 AI 编码代理。基于 grok-build-0.1，专为 Agent 化软件工程工作流训练，256K 上下文，支持 8 个并行子 Agent。"
-      },
-      "category": "ai-coding",
-      "tags": ["ai", "xai", "grok", "cli", "agent"],
-      "homepageURL": "https://x.ai",
-      "documentationURL": "https://docs.x.ai/build/overview",
-      "installOptions": [
+      "category" : "ai-coding",
+      "description" : "xAI 官方终端 AI 编码代理。基于 grok-build-0.1，专为 Agent 化软件工程工作流训练，256K 上下文，支持 8 个并行子 Agent。",
+      "documentationURL" : "https://docs.x.ai/build/overview",
+      "homepageURL" : "https://x.ai",
+      "id" : "grok-build",
+      "installOptions" : [
         {
-          "type": "npm-global",
-          "url": "https://x.ai/cli/install.sh",
-          "riskLevel": "low"
+          "riskLevel" : "low",
+          "type" : "npm-global",
+          "url" : "https://x.ai/cli/install.sh"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "grok",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "grok",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "xAI's official terminal AI coding agent. Powered by grok-build-0.1, optimized for software engineering workflows. 256K context, up to 8 parallel sub-agents.",
+        "zh-Hans" : "xAI 官方终端 AI 编码代理。基于 grok-build-0.1，专为 Agent 化软件工程工作流训练，256K 上下文，支持 8 个并行子 Agent。"
+      },
+      "localizedName" : {
+        "en" : "Grok Build",
+        "zh-Hans" : "Grok Build"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "Grok Build",
+      "riskLevel" : "low",
+      "slug" : "grok-build",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "ai",
+        "xai",
+        "grok",
+        "cli",
+        "agent"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

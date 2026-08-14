@@ -135,3 +135,29 @@ public enum InMemoryPublicKeys {
     /// 默认 dev key；raw 32 字节。空数组也行，仅允许 manifest 测试失败模式。
     public static let developmentRegistry = PublicKeyRegistry(keys: [:])
 }
+
+// MARK: - Default production verifier
+//
+// 启动期构造 Ed25519ManifestVerifier，公钥从当前 framework bundle 的
+// PublicKeys/ 子目录加载（每个 <keyID>.pub 文件 = 32 字节裸 Ed25519 公钥）。
+//
+// 注意：禁止把 `developmentRegistry`（空 registry）用于生产路径 — 那样
+// 所有签名都会被 unknownKey 拒绝，等同关闭验证。
+public enum ManifestSecurityFactory {
+    /// 构造默认 verifier（从当前 bundle 加载公钥）。
+    /// 返回 `nil` 当且仅当 bundle 中没有任何 *.pub 文件；调用方应按 P0-G1-3 拒绝启动。
+    public static func makeDefaultVerifier(
+        bundle: Bundle? = nil,
+        subdirectory: String = "PublicKeys"
+    ) -> (verifier: Ed25519ManifestVerifier, keyCount: Int)? {
+        let loader = BundlePublicKeyLoader(bundle: bundle, subdirectory: subdirectory)
+        let registry: PublicKeyRegistry
+        do {
+            registry = try loader.loadRegistry()
+        } catch {
+            return nil
+        }
+        guard !registry.keys.isEmpty else { return nil }
+        return (Ed25519ManifestVerifier(registry: registry), registry.keys.count)
+    }
+}

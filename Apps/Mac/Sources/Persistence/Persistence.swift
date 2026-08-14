@@ -14,13 +14,17 @@ public protocol Store: Sendable {
     func saveFavorite(toolID: String) async throws
     func removeFavorite(toolID: String) async throws
     func loadFavorites() async throws -> [String]
+    func saveRecent(toolID: String, maxItems: Int) async throws
+    func loadRecents() async throws -> [String]
     func saveCatalog(_ snapshot: CatalogSnapshot) async throws
     func loadLatestCatalog() async throws -> CatalogSnapshot?
+    func clearOperationHistory() async throws
 }
 
 public actor InMemoryStore: Store {
     private var installations: [String: InstallationProbe] = [:]
     private var favorites: Set<String> = []
+    private var recents: [String] = []
     private var catalog: CatalogSnapshot?
 
     public init() {}
@@ -45,11 +49,27 @@ public actor InMemoryStore: Store {
         Array(favorites)
     }
 
+    public func saveRecent(toolID: String, maxItems: Int) async throws {
+        recents.removeAll { $0 == toolID }
+        recents.insert(toolID, at: 0)
+        if recents.count > maxItems {
+            recents = Array(recents.prefix(maxItems))
+        }
+    }
+
+    public func loadRecents() async throws -> [String] {
+        recents
+    }
+
     public func saveCatalog(_ snapshot: CatalogSnapshot) async throws {
         catalog = snapshot
     }
 
     public func loadLatestCatalog() async throws -> CatalogSnapshot? {
         catalog
+    }
+
+    public func clearOperationHistory() async throws {
+        installations.removeAll()
     }
 }

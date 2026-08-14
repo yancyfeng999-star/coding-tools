@@ -1,46 +1,59 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.10-002-codex",
-  "createdAt": "2026-08-10T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.10-002-codex",
+  "createdAt" : "2026-08-10T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "3gn6c4kfzJR7eE0mDxQzamQpleIbV/Q/eE7V8JMsffhEdvlaqk2/VLqJXTBBP2qH57eY0KyL7vPucNLy1FtvAg==",
+  "tools" : [
     {
-      "id": "codex",
-      "slug": "codex",
-      "name": "Codex",
-      "localizedName": {
-        "en": "Codex",
-        "zh-Hans": "Codex"
-      },
-      "description": "OpenAI 官方终端 AI 编程智能体。基于 GPT-5-Codex，能跨文件重构、跑测试、自动开 PR。",
-      "localizedDescription": {
-        "en": "OpenAI's official terminal AI coding agent. Powered by GPT-5-Codex. Refactor across files, run tests, and open PRs automatically.",
-        "zh-Hans": "OpenAI 官方终端 AI 编程智能体。基于 GPT-5-Codex，能跨文件重构、跑测试、自动开 PR。"
-      },
-      "category": "ai-coding",
-      "tags": ["ai", "openai", "gpt-5-codex", "cli", "agent"],
-      "homepageURL": "https://openai.com/codex",
-      "documentationURL": "https://developers.openai.com/codex",
-      "installOptions": [
+      "category" : "ai-coding",
+      "description" : "OpenAI 官方终端 AI 编程智能体。基于 GPT-5-Codex，能跨文件重构、跑测试、自动开 PR。",
+      "documentationURL" : "https://developers.openai.com/codex",
+      "homepageURL" : "https://openai.com/codex",
+      "id" : "codex",
+      "installOptions" : [
         {
-          "type": "npm-global",
-          "packageName": "@openai/codex",
-          "riskLevel": "low"
+          "packageName" : "@openai/codex",
+          "riskLevel" : "low",
+          "type" : "npm-global"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "codex",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "codex",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "OpenAI's official terminal AI coding agent. Powered by GPT-5-Codex. Refactor across files, run tests, and open PRs automatically.",
+        "zh-Hans" : "OpenAI 官方终端 AI 编程智能体。基于 GPT-5-Codex，能跨文件重构、跑测试、自动开 PR。"
+      },
+      "localizedName" : {
+        "en" : "Codex",
+        "zh-Hans" : "Codex"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "Codex",
+      "riskLevel" : "low",
+      "slug" : "codex",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "ai",
+        "openai",
+        "gpt-5-codex",
+        "cli",
+        "agent"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

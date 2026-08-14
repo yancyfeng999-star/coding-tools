@@ -1,47 +1,59 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.11-001-lazydocker",
-  "createdAt": "2026-08-11T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.11-001-lazydocker",
+  "createdAt" : "2026-08-11T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "Qg7HYNIm0KiMUYfpEjxAOavtNjdLZdxmyrhm0dVWeDd0O+S7BKopU+0UK88mmMfY4E7ajS51BDJniyii/vw0Aw==",
+  "tools" : [
     {
-      "id": "lazydocker",
-      "slug": "lazydocker",
-      "name": "Lazydocker",
-      "localizedName": {
-        "en": "Lazydocker",
-        "zh-Hans": "Lazydocker"
-      },
-      "description": "Simple terminal UI for Docker and Docker Compose. View containers, images, volumes, networks; restart / rebuild / view logs.",
-      "localizedDescription": {
-        "en": "Simple terminal UI for Docker and Docker Compose. View containers, images, volumes, networks; restart / rebuild / view logs.",
-        "zh-Hans": "Docker 与 Docker Compose 的简易终端 UI。查看容器、镜像、卷、网络；重启 / 重建 / 查看日志。"
-      },
-      "category": "docker",
-      "tags": ["docker", "lazydocker", "tui", "cli"],
-      "homepageURL": "https://github.com/jesseduffield/lazydocker",
-      "documentationURL": "https://github.com/jesseduffield/lazydocker#usage",
-      "installOptions": [
+      "category" : "docker",
+      "description" : "Simple terminal UI for Docker and Docker Compose. View containers, images, volumes, networks; restart / rebuild / view logs.",
+      "documentationURL" : "https://github.com/jesseduffield/lazydocker#usage",
+      "homepageURL" : "https://github.com/jesseduffield/lazydocker",
+      "id" : "lazydocker",
+      "installOptions" : [
         {
-          "type": "homebrew-formula",
-          "packageName": "lazydocker",
-          "versionRule": ">=0.23.0",
-          "riskLevel": "low"
+          "packageName" : "lazydocker",
+          "riskLevel" : "low",
+          "type" : "homebrew-formula",
+          "versionRule" : ">=0.23.0"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "lazydocker",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "lazydocker",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "Simple terminal UI for Docker and Docker Compose. View containers, images, volumes, networks; restart / rebuild / view logs.",
+        "zh-Hans" : "Docker 与 Docker Compose 的简易终端 UI。查看容器、镜像、卷、网络；重启 / 重建 / 查看日志。"
+      },
+      "localizedName" : {
+        "en" : "Lazydocker",
+        "zh-Hans" : "Lazydocker"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "Lazydocker",
+      "riskLevel" : "low",
+      "slug" : "lazydocker",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "docker",
+        "lazydocker",
+        "tui",
+        "cli"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

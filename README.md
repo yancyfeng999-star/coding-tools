@@ -4,13 +4,13 @@
 
 Coding Tools 把 Homebrew、mise、官方安装包、官方文档和精选教程整合到一个签名化的目录中，帮助开发者安全安装、启动和持续更新开发工具。
 
-> 当前状态：项目初始化阶段（v0.0.0）。已完成产品合同、安全模型、目录 Schema、阶段计划与 Tuist 工程骨架，未进入功能实现。
+> 当前状态：v1.5.0（build 23）发布候选。已接通 24 个工具目录、Ed25519 验签、安装链、持久化收藏/最近使用、菜单栏入口和 Coding Tools 品牌资源；当前构建为本地 ad-hoc 签名，Developer ID / 公证仍待外部流程。
 
 ---
 
 ## 项目说明
 
-- **代码仓库**：`yancyfeng999-star/coding-tools`（即将创建）
+- **代码仓库**：[`yancyfeng999-star/coding-tools`](https://github.com/yancyfeng999-star/coding-tools)
 - **首发平台**：macOS 14 Sonoma 及以上
 - **架构**：Apple Silicon + Intel Universal Binary
 - **首发语言**：简体中文、English

@@ -1,6 +1,7 @@
 import Foundation
 import Domain
 import Persistence
+import ManifestSecurity
 
 // MARK: - Remote Content Loader
 //
@@ -8,13 +9,15 @@ import Persistence
 // - HTTPS only
 // - 本地缓存：`~/Library/Caches/CodingTools/content/<contentVersion>.json`
 // - 失败回退到缓存
-// 阶段 5 由子代理 B 实现。
+// - 阶段 11 修复（P0-G1-4）：fetchRemote 验签 + 缓存 manifest 也验签
+// 阶段 5 由子代理 B 实现；阶段 11 接入验签。
 
 /// 内容远程加载器。`HTTPS` only；离线/网络失败时回退到本地缓存。
 public actor RemoteContentLoader: ContentLoading {
     public let manifestURL: URL
     public let cacheDirectory: URL
     public let session: URLSession
+    public let verifier: Ed25519ManifestVerifier?
 
     private let fileManager: FileManager
 
@@ -22,13 +25,30 @@ public actor RemoteContentLoader: ContentLoading {
         manifestURL: URL,
         cacheDirectory: URL = RemoteContentLoader.defaultCacheDirectory,
         session: URLSession = .shared,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        verifier: Ed25519ManifestVerifier? = nil
     ) {
         self.manifestURL = manifestURL
         self.cacheDirectory = cacheDirectory
         self.session = session
         self.fileManager = fileManager
+        self.verifier = verifier
         try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+    }
+
+    /// 生产便利构造：从当前 framework bundle 加载 PublicKeys，构造 verifier。
+    public static func makeDefault(
+        manifestURL: URL,
+        cacheDirectory: URL = RemoteContentLoader.defaultCacheDirectory,
+        session: URLSession = .shared
+    ) -> RemoteContentLoader {
+        let factory = ManifestSecurityFactory.makeDefaultVerifier()
+        return RemoteContentLoader(
+            manifestURL: manifestURL,
+            cacheDirectory: cacheDirectory,
+            session: session,
+            verifier: factory?.verifier
+        )
     }
 
     // MARK: - Public API
@@ -97,11 +117,30 @@ public actor RemoteContentLoader: ContentLoading {
             guard manifest.schemaVersion == "1.0.0" else {
                 throw ContentError.schemaMismatch(expected: "1.0.0", got: manifest.schemaVersion)
             }
+            // P0-G1-4：content manifest 验签
+            if let verifier {
+                let payload = try ContentCanonicalizer.canonicalize(manifest)
+                try verifier.verifyPayload(
+                    payload,
+                    keyID: manifest.keyID,
+                    signatureBase64: manifest.signature
+                )
+            }
             return manifest
         } catch let err as DecodingError {
             throw ContentError.decoding(String(describing: err))
         } catch let err as ContentError {
             throw err
+        } catch let err as ManifestSecurityError {
+            switch err {
+            case .expired(let at):
+                throw ContentError.expired(filename: manifestURL.lastPathComponent, expiresAt: at)
+            default:
+                throw ContentError.signatureInvalid(
+                    filename: manifestURL.lastPathComponent,
+                    reason: "\(err)"
+                )
+            }
         } catch {
             throw ContentError.decoding(error.localizedDescription)
         }
@@ -134,7 +173,21 @@ public actor RemoteContentLoader: ContentLoading {
         guard let data = try? Data(contentsOf: url) else { return nil }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return try? decoder.decode(ContentManifest.self, from: data)
+        guard let manifest = try? decoder.decode(ContentManifest.self, from: data) else { return nil }
+        // P0-G1-4：缓存里的 manifest 也要验签，否则本地污染会绕过验证
+        if let verifier {
+            do {
+                let payload = try ContentCanonicalizer.canonicalize(manifest)
+                try verifier.verifyPayload(
+                    payload,
+                    keyID: manifest.keyID,
+                    signatureBase64: manifest.signature
+                )
+            } catch {
+                return nil
+            }
+        }
+        return manifest
     }
 
     private func persist(manifest: ContentManifest) throws {

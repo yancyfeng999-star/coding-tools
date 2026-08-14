@@ -246,11 +246,21 @@ public enum OutputRedactor {
             (#"\bgho_[A-Za-z0-9]{20,}\b"#, "***"),
             (#"\bghs_[A-Za-z0-9]{20,}\b"#, "***"),
             (#"\bghu_[A-Za-z0-9]{20,}\b"#, "***"),
+            // npm tokens（P1-G3-4 修复）
+            (#"\bnpm_[A-Za-z0-9]{36,}\b"#, "***"),
+            // AWS access keys
+            (#"\bAKIA[0-9A-Z]{16}\b"#, "***"),
+            // Anthropic / OpenAI API keys
+            (#"\bsk-ant-[A-Za-z0-9_\-]{20,}\b"#, "***"),
+            (#"\bsk-[A-Za-z0-9]{20,}\b"#, "***"),
+            // Generic API_KEY= / TOKEN= / SECRET=
+            (#"(^|\s)(API_KEY|SECRET|TOKEN|PASSWORD|AUTH|CLIENT_SECRET|ACCESS_KEY)=([^\s]+)"#, "$1$2=***"),
             // process.env prints (e.g. "PATH=/usr/bin", "HOME=/Users/foo")
-            // 匹配行首或空白后的 KEY=VALUE
-            (#"(^|\s)(HOME|PATH|SHELL|API_KEY|SECRET|TOKEN|PASSWORD)=([^\s]+)"#, "$1$2=***"),
+            (#"(^|\s)(HOME|PATH|SHELL)=([^\s]+)"#, "$1$2=***"),
             // PEM private key block
             (#"-----BEGIN (?:RSA |EC |DSA |OPENSSH |)PRIVATE KEY-----[\s\S]*?-----END (?:RSA |EC |DSA |OPENSSH |)PRIVATE KEY-----"#, "***PRIVATE KEY REDACTED***"),
+            // PostgreSQL connection string with password
+            (#"\bpostgres(ql)?://[^:\s]+:[^@\s]+@"#, "***POSTGRES_URL***"),
         ]
         for (pattern, replacement) in patterns {
             if let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) {
@@ -263,6 +273,18 @@ public enum OutputRedactor {
             }
         }
         return out
+    }
+
+    /// 截断绝对路径为 `/Users/***/.../last3` 形式（用于 UI 显示 P0-G3-3）。
+    public static func redactPath(_ path: String, keepLastSegments: Int = 2) -> String {
+        let home = NSHomeDirectory()
+        if path.hasPrefix(home) {
+            let suffix = path.dropFirst(home.count)
+            let parts = suffix.split(separator: "/").map(String.init)
+            let lastN = parts.suffix(keepLastSegments).joined(separator: "/")
+            return "/Users/***/\(lastN)"
+        }
+        return path
     }
 }
 

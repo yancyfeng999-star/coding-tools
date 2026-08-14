@@ -103,7 +103,13 @@ public final class HelperInstallExecutor: @unchecked Sendable {
         }
         do {
             let plan = try await adapter.plan(toolID: toolID, action: action)
-            let result = try await adapter.execute(plan, progress: nil)
+            // P0-G2-1 修复：用 executeWithAction 走完整 action 链路
+            let result: InstallResult
+            if let withAction = adapter as? InstallAdapterWithAction {
+                result = try await withAction.executeWithAction(action, plan: plan, progress: nil)
+            } else {
+                result = try await adapter.execute(plan, progress: nil)
+            }
             reply(HelperInstallResponse(
                 success: result.exitCode == 0,
                 exitCode: result.exitCode,

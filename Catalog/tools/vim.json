@@ -1,47 +1,58 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.11-001-vim",
-  "createdAt": "2026-08-11T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.11-001-vim",
+  "createdAt" : "2026-08-11T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "JwFjN+O9ZMB8Z1bPla5yW4Ybbkuk/1zfz/c+/xPugp4MZT5NO+NDqBajwxryFuDVg+9sYJZtpJQ0iUbTdSsSDg==",
+  "tools" : [
     {
-      "id": "vim",
-      "slug": "vim",
-      "name": "Vim",
-      "localizedName": {
-        "en": "Vim",
-        "zh-Hans": "Vim"
-      },
-      "description": "Highly configurable text editor built to enable efficient text editing. Pre-installed on macOS but this catalog entry tracks Homebrew-managed versions.",
-      "localizedDescription": {
-        "en": "Highly configurable text editor built to enable efficient text editing. Pre-installed on macOS but this catalog entry tracks Homebrew-managed versions.",
-        "zh-Hans": "高度可配置的文本编辑器，为高效编辑而设计。macOS 自带 Vim，本条目跟踪 Homebrew 管理的版本。"
-      },
-      "category": "editor",
-      "tags": ["vim", "editor", "cli"],
-      "homepageURL": "https://www.vim.org",
-      "documentationURL": "https://www.vim.org/docs.php",
-      "installOptions": [
+      "category" : "editor",
+      "description" : "Highly configurable text editor built to enable efficient text editing. Pre-installed on macOS but this catalog entry tracks Homebrew-managed versions.",
+      "documentationURL" : "https://www.vim.org/docs.php",
+      "homepageURL" : "https://www.vim.org",
+      "id" : "vim",
+      "installOptions" : [
         {
-          "type": "homebrew-formula",
-          "packageName": "vim",
-          "versionRule": ">=9.0.0",
-          "riskLevel": "low"
+          "packageName" : "vim",
+          "riskLevel" : "low",
+          "type" : "homebrew-formula",
+          "versionRule" : ">=9.0.0"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "vim",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "vim",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "Highly configurable text editor built to enable efficient text editing. Pre-installed on macOS but this catalog entry tracks Homebrew-managed versions.",
+        "zh-Hans" : "高度可配置的文本编辑器，为高效编辑而设计。macOS 自带 Vim，本条目跟踪 Homebrew 管理的版本。"
+      },
+      "localizedName" : {
+        "en" : "Vim",
+        "zh-Hans" : "Vim"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "Vim",
+      "riskLevel" : "low",
+      "slug" : "vim",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "vim",
+        "editor",
+        "cli"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

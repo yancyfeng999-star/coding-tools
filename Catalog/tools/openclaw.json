@@ -1,46 +1,60 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.10-002-openclaw",
-  "createdAt": "2026-08-10T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.10-002-openclaw",
+  "createdAt" : "2026-08-10T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "DKKqO79SK/xEVnWV0OeZLG36KrZT+xIll11f52xzdqwRnvXctseupJUV9sWEjmDRZf7MDtnip9mzchX3e9CSAg==",
+  "tools" : [
     {
-      "id": "openclaw",
-      "slug": "openclaw",
-      "name": "OpenClaw",
-      "localizedName": {
-        "en": "OpenClaw",
-        "zh-Hans": "OpenClaw"
-      },
-      "description": "开源本地 AI 执行引擎。可实现文件操作、终端命令执行、浏览器控制、飞书/钉钉/Telegram 网关等自动化任务。",
-      "localizedDescription": {
-        "en": "Open-source local AI execution engine. Automate file operations, terminal commands, browser control, and Feishu/DingTalk/Telegram gateways.",
-        "zh-Hans": "开源本地 AI 执行引擎。可实现文件操作、终端命令执行、浏览器控制、飞书/钉钉/Telegram 网关等自动化任务。"
-      },
-      "category": "ai-coding",
-      "tags": ["ai", "openclaw", "automation", "gateway", "cli", "agent"],
-      "homepageURL": "https://openclaw.ai",
-      "documentationURL": "https://docs.openclaw.ai",
-      "installOptions": [
+      "category" : "ai-coding",
+      "description" : "开源本地 AI 执行引擎。可实现文件操作、终端命令执行、浏览器控制、飞书/钉钉/Telegram 网关等自动化任务。",
+      "documentationURL" : "https://docs.openclaw.ai",
+      "homepageURL" : "https://openclaw.ai",
+      "id" : "openclaw",
+      "installOptions" : [
         {
-          "type": "npm-global",
-          "packageName": "openclaw@latest",
-          "riskLevel": "low"
+          "packageName" : "openclaw@latest",
+          "riskLevel" : "low",
+          "type" : "npm-global"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "openclaw",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "openclaw",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "12.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "Open-source local AI execution engine. Automate file operations, terminal commands, browser control, and Feishu/DingTalk/Telegram gateways.",
+        "zh-Hans" : "开源本地 AI 执行引擎。可实现文件操作、终端命令执行、浏览器控制、飞书/钉钉/Telegram 网关等自动化任务。"
+      },
+      "localizedName" : {
+        "en" : "OpenClaw",
+        "zh-Hans" : "OpenClaw"
+      },
+      "minimumMacOS" : "12.0",
+      "name" : "OpenClaw",
+      "riskLevel" : "low",
+      "slug" : "openclaw",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "ai",
+        "openclaw",
+        "automation",
+        "gateway",
+        "cli",
+        "agent"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

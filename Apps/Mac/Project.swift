@@ -42,6 +42,8 @@ let project = Project(
             sources: ["Sources/Persistence/**"],
             dependencies: [
                 .target(name: "Domain"),
+                .target(name: "Catalog"),
+                .target(name: "ManifestSecurity"),
             ]
         ),
         .target(
@@ -73,6 +75,7 @@ let project = Project(
             sources: ["Sources/Catalog/**"],
             dependencies: [
                 .target(name: "Domain"),
+                .target(name: "ManifestSecurity"),  // P0-G1-1/2：签名验签接通
             ]
         ),
         .target(
@@ -82,6 +85,9 @@ let project = Project(
             bundleId: "com.codingtools.manifestsecurity",
             deploymentTargets: .macOS("14.0"),
             sources: ["Sources/ManifestSecurity/**"],
+            resources: [
+                .folderReference(path: "Sources/ManifestSecurity/PublicKeys"),
+            ],
             dependencies: [
                 .target(name: "Domain"),
             ]
@@ -139,6 +145,8 @@ let project = Project(
             dependencies: [
                 .target(name: "Domain"),
                 .target(name: "Persistence"),
+                .target(name: "Catalog"),
+                .target(name: "ManifestSecurity"),  // P0-G1-4：content 签名验签
             ]
         ),
         .target(
@@ -187,6 +195,8 @@ let project = Project(
                 .target(name: "Launching"),
                 .target(name: "Content"),
                 .target(name: "Persistence"),
+                .target(name: "LatestVersion"),
+                .target(name: "AIConfigDiscovery"),
                 .target(name: "Localization"),
                 .target(name: "Theme"),
                 .target(name: "Updates"),

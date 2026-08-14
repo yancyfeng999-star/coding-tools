@@ -5,9 +5,9 @@
 
 ## 当前状态
 
-- **阶段**：v1.5.0 阶段 9 + 12 起步；阶段 11 目录签名未开始
-- **版本**：v1.5.0-rc1（build，下一个）
-- **最近更新**：2026-08-11
+- **阶段**：v1.5.0 发布候选；阶段 9 架构就位、阶段 11 目录签名已接通、阶段 12 本地 Crash 落盘已起步
+- **版本**：v1.5.0（build 23）
+- **最近更新**：2026-08-14
 
 ## 阶段路线
 
@@ -15,7 +15,7 @@
 | --- | --- | --- | --- | --- |
 | 0 | 产品和安全契约 | 3–5 d | ✅ 已完成 | Coordinator |
 | 1 | 工程骨架 | 3–5 d | ✅ 已完成 | Coordinator |
-| 2 | 目录与安全目录 | 1–2 w | ✅ 已完成（**目录签名未接通**） | 子代理 A |
+| 2 | 目录与安全目录 | 1–2 w | ✅ 已完成（Ed25519 验签已接通） | 子代理 A |
 | 3 | 安装、检测、启动 | 2–3 w | ✅ 已完成 | 子代理 A |
 | 4 | 主界面 | 1.5–2 w | ✅ 已完成 | 子代理 B |
 | 5 | 内容中心 | 1–1.5 w | ✅ 已完成 | 子代理 B |
@@ -24,10 +24,18 @@
 | 8 | 持续发布 v1.2.x | — | ✅ 已完成（v1.2.4 Latest） | Coordinator |
 | 9 | Sandbox + XPC Helper | 2–3 w | 🟡 **架构就位**（待 Apple ID 开 sandbox） | Coordinator |
 | 10 | Apple Developer ID + 签名 / 公证 | 1–2 w（依赖外部） | ⬜ 未开始 | Coordinator |
-| 11 | 目录签名接通（ManifestSecurity 接到 Catalog 加载链） | 1 w | ⬜ 未开始 | 子代理 A + C |
+| 11 | 目录签名接通（ManifestSecurity 接到 Catalog 加载链） | 1 w | ✅ 已完成（工具与内容目录均验签） | 子代理 A + C |
 | 12 | Post-release 闭环（遥测 / 反馈 / Crash） | 2 w | 🟡 **Crash 本地落盘起步** | 子代理 B |
 
-## 已完成（本轮 · 2026-08-11）
+## 已完成（本轮 · 2026-08-14）
+
+### v1.5.0 发布候选收口
+- [x] 24 个工具目录与内容目录加入 Ed25519 签名，Bundle 内置公钥，Catalog/Content 加载链默认验签并拒绝失败数据。
+- [x] 安装链按真实 `InstallAction` 透传到 Homebrew / mise / npm / official-artifact，移除 `curl | bash` 回退；取消会停止任务并支持 Helper 兜底。
+- [x] FileJSONStore 持久化收藏、最近使用与安装状态；进度日志统一脱敏。
+- [x] 菜单栏启动入口按 CLI / App / 白名单 URL 分发；首页、详情页、安装弹窗显示真实来源、风险和状态。
+- [x] Coding Tools logo 接入菜单栏状态项、菜单头部、关于卡片和 AppIcon；支持 PNG 1:1 资源。
+- [x] 9 个测试 scheme 共 194 个测试通过；Debug / Release Universal Binary 构建通过。
 
 ### 阶段 7 — Sparkle 自动更新 + 发版管道
 - [x] Sparkle 2.x appcast `xml:lang` 强要求适配（v1.0.3 → v1.0.9）
@@ -73,7 +81,6 @@
 
 ## 进行中
 
-- [ ] v1.5.0-rc1 发版（XPC Helper 架构 + Crash 本地落盘 + Catalog 24 工具 + 135 测试）
 - [ ] Apple Developer ID 申请（外部流程，阶段 10 阻塞 sandbox + 公证 + 上架）
 - [ ] Sandbox 实际开启（等阶段 10 完成）
 - [ ] NpmGlobalAdapter 切换到走 HelperClient（阶段 9 二期）
@@ -100,11 +107,11 @@
 - [ ] 替换 ad-hoc 签名为 Developer ID
 
 ### 阶段 11（目录签名）
-- [ ] 生成 Ed25519 密钥对（管理 `Catalog/signing/key.priv`，公钥进 App）
-- [ ] 把 `ManifestCanonicalizer` 接到 `CatalogLoader`
-- [ ] 给现有 24 个 `tools/*.json` + `content/*.json` 签 Ed25519
-- [ ] Catalog 加载时验签 + 检查过期 + 检查撤销列表
-- [ ] `Catalog/revocations/` 维护流程
+- [x] Ed25519 公钥随 App 入库，私钥仅保留在本机 `.keys/`
+- [x] `ManifestCanonicalizer` 接到 `CatalogLoader` 与 `ContentLoader`
+- [x] 现有 24 个 `tools/*.json` 与 `content/*.json` 已签名
+- [x] Catalog 加载时验签、检查过期并检查撤销列表
+- [ ] `Catalog/revocations/` 维护流程持续补齐
 
 ### 阶段 12 二期（Crash 报告访问 + Sentry 可选）
 - [ ] Settings 加「打开 crash log 文件夹」按钮
@@ -121,8 +128,8 @@
 | v1.1.0 | UI 打磨（教程 / 菜单栏 / ToolCard） | ✅ 已发布 |
 | v1.2.0 | 多语言扩展 + Settings 关于 + Toast | ✅ 已发布 |
 | v1.2.1 | 文档清理 patch | ✅ 已发布 |
-| v1.2.2 | UpdatesTests 修复 + 反馈问题 + 工具扩充 | 🔄 本轮目标 |
-| v1.5.0 | Sandbox 重启 + 目录签名接通 | 🟡 架构就位，等 Apple ID |
+| v1.2.2 | UpdatesTests 修复 + 反馈问题 + 工具扩充 | 🔄 历史文档待归档 |
+| v1.5.0 | 目录安全、安装链、持久化、菜单栏与品牌资源收口 | 🔄 本轮发布 |
 | v2.0.0 | Apple Developer ID + 公证 + App Store 上架 | ⬜ 待启动 |
 
 ## 风险登记
@@ -131,9 +138,9 @@
 | --- | --- | --- |
 | Apple Developer ID 申请 | 🔴 未开始 | 阶段 10；外部流程阻塞（无 Apple ID） |
 | Sandbox 关闭 | 🔴 v1.0.0 起一直未恢复 | 阶段 9：引入 XPC Helper 后再开 |
-| 目录签名未接通 | 🔴 10 个 tools 全部 signature="" | 阶段 11：ManifestSecurity 代码已就绪，待接 CatalogLoader |
-| Post-release 闭环缺失 | 🔴 无崩溃收集、无用户反馈 | 阶段 12：v1.2.2 先加 GitHub Issues 入口 |
-| Catalog 工具数低于承诺 | 🟡 当前 10 / 承诺 20–30 | 持续扩充中 |
+| 目录签名未接通 | 🟢 已修复 | 24 个工具与内容 manifest 已签名；加载链 fail-closed |
+| Post-release 闭环缺失 | 🟡 本地 Crash 已落盘，云端收集未接 | 阶段 12 后续评估 Sentry / 反馈闭环 |
+| Catalog 工具数低于承诺 | 🟢 24 个工具 | 后续按目录治理流程扩充 |
 | 测试覆盖率 ~22.5% | 🟡 偏低 | 关键模块补 AppTests / CatalogTests |
 | Sparkle 端到端更新未真实验证 | 🟡 release 成功 ≠ 用户装机成功 | 需要真实装机记录 |
 | CFBundleLocalizations 与 .xcstrings 不一致 | 🟢 已修复（v1.2.2） | Info.plist 补 5 种语言 |
@@ -144,10 +151,10 @@
 
 ## 下一动作
 
-1. 完成 v1.2.2 修复集（UpdatesTests / 反馈问题 / 工具扩充 / 测试）
-2. 发版 v1.2.2 → GitHub Latest
-3. 规划 v1.5.0：Sandbox 重启 + 目录签名接通
-4. 申请 Apple Developer ID（独立流程，外部阻塞）
+1. 完成 v1.5.0 GitHub Release 与远程资产核验
+2. 申请 Apple Developer ID（独立流程，外部阻塞）
+3. 全 Adapter 迁移到 Helper 后重新开启 App Sandbox
+4. 在独立机器完成安装与 Sparkle 端到端升级验收
 
 ## 维护规则
 

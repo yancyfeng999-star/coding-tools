@@ -1,5 +1,6 @@
 import Foundation
 import Domain
+import ManifestSecurity
 
 // MARK: - Content
 //
@@ -60,26 +61,48 @@ public protocol ContentLoading: Sendable {
 }
 
 /// 单次内容快照的 manifest 格式。Catalog 也用类似的 v1 + 签名 + 缓存。
-/// 阶段 5 占位：先不加签名验证（子代理 A 走 Catalog 签名）。
+/// 阶段 11 修复（P0-G1-4）：加 keyID + signature 字段；走 ManifestSecurity 验签。
 public struct ContentManifest: Hashable, Sendable, Codable {
     public let schemaVersion: String
     public let contentVersion: String
     public let createdAt: Date
     public let expiresAt: Date
+    public let keyID: String
+    public let signature: String
     public let items: [ContentItem]
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, contentVersion, createdAt, expiresAt, keyID, signature, items
+    }
 
     public init(
         schemaVersion: String = "1.0.0",
         contentVersion: String,
         createdAt: Date,
         expiresAt: Date,
+        keyID: String = "",
+        signature: String = "",
         items: [ContentItem]
     ) {
         self.schemaVersion = schemaVersion
         self.contentVersion = contentVersion
         self.createdAt = createdAt
         self.expiresAt = expiresAt
+        self.keyID = keyID
+        self.signature = signature
         self.items = items
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.schemaVersion = try c.decode(String.self, forKey: .schemaVersion)
+        self.contentVersion = try c.decode(String.self, forKey: .contentVersion)
+        self.createdAt = try c.decode(Date.self, forKey: .createdAt)
+        self.expiresAt = try c.decode(Date.self, forKey: .expiresAt)
+        // 兼容旧 fixture：keyID / signature 缺失时用空字符串（验签会拒）
+        self.keyID = try c.decodeIfPresent(String.self, forKey: .keyID) ?? ""
+        self.signature = try c.decodeIfPresent(String.self, forKey: .signature) ?? ""
+        self.items = try c.decode([ContentItem].self, forKey: .items)
     }
 
     public var isExpired: Bool { expiresAt < Date() }
@@ -90,4 +113,7 @@ public enum ContentError: Error, Sendable, Equatable {
     case network(String)
     case decoding(String)
     case schemaMismatch(expected: String, got: String)
+    case signatureInvalid(filename: String, reason: String)
+    case expired(filename: String, expiresAt: Date)
+    case verifierUnavailable(reason: String)
 }

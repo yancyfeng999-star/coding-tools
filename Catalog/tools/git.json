@@ -1,47 +1,59 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.10-001-git",
-  "createdAt": "2026-08-10T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.10-001-git",
+  "createdAt" : "2026-08-10T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "1GelCMEf76X7goAK+/VKrziWZFfI7X6Ro+uVrHLSI6GAQ8CWTgeoRUFVGgB2dONoJwMqUHy41EnL2MxHM5K2AA==",
+  "tools" : [
     {
-      "id": "git",
-      "slug": "git",
-      "name": "Git",
-      "localizedName": {
-        "en": "Git",
-        "zh-Hans": "Git"
-      },
-      "description": "Distributed version control system designed to handle everything from small to very large projects with speed and efficiency.",
-      "localizedDescription": {
-        "en": "Distributed version control system designed to handle everything from small to very large projects with speed and efficiency.",
-        "zh-Hans": "分布式版本控制系统，速度快且可扩展，能够高效处理从小型到超大型项目。"
-      },
-      "category": "git-collaboration",
-      "tags": ["vcs", "git", "cli", "scm"],
-      "homepageURL": "https://git-scm.com",
-      "documentationURL": "https://git-scm.com/doc",
-      "installOptions": [
+      "category" : "git-collaboration",
+      "description" : "Distributed version control system designed to handle everything from small to very large projects with speed and efficiency.",
+      "documentationURL" : "https://git-scm.com/doc",
+      "homepageURL" : "https://git-scm.com",
+      "id" : "git",
+      "installOptions" : [
         {
-          "type": "homebrew-formula",
-          "packageName": "git",
-          "versionRule": ">=2.46.0",
-          "riskLevel": "low"
+          "packageName" : "git",
+          "riskLevel" : "low",
+          "type" : "homebrew-formula",
+          "versionRule" : ">=2.46.0"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "git",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "git",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "Distributed version control system designed to handle everything from small to very large projects with speed and efficiency.",
+        "zh-Hans" : "分布式版本控制系统，速度快且可扩展，能够高效处理从小型到超大型项目。"
+      },
+      "localizedName" : {
+        "en" : "Git",
+        "zh-Hans" : "Git"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "Git",
+      "riskLevel" : "low",
+      "slug" : "git",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "vcs",
+        "git",
+        "cli",
+        "scm"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

@@ -274,10 +274,21 @@ final class RemoteCatalogLoaderNetworkTests: XCTestCase {
 
 final class CatalogErrorTests: XCTestCase {
     func testEquatable() {
-        XCTAssertEqual(CatalogError.expired, CatalogError.expired)
+        let pastExpiry = Date(timeIntervalSince1970: 1700000000)
+        XCTAssertEqual(
+            CatalogError.expired(filename: "x.json", expiresAt: pastExpiry),
+            CatalogError.expired(filename: "x.json", expiresAt: pastExpiry)
+        )
         XCTAssertEqual(CatalogError.signatureInvalid, CatalogError.signatureInvalid)
+        XCTAssertEqual(
+            CatalogError.signatureInvalidDetailed(filename: "x", reason: "y"),
+            CatalogError.signatureInvalidDetailed(filename: "x", reason: "y")
+        )
         XCTAssertEqual(CatalogError.revoked(toolID: "x"), CatalogError.revoked(toolID: "x"))
         XCTAssertNotEqual(CatalogError.revoked(toolID: "x"), CatalogError.revoked(toolID: "y"))
-        XCTAssertNotEqual(CatalogError.expired, CatalogError.signatureInvalid)
+        XCTAssertNotEqual(
+            CatalogError.expired(filename: "a", expiresAt: pastExpiry),
+            CatalogError.signatureInvalid
+        )
     }
 }

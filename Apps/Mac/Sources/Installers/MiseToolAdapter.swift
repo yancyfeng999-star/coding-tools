@@ -7,10 +7,12 @@ import ProcessExecution
 // `mise use <tool>@<version>` —— version 可选。
 // 通过 `which mise` 探测 mise 路径。
 
-public final class MiseToolAdapter: InstallAdapter, @unchecked Sendable {
+public final class MiseToolAdapter: InstallAdapter, InstallAdapterWithAction, @unchecked Sendable {
     public let type: InstallActionType = .miseTool
     private let executor: any ProcessExecuting
     private let misePath: URL?
+    private var pendingActions: [String: InstallAction] = [:]
+    private let actionsLock = NSLock()
 
     public init(
         executor: any ProcessExecuting = ProcessExecutor(),
@@ -26,6 +28,41 @@ public final class MiseToolAdapter: InstallAdapter, @unchecked Sendable {
     }
 
     public func execute(_ plan: InstallPlan, progress: InstallProgressHandler?) async throws -> InstallResult {
+        let action = actionsLock.withLock { pendingActions.removeValue(forKey: plan.id) }
+        guard let action else {
+            throw InstallError.preconditionFailed("MiseToolAdapter requires executeWithAction for action context")
+        }
+        return try await runMiseInstall(action: action, plan: plan, progress: progress)
+    }
+
+    /// P0-G2-2 修复：从 action 取真实 tool name + version，而非 plan.toolID。
+    public func executeWithAction(
+        _ action: InstallAction,
+        plan: InstallPlan,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult {
+        actionsLock.withLock { pendingActions[plan.id] = action }
+        return try await runMiseInstall(action: action, plan: plan, progress: progress)
+    }
+
+    public func cancel(planID: String) async {
+        actionsLock.withLock { _ = pendingActions.removeValue(forKey: planID) }
+    }
+
+    // MARK: - Helpers
+
+    private func runMiseInstall(
+        action: InstallAction,
+        plan: InstallPlan,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult {
+        guard case .miseTool(let name, let version) = action else {
+            throw InstallError.unsupported(type)
+        }
+        guard !name.isEmpty else {
+            throw InstallError.preconditionFailed("miseTool requires non-empty tool name")
+        }
+
         let mise: URL
         if let provided = misePath {
             mise = provided
@@ -35,17 +72,11 @@ public final class MiseToolAdapter: InstallAdapter, @unchecked Sendable {
             throw InstallError.toolNotFound("mise not found. Install from https://mise.jdx.dev first.")
         }
 
-        // 把 toolID 解析为 tool name + version（约定：toolID == tool name）
-        // 真实使用方应在 InstallAction.miseTool 阶段传入 version；这里做
-        // 兜底（如果 InstallAction 用了 .homebrewFormula 等被错误路由过来，
-        // toolID 通常就是 tool name）。
-        let (toolName, version) = parseToolID(plan.toolID)
-
         let args: [String]
-        if let v = version {
-            args = ["use", "-g", "\(toolName)@\(v)"]
+        if let v = version, !v.isEmpty {
+            args = ["use", "-g", "\(name)@\(v)"]
         } else {
-            args = ["use", "-g", toolName]
+            args = ["use", "-g", name]
         }
 
         progress?(InstallProgress(planID: plan.id, stage: .installing, message: "Running \(mise.path) \(args.joined(separator: " "))"))
@@ -72,21 +103,6 @@ public final class MiseToolAdapter: InstallAdapter, @unchecked Sendable {
             default: throw InstallError.failed(exitCode: -1, message: String(describing: e))
             }
         }
-    }
-
-    public func cancel(planID: String) async {
-        // 取消通过调用方 Task 传播（同 HomebrewAdapter 注释）
-    }
-
-    // MARK: - Helpers
-
-    private func parseToolID(_ id: String) -> (name: String, version: String?) {
-        // 约定: "node@22" → ("node", "22")
-        let parts = id.split(separator: "@", maxSplits: 1).map(String.init)
-        if parts.count == 2 {
-            return (parts[0], parts[1])
-        }
-        return (id, nil)
     }
 
     private func resolveMise() async -> URL? {

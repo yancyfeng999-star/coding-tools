@@ -13,7 +13,7 @@
 | 项 | 值 |
 | --- | --- |
 | 本地根目录 | `…/自研软件/Coding Tools` |
-| 远程 | `https://github.com/yancyfeng999-star/coding-tools.git`（待创建） |
+| 远程 | `https://github.com/yancyfeng999-star/coding-tools.git` |
 | 默认分支 | `main` |
 | Mac 工程 | `Apps/Mac/`（Tuist + Xcode，Scheme `CodingTools`） |
 | 发版脚本 | `Apps/Mac/scripts/release.sh` |

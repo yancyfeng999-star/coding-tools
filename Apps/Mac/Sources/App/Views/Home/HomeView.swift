@@ -5,6 +5,7 @@ import UI
 import Domain
 import AIConfigDiscovery
 import Updates
+import ProcessExecution
 
 /// 首页：欢迎语 + 推荐 + 最近使用 + 可更新（接 Sparkle）。
 struct HomeView: View {
@@ -78,9 +79,10 @@ struct HomeView: View {
     @ViewBuilder
     private func summaryStats(snapshot: Domain.CatalogSnapshot) -> some View {
         HStack(spacing: 12) {
-            StatCard(title: "工具", value: "\(snapshot.tools.count)", icon: "shippingbox.fill", color: .blue)
-            StatCard(title: "已收藏", value: "\(state.favorites.count)", icon: "star.fill", color: .yellow)
-            StatCard(title: "最近", value: "\(state.recent.count)", icon: "clock.fill", color: .green)
+            // P0-G4-3 修复：title 改为 LocalizedStringKey 以走本地化查找
+            StatCard(titleKey: "home.stats.tools", value: "\(snapshot.tools.count)", icon: "shippingbox.fill", color: .blue)
+            StatCard(titleKey: "home.stats.favorites", value: "\(state.favorites.count)", icon: "star.fill", color: .yellow)
+            StatCard(titleKey: "home.stats.recent", value: "\(state.recent.count)", icon: "clock.fill", color: .green)
         }
     }
 
@@ -197,10 +199,17 @@ struct HomeView: View {
 }
 
 private struct StatCard: View {
-    let title: String
+    let titleKey: LocalizedStringKey
     let value: String
     let icon: String
     let color: Color
+
+    init(titleKey: LocalizedStringKey, value: String, icon: String, color: Color) {
+        self.titleKey = titleKey
+        self.value = value
+        self.icon = icon
+        self.color = color
+    }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -212,7 +221,7 @@ private struct StatCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(value)
                     .font(.title2.bold())
-                Text(title)
+                Text(titleKey)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -235,7 +244,8 @@ private struct HomeToolCard: View {
             HStack(alignment: .top) {
                 ToolIconView(toolID: tool.id, category: tool.category, size: 40)
                 Spacer()
-                HealthBadge(status: .notInstalled)
+                // P0-G4-2 修复：用 state.probe 真实状态
+                HealthBadge(status: state.probe(for: tool.id)?.healthStatus ?? .notInstalled)
             }
             Text(tool.name)
                 .font(.headline)
@@ -428,7 +438,8 @@ private struct DiscoveredConfigRow: View {
                 Text(toolDisplayName(config.toolID))
                     .font(.subheadline)
                     .lineLimit(1)
-                Text(config.configPath.path)
+                // P0-G3-3 修复：路径脱敏为 /Users/***/last2
+                Text(redactedPath(config.configPath.path))
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -461,6 +472,10 @@ private struct DiscoveredConfigRow: View {
             Color.secondary.opacity(0.06),
             in: RoundedRectangle(cornerRadius: 8, style: .continuous)
         )
+    }
+
+    private func redactedPath(_ path: String) -> String {
+        OutputRedactor.redactPath(path, keepLastSegments: 2)
     }
 }
 

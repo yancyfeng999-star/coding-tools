@@ -168,4 +168,51 @@ public final class AdapterRegistry: @unchecked Sendable {
         let plan = try await adapter.plan(toolID: toolID, action: action)
         return try await adapter.execute(plan, progress: progress)
     }
+
+    /// P0-G2-1 修复：把 InstallAction 显式传给 adapter 的 executeWithAction，
+    /// 避免 plan 阶段丢失 action 导致 NpmGlobalAdapter / OfficialArtifactAdapter
+    /// 抛 preconditionFailed。
+    public func executeWithAction(
+        toolID: String,
+        action: InstallAction,
+        progress: InstallProgressHandler? = nil
+    ) async throws -> InstallResult {
+        let actionType: InstallActionType
+        switch action {
+        case .homebrewFormula: actionType = .homebrewFormula
+        case .homebrewCask: actionType = .homebrewCask
+        case .miseTool: actionType = .miseTool
+        case .officialArtifact: actionType = .officialArtifact
+        case .npmGlobal: actionType = .npmGlobal
+        }
+        guard let adapter = adapters[actionType] else {
+            throw InstallError.adapterUnavailable(actionType.rawValue)
+        }
+        let plan = try await adapter.plan(toolID: toolID, action: action)
+        // 优先调用 executeWithAction（支持 plan 不携带 action 的 adapter）
+        if let withAction = adapter as? InstallAdapterWithAction {
+            return try await withAction.executeWithAction(action, plan: plan, progress: progress)
+        }
+        return try await adapter.execute(plan, progress: progress)
+    }
+}
+
+/// P0-G2-1：显式声明支持 executeWithAction 的 adapter 接口（默认实现）。
+public protocol InstallAdapterWithAction: InstallAdapter {
+    func executeWithAction(
+        _ action: InstallAction,
+        plan: InstallPlan,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult
+}
+
+public extension InstallAdapterWithAction {
+    /// 旧式入口（plan-only）的默认实现：先存 action 再调 execute。
+    func executeWithAction(
+        _ action: InstallAction,
+        plan: InstallPlan,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult {
+        return try await execute(plan, progress: progress)
+    }
 }

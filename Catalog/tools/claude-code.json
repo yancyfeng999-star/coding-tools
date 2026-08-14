@@ -1,46 +1,59 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.10-002-claude-code",
-  "createdAt": "2026-08-10T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.10-002-claude-code",
+  "createdAt" : "2026-08-10T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "iWMFQRHukbwD0zQIwSpdLhAgFNAjU40AJHYfh+pO54960fyhh1nx4cigpr9PjSEdqvPRwMctoUsINvjNjjVkDg==",
+  "tools" : [
     {
-      "id": "claude-code",
-      "slug": "claude-code",
-      "name": "Claude Code",
-      "localizedName": {
-        "en": "Claude Code",
-        "zh-Hans": "Claude Code"
-      },
-      "description": "Anthropic 官方终端 AI 编程助手。在终端直接与 Claude 协作，编辑文件、运行命令、管理 PR。",
-      "localizedDescription": {
-        "en": "Anthropic's official terminal AI coding agent. Edit files, run commands, and manage PRs directly from your terminal.",
-        "zh-Hans": "Anthropic 官方终端 AI 编程助手。在终端直接与 Claude 协作，编辑文件、运行命令、管理 PR。"
-      },
-      "category": "ai-coding",
-      "tags": ["ai", "anthropic", "claude", "cli", "agent"],
-      "homepageURL": "https://claude.com/product/claude-code",
-      "documentationURL": "https://docs.claude.com/en/docs/claude-code",
-      "installOptions": [
+      "category" : "ai-coding",
+      "description" : "Anthropic 官方终端 AI 编程助手。在终端直接与 Claude 协作，编辑文件、运行命令、管理 PR。",
+      "documentationURL" : "https://docs.claude.com/en/docs/claude-code",
+      "homepageURL" : "https://claude.com/product/claude-code",
+      "id" : "claude-code",
+      "installOptions" : [
         {
-          "type": "npm-global",
-          "packageName": "@anthropic-ai/claude-code",
-          "riskLevel": "low"
+          "packageName" : "@anthropic-ai/claude-code",
+          "riskLevel" : "low",
+          "type" : "npm-global"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "claude",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "claude",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "Anthropic's official terminal AI coding agent. Edit files, run commands, and manage PRs directly from your terminal.",
+        "zh-Hans" : "Anthropic 官方终端 AI 编程助手。在终端直接与 Claude 协作，编辑文件、运行命令、管理 PR。"
+      },
+      "localizedName" : {
+        "en" : "Claude Code",
+        "zh-Hans" : "Claude Code"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "Claude Code",
+      "riskLevel" : "low",
+      "slug" : "claude-code",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "ai",
+        "anthropic",
+        "claude",
+        "cli",
+        "agent"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

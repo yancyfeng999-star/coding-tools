@@ -20,7 +20,7 @@ import CryptoKit
 //   - 删除 quarantine
 //   - 替换已存在的应用
 
-public final class OfficialArtifactAdapter: InstallAdapter, @unchecked Sendable {
+public final class OfficialArtifactAdapter: InstallAdapter, InstallAdapterWithAction, @unchecked Sendable {
     public let type: InstallActionType = .officialArtifact
     private let executor: any ProcessExecuting
     private let downloader: any ArtifactDownloading
@@ -130,6 +130,7 @@ public final class OfficialArtifactAdapter: InstallAdapter, @unchecked Sendable 
 
     public func cancel(planID: String) async {
         // 取消通过调用方 Task 传播
+        actionsLock.withLock { _ = pendingActions.removeValue(forKey: planID) }
     }
 
     // MARK: - Action 注入

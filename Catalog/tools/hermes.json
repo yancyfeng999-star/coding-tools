@@ -1,46 +1,60 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.10-002-hermes",
-  "createdAt": "2026-08-10T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.10-002-hermes",
+  "createdAt" : "2026-08-10T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "pHpsMc6OL/lJVj/L4+FdBw2uU9VafI6s5cU2F3gbbbw01oixcu70KqRyDgw1/EG/es5b8xnIvZy5bPzwTmdTDw==",
+  "tools" : [
     {
-      "id": "hermes",
-      "slug": "hermes",
-      "name": "Hermes",
-      "localizedName": {
-        "en": "Hermes",
-        "zh-Hans": "Hermes"
-      },
-      "description": "NousResearch 开源的自进化 AI Agent。支持 CLI、Telegram、Discord 等多端，长期记忆 + 自动学习 + 跨平台消息通道。",
-      "localizedDescription": {
-        "en": "NousResearch's open-source self-evolving AI agent. CLI + Telegram/Discord gateways, long-term memory, automatic skill learning, cross-platform messaging.",
-        "zh-Hans": "NousResearch 开源的自进化 AI Agent。支持 CLI、Telegram、Discord 等多端，长期记忆 + 自动学习 + 跨平台消息通道。"
-      },
-      "category": "ai-coding",
-      "tags": ["ai", "nous-research", "open-source", "cli", "agent", "self-evolving"],
-      "homepageURL": "https://hermes-agent.nousresearch.com",
-      "documentationURL": "https://hermes-agent.nousresearch.com/docs",
-      "installOptions": [
+      "category" : "ai-coding",
+      "description" : "NousResearch 开源的自进化 AI Agent。支持 CLI、Telegram、Discord 等多端，长期记忆 + 自动学习 + 跨平台消息通道。",
+      "documentationURL" : "https://hermes-agent.nousresearch.com/docs",
+      "homepageURL" : "https://hermes-agent.nousresearch.com",
+      "id" : "hermes",
+      "installOptions" : [
         {
-          "type": "npm-global",
-          "url": "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh",
-          "riskLevel": "low"
+          "riskLevel" : "low",
+          "type" : "npm-global",
+          "url" : "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "hermes",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "hermes",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "NousResearch's open-source self-evolving AI agent. CLI + Telegram/Discord gateways, long-term memory, automatic skill learning, cross-platform messaging.",
+        "zh-Hans" : "NousResearch 开源的自进化 AI Agent。支持 CLI、Telegram、Discord 等多端，长期记忆 + 自动学习 + 跨平台消息通道。"
+      },
+      "localizedName" : {
+        "en" : "Hermes",
+        "zh-Hans" : "Hermes"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "Hermes",
+      "riskLevel" : "low",
+      "slug" : "hermes",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "ai",
+        "nous-research",
+        "open-source",
+        "cli",
+        "agent",
+        "self-evolving"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

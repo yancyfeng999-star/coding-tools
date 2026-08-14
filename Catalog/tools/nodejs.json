@@ -1,53 +1,65 @@
 {
-  "schemaVersion": "1.0.0",
-  "catalogVersion": "2026.08.10-001-nodejs",
-  "createdAt": "2026-08-10T00:00:00Z",
-  "expiresAt": "2099-12-31T23:59:59Z",
-  "keyID": "0000000000000000",
-  "signature": "",
-  "tools": [
+  "catalogVersion" : "2026.08.10-001-nodejs",
+  "createdAt" : "2026-08-10T00:00:00Z",
+  "expiresAt" : "2099-12-31T23:59:59Z",
+  "keyID" : "52d8fe708b101393",
+  "revokedItems" : [
+
+  ],
+  "schemaVersion" : "1.0.0",
+  "signature" : "ducNcG/kqxxSYwEm6RBkGaB8fI4WZ7HrFyJ0KKrEsEJXMM25tnBhgUVwBN7X7LxJYo/qWSg/mjphlQ0kzWBvAA==",
+  "tools" : [
     {
-      "id": "nodejs",
-      "slug": "nodejs",
-      "name": "Node.js",
-      "localizedName": {
-        "en": "Node.js",
-        "zh-Hans": "Node.js"
-      },
-      "description": "JavaScript runtime built on Chrome's V8 engine. Designed for building scalable network applications.",
-      "localizedDescription": {
-        "en": "JavaScript runtime built on Chrome's V8 engine. Designed for building scalable network applications.",
-        "zh-Hans": "基于 Chrome V8 引擎的 JavaScript 运行时，用于构建可扩展的网络应用。"
-      },
-      "category": "language-runtime",
-      "tags": ["javascript", "node", "runtime", "npm"],
-      "homepageURL": "https://nodejs.org",
-      "documentationURL": "https://nodejs.org/en/docs",
-      "installOptions": [
+      "category" : "language-runtime",
+      "description" : "JavaScript runtime built on Chrome's V8 engine. Designed for building scalable network applications.",
+      "documentationURL" : "https://nodejs.org/en/docs",
+      "homepageURL" : "https://nodejs.org",
+      "id" : "nodejs",
+      "installOptions" : [
         {
-          "type": "mise-tool",
-          "toolName": "node",
-          "version": "22",
-          "riskLevel": "low"
+          "riskLevel" : "low",
+          "toolName" : "node",
+          "type" : "mise-tool",
+          "version" : "22"
         },
         {
-          "type": "homebrew-formula",
-          "packageName": "node",
-          "versionRule": ">=22.0.0",
-          "riskLevel": "low"
+          "packageName" : "node",
+          "riskLevel" : "low",
+          "type" : "homebrew-formula",
+          "versionRule" : ">=22.0.0"
         }
       ],
-      "launchCapability": {
-        "type": "cli",
-        "command": "node",
-        "arguments": ["--version"],
-        "openInTerminal": true
+      "launchCapability" : {
+        "arguments" : [
+          "--version"
+        ],
+        "command" : "node",
+        "openInTerminal" : true,
+        "type" : "cli"
       },
-      "supportedArchitectures": ["arm64", "x86_64"],
-      "minimumMacOS": "14.0",
-      "status": "active",
-      "riskLevel": "low"
+      "localizedDescription" : {
+        "en" : "JavaScript runtime built on Chrome's V8 engine. Designed for building scalable network applications.",
+        "zh-Hans" : "基于 Chrome V8 引擎的 JavaScript 运行时，用于构建可扩展的网络应用。"
+      },
+      "localizedName" : {
+        "en" : "Node.js",
+        "zh-Hans" : "Node.js"
+      },
+      "minimumMacOS" : "14.0",
+      "name" : "Node.js",
+      "riskLevel" : "low",
+      "slug" : "nodejs",
+      "status" : "active",
+      "supportedArchitectures" : [
+        "arm64",
+        "x86_64"
+      ],
+      "tags" : [
+        "javascript",
+        "node",
+        "runtime",
+        "npm"
+      ]
     }
-  ],
-  "revokedItems": []
+  ]
 }

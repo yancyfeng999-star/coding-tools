@@ -8,6 +8,9 @@ import Detection
 import LatestVersion
 import AIConfigDiscovery
 import Updates
+import Persistence
+import ProcessExecution
+import AppKit
 
 /// UI 全局状态中枢。**所有 UI 状态都通过 AppState 暴露**，
 /// AppModel 只保留 selectedTab / searchText（高冲突，由 Coordinator 拥有）。
@@ -67,10 +70,16 @@ public final class AppState: ObservableObject {
     /// 收藏 / 加载接口（占位：阶段 2 接入后替换为 Store）
     public var favoriteProvider: ((String) async -> [String])?
     public var favoriteSaver: ((String, Bool) async -> Void)?
+    /// 持久化存储（P0-G3-1 修复）：默认 nil，AppDelegate / CodingToolsApp 启动时注入
+    /// FileJSONStore。启动后 favorites / recents 走 loadFavorites / loadRecents。
+    public var persistStore: (any Store)?
     /// 安装器注册表（AdapterRegistry）
     public var installerRegistry: AdapterRegistry = .defaultRegistry()
     /// 真实安装调用桥（默认走 AdapterRegistry）
     public var installer: ((Tool) async -> InstallResult)?
+    /// P0-G2-5 修复：HelperClient 在 CodingToolsApp 启动时注入；
+    /// 不为 nil 时 install 优先走 XPC，失败回退到 in-process。
+    public var helperClient: HelperClient?
     /// 安装探测器（默认 `InstallationDetector()`，可注入 mock）
     public var detector: InstallationDetecting = InstallationDetector()
     /// Latest version provider（默认 brew + npm + cache；可注入 mock）
@@ -92,6 +101,13 @@ public final class AppState: ObservableObject {
     public weak var toastCenter: ToastCenter?
 
     public init() {}
+
+    // MARK: - Persistence factory (P0-G3-1)
+
+    /// 默认存储位置：~/Library/Application Support/CodingTools/store.json
+    public static func makeDefaultStore() -> any Store {
+        FileJSONStore()
+    }
 
     // MARK: - Catalog
 
@@ -270,13 +286,27 @@ public final class AppState: ObservableObject {
         if favorites.contains(toolID) {
             favorites.remove(toolID)
             Task { await favoriteSaver?(toolID, false) }
+            if let store = persistStore {
+                Task { try? await store.removeFavorite(toolID: toolID) }
+            }
         } else {
             favorites.insert(toolID)
             Task { await favoriteSaver?(toolID, true) }
+            if let store = persistStore {
+                Task { try? await store.saveFavorite(toolID: toolID) }
+            }
         }
     }
 
     public func loadFavorites() async {
+        // 优先用 Store（P0-G3-1 修复）
+        if let store = persistStore {
+            if let list = try? await store.loadFavorites() {
+                favorites = Set(list)
+                return
+            }
+        }
+        // 兜底：旧闭包接口
         guard let provider = favoriteProvider else { return }
         let list = await provider("all")
         favorites = Set(list)
@@ -288,6 +318,16 @@ public final class AppState: ObservableObject {
         recent.removeAll(where: { $0 == toolID })
         recent.insert(toolID, at: 0)
         if recent.count > 10 { recent = Array(recent.prefix(10)) }
+        if let store = persistStore {
+            Task { try? await store.saveRecent(toolID: toolID, maxItems: 10) }
+        }
+    }
+
+    /// 重启时从 Store 恢复最近列表。
+    public func loadRecents() async {
+        guard let store = persistStore,
+              let list = try? await store.loadRecents() else { return }
+        recent = list
     }
 
     public func recentTools() -> [Tool] {
@@ -300,42 +340,130 @@ public final class AppState: ObservableObject {
 
     // MARK: - Install (真实接入 AdapterRegistry，缺依赖时 fallback 到占位输出)
 
+    /// 当前正在跑的 install Task 句柄 — 取消时调用 cancel()（P0-G2-6 / G4-7）
+    private var installTask: Task<Void, Never>?
+
     public func startInstall(_ tool: Tool) {
+        // 已经在跑：忽略重复点击（P1-G2-3）
+        if installState == .running || installState == .cancelling { return }
         installingTool = tool
         installLog = ""
         installState = .running
-        Task { @MainActor in
-            // 选择第一个 installOption 跑（v1.0.0 一工具一来源）
-            guard let opt = tool.installOptions.first else {
-                installLog += "==> \(tool.name) 暂未提供安装来源（仅展示）\n"
-                installState = .completed
-                return
+        let toolRef = tool
+        installTask = Task { @MainActor [weak self] in
+            await self?.runInstall(tool: toolRef)
+        }
+    }
+
+    /// 接收具体 InstallOption 的版本 — ToolDetailView / CatalogView 选择
+    /// 多个 installOptions 时使用。
+    public func startInstall(_ tool: Tool, option: InstallOption) {
+        if installState == .running || installState == .cancelling { return }
+        installingTool = tool
+        installLog = ""
+        installState = .running
+        let toolRef = tool
+        let optRef = option
+        installTask = Task { @MainActor [weak self] in
+            await self?.runInstall(tool: toolRef, option: optRef)
+        }
+    }
+
+    @MainActor
+    private func runInstall(tool: Tool) async {
+        await runInstall(tool: tool, option: tool.installOptions.first)
+    }
+
+    @MainActor
+    private func runInstall(tool: Tool, option: InstallOption?) async {
+        guard let opt = option else {
+            installLog += "==> \(tool.name) 暂未提供安装来源（仅展示）\n"
+            installState = .completed
+            return
+        }
+        installLog += "==> 准备安装 \(tool.name) [\(opt.type.rawValue)]\n"
+        do {
+            let descriptor = try opt.toInstallAction()
+            let action = Self.descriptorToAction(descriptor)
+            let progress: InstallProgressHandler = { [weak self] p in
+                // P0-G3-2：进度消息脱敏后再写入 installLog
+                let safe = OutputRedactor.redact(p.message)
+                Task { @MainActor in
+                    self?.installLog += "[\(p.stage.rawValue)] \(safe)\n"
+                }
             }
-            installLog += "==> 准备安装 \(tool.name) [\(opt.type.rawValue)]\n"
-            do {
-                let descriptor = try opt.toInstallAction()
-                let action = Self.descriptorToAction(descriptor)
-                let progress: InstallProgressHandler = { [weak self] p in
-                    Task { @MainActor in
-                        self?.installLog += "[\(p.stage.rawValue)] \(p.message)\n"
-                    }
+            // 阶段 9 修复（P0-G2-5）：走 HelperClient（Helper 不可用回退 in-process）
+            let result = try await executeWithHelperFallback(
+                toolID: tool.id,
+                action: action,
+                progress: progress
+            )
+            if result.exitCode == 0 {
+                installLog += "==> 安装完成 ✅\n"
+                installState = .completed
+                // P1-G2-2：安装成功后立刻刷新探测，让 UI 看到 installed version
+                await refreshProbe(toolID: tool.id)
+                if let store = persistStore {
+                    let probe = InstallationProbe(
+                        toolID: tool.id,
+                        installedVersion: result.resolvedVersion,
+                        detectedPath: nil,
+                        architecture: nil,
+                        healthStatus: .installed,
+                        lastCheckedAt: Date()
+                    )
+                    try? await store.saveInstallation(probe)
                 }
-                let result = try await installerRegistry.execute(
-                    toolID: tool.id,
-                    action: action,
-                    progress: progress
-                )
-                if result.exitCode == 0 {
-                    installLog += "==> 安装完成 ✅\n"
-                    installState = .completed
-                } else {
-                    installLog += "==> 安装失败，退出码 \(result.exitCode)\n"
-                    installState = .failed
-                }
-            } catch {
-                installLog += "==> 失败: \(error)\n"
+            } else {
+                installLog += "==> 安装失败，退出码 \(result.exitCode)\n"
                 installState = .failed
             }
+        } catch is CancellationError {
+            installLog += "\n[用户取消] 已停止底层进程\n"
+            installState = .cancelled
+        } catch {
+            installLog += "==> 失败: \(error)\n"
+            installState = .failed
+        }
+        installTask = nil
+    }
+
+    /// P0-G2-5：先尝试 HelperClient，失败回退到 in-process AdapterRegistry。
+    private func executeWithHelperFallback(
+        toolID: String,
+        action: InstallAction,
+        progress: InstallProgressHandler?
+    ) async throws -> InstallResult {
+        // 阶段 9 接入后，HelperClient.install(...) 是首选。
+        // 当前 HelperClient 是 stub 接口；暂时走 AdapterRegistry，并标记日志。
+        // P1-G2-1 / P0-G2-1 修复：使用 executeWithAction 替代 execute(plan)
+        if let helper = helperClient {
+            do {
+                let plan = try await adapterRegistry(for: action).plan(toolID: toolID, action: action)
+                let response = try await helper.install(plan: plan, action: action)
+                return InstallResult(
+                    planID: plan.id,
+                    exitCode: response.exitCode,
+                    resolvedVersion: response.resolvedVersion
+                )
+            } catch {
+                installLog += "[helper 不可用，回退到 in-process executor] \(error)\n"
+            }
+        }
+        return try await installerRegistry.executeWithAction(
+            toolID: toolID,
+            action: action,
+            progress: progress
+        )
+    }
+
+    private func adapterRegistry(for action: InstallAction) -> InstallAdapter {
+        switch action {
+        case .homebrewFormula: return installerRegistry.adapter(for: .homebrewFormula)!
+        case .homebrewCask:    return installerRegistry.adapter(for: .homebrewCask)!
+        case .miseTool:        return installerRegistry.adapter(for: .miseTool)!
+        case .officialArtifact: return installerRegistry.adapter(for: .officialArtifact)!
+        case .npmGlobal:       return installerRegistry.adapter(for: .npmGlobal)!
         }
     }
 
@@ -353,14 +481,43 @@ public final class AppState: ObservableObject {
     }
 
     public func cancelInstall() {
-        installState = .cancelled
-        installLog += "\n[用户取消]"
+    // P0-G2-6 / G4-7：取消时真正停掉底层 Task + 调用 adapter.cancel
+    installState = .cancelling
+    if let task = installTask {
+        task.cancel()
     }
+    // 也尝试 cancel 当前 adapter 的 plan（防止 user 用其他入口调起）
+    if let tool = installingTool,
+       let opt = tool.installOptions.first,
+       let action = try? opt.toInstallAction() {
+        let actionType: InstallActionType = {
+            switch action {
+            case .formula: return .homebrewFormula
+            case .cask:    return .homebrewCask
+            case .mise:    return .miseTool
+            case .artifact: return .officialArtifact
+            case .npm:     return .npmGlobal
+            }
+        }()
+        Task { [installerRegistry] in
+            await installerRegistry.adapter(for: actionType)?.cancel(planID: "")
+        }
+    }
+    installLog += "\n[用户取消]"
+}
 
     public func closeInstall() {
         installingTool = nil
         installLog = ""
         installState = .idle
+    }
+
+    /// 清除操作历史（仅 installations 表；不影响 favorites / catalog）。
+    public func clearOperationHistory() async {
+        if let store = persistStore {
+            try? await store.clearOperationHistory()
+        }
+        probes = [:]
     }
 
     // MARK: - Updates (Sparkle)
@@ -404,6 +561,7 @@ extension AppState: UpdateObserver {
 public enum InstallRunState: Equatable, Sendable {
     case idle
     case running
+    case cancelling      // P0-G2-6：取消请求已发出，等待底层 Task 退出
     case completed
     case failed
     case cancelled

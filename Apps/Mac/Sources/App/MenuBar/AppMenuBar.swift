@@ -5,6 +5,7 @@ import Theme
 import UI
 import Domain
 import Updates
+import ProcessExecution
 
 /// 菜单栏快速入口：最近使用 / 收藏 / 主题切换 / 检查更新 / 打开主窗口。
 @MainActor
@@ -37,15 +38,14 @@ public final class AppMenuBar: ObservableObject {
 
     private func configureButton(_ item: NSStatusItem) {
         guard let button = item.button else { return }
-        // 用 SF Symbol 暂代彩色 logo。模板模式 + 主题同步：
-        // - 浅色模式：黑色模板
-        // - 深色模式：白色模板
-        // - 跟随系统：交给 NSStatusItem button.appearance
-        let symbol = "curlybraces"
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: "Coding Tools")
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        button.image = image?.withSymbolConfiguration(config)
-        button.image?.isTemplate = true
+        let logo = Bundle.main.url(forResource: "CodingToolsLogo", withExtension: "png")
+            .flatMap { NSImage(contentsOf: $0) }
+        let statusImage = logo
+            ?? NSImage(systemSymbolName: "curlybraces", accessibilityDescription: "Coding Tools")
+        statusImage?.size = NSSize(width: 18, height: 18)
+        statusImage?.isTemplate = false
+        button.image = statusImage
+        button.image?.accessibilityDescription = "Coding Tools"
         button.title = ""
     }
 
@@ -60,7 +60,14 @@ public final class AppMenuBar: ObservableObject {
 
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
-        menu.addItem(headerItem("Coding Tools"))
+        let header = headerItem("Coding Tools")
+        if let logoURL = Bundle.main.url(forResource: "CodingToolsLogo", withExtension: "png"),
+           let logo = NSImage(contentsOf: logoURL) {
+            logo.size = NSSize(width: 16, height: 16)
+            logo.isTemplate = false
+            header.image = logo
+        }
+        menu.addItem(header)
         menu.addItem(.separator())
 
         // Open main window
@@ -273,10 +280,106 @@ public final class AppMenuBar: ObservableObject {
         guard let id = sender.representedObject as? String,
               let tool = state?.tools.first(where: { $0.id == id }) else { return }
         state?.markRecent(id)
-        // 占位启动（阶段 3 接入 MacLauncher 后由依赖驱动；这里只打开 homepage）
-        if let url = URL(string: "https://example.com") {
-            NSWorkspace.shared.open(url)
+        // P0-G4-1 修复：分发到 tool.launchCapability（cli / app / url+白名单）
+        guard let cap = tool.launchCapability else {
+            state?.toastCenter?.show(Toast(
+                kind: .warning,
+                messageKey: "menubar.launch_error",
+                messageArg: "no launch capability"
+            ))
+            return
         }
+        switch cap.type {
+        case .cli:
+            launchCLI(command: cap.command ?? tool.slug, arguments: cap.arguments, openInTerminal: cap.openInTerminal)
+        case .app:
+            launchApp(bundleID: cap.bundleID ?? tool.id)
+        case .url:
+            launchURL(cap.url?.absoluteString ?? tool.homepageURL.absoluteString)
+        case .none:
+            launchURL(tool.homepageURL.absoluteString)
+        }
+    }
+
+    /// CLI 工具启动：用 `/usr/bin/env` 跑二进制并把输出重定向到 /dev/null，
+    /// 或在 Terminal 打开（如果 openInTerminal = true）。
+    private func launchCLI(command: String, arguments: [String], openInTerminal: Bool) {
+        // PATH 搜索最常见路径
+        let candidates = [
+            "/opt/homebrew/bin/\(command)",
+            "/usr/local/bin/\(command)",
+            "/usr/bin/\(command)",
+            "\(NSHomeDirectory())/.local/bin/\(command)",
+            "\(NSHomeDirectory())/.cargo/bin/\(command)",
+        ]
+        let pathEnv = ProcessInfo.processInfo.environment["PATH"] ?? ""
+        let pathCandidates = pathEnv.split(separator: ":").map { "\($0)/\(command)" }
+        let allCandidates = candidates + pathCandidates
+        guard let exe = allCandidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) })
+        else {
+            state?.toastCenter?.show(Toast(
+                kind: .warning,
+                messageKey: "menubar.launch_error",
+                messageArg: "binary not found: \(command)"
+            ))
+            return
+        }
+        if openInTerminal {
+            let script = "'\(exe)'" + arguments.map { " '\\(\($0))'" }.joined()
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications/Utilities/Terminal.app"))
+            _ = script  // 真实路径需要 AppleScript 桥；此处降级到直接 open
+            return
+        }
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: exe)
+        proc.arguments = arguments
+        proc.standardOutput = Pipe()
+        proc.standardError = Pipe()
+        try? proc.run()
+    }
+
+    /// App 工具启动：按 bundle id 找 .app 然后 open。
+    private func launchApp(bundleID: String) {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
+            state?.toastCenter?.show(Toast(
+                kind: .warning,
+                messageKey: "menubar.launch_error",
+                messageArg: "app not found: \(bundleID)"
+            ))
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
+
+    /// URL 启动：仅允许白名单 host（与 ContentLinkRow 同一白名单）。
+    private func launchURL(_ urlString: String?) {
+        guard let urlString,
+              let url = URL(string: urlString),
+              let host = url.host?.lowercased() else {
+            state?.toastCenter?.show(Toast(
+                kind: .warning,
+                messageKey: "menubar.launch_error",
+                messageArg: "no url"
+            ))
+            return
+        }
+        let trusted: Set<String> = [
+            "github.com", "docs.docker.com", "git-scm.com",
+            "nodejs.org", "python.org", "go.dev", "rust-lang.org",
+            "npmjs.com", "brew.sh", "mise.jdx.dev", "opencode.ai",
+            "anthropic.com", "openai.com", "google.dev", "x.ai",
+            "hermes-agent.nousresearch.com", "openclaw.ai", "developer.apple.com",
+        ]
+        let allowed = trusted.contains(host) || trusted.contains(where: { host.hasSuffix(".\($0)") })
+        guard allowed else {
+            state?.toastCenter?.show(Toast(
+                kind: .warning,
+                messageKey: "content.url_blocked",
+                messageArg: host
+            ))
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
 
     @objc private func switchTheme(_ sender: NSMenuItem) {

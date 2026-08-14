@@ -116,19 +116,12 @@ struct SettingsView: View {
         Section {
             VStack(spacing: 12) {
                 HStack(spacing: 14) {
-                    // 临时 icon：SF Symbol "curlybraces" + 主题色背景
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(LinearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ))
-                        Image(systemName: "curlybraces")
-                            .font(.title)
-                            .foregroundStyle(.white)
-                    }
-                    .frame(width: 56, height: 56)
+                    Image("CodingToolsLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(4)
+                        .frame(width: 56, height: 56)
+                        .accessibilityLabel(Text("app.name"))
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("app.name")
