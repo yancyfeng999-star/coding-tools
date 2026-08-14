@@ -5,8 +5,8 @@
 
 ## 当前状态
 
-- **阶段**：v1.5.0 已发布；阶段 9 架构就位、阶段 11 目录签名已接通、阶段 12 本地 Crash 落盘已起步
-- **版本**：v1.5.0（build 23）
+- **阶段**：v1.5.0 仍为最近公开 Release；v1.5.1 源码版本已更新但尚未发布；阶段 9 架构就位、阶段 11 目录签名已接通、阶段 12 本地 Crash 落盘已起步
+- **版本**：v1.5.1（build 24）
 - **最近更新**：2026-08-14
 
 ## 阶段路线
@@ -28,6 +28,11 @@
 | 12 | Post-release 闭环（遥测 / 反馈 / Crash） | 2 w | 🟡 **Crash 本地落盘起步** | 子代理 B |
 
 ## 已完成（本轮 · 2026-08-14）
+
+### v1.5.1 版本元数据与开源文档（源码已更新，未发布）
+- [x] `Info.plist` 更新为 `CFBundleShortVersionString=1.5.1`、`CFBundleVersion=24`。
+- [x] Apache-2.0、`NOTICE`、第三方声明、贡献/安全/支持文档和 GitHub 协作模板已推送到 `main`。
+- [ ] v1.5.1 的 App 构建、签名、公证、GitHub Release、应用内更新和用户安装尚未执行。
 
 ### v1.5.0 发布候选收口
 - [x] 24 个工具目录与内容目录加入 Ed25519 签名，Bundle 内置公钥，Catalog/Content 加载链默认验签并拒绝失败数据。
@@ -130,6 +135,7 @@
 | v1.2.1 | 文档清理 patch | ✅ 已发布 |
 | v1.2.2 | UpdatesTests 修复 + 反馈问题 + 工具扩充 | 🔄 历史文档待归档 |
 | v1.5.0 | 目录安全、安装链、持久化、菜单栏与品牌资源收口 | ✅ 已发布（GitHub Release） |
+| v1.5.1 | Apache-2.0 开源文档与版本元数据 | 🟡 源码已更新（build 24），未构建/发布 |
 | v2.0.0 | Apple Developer ID + 公证 + App Store 上架 | ⬜ 待启动 |
 
 ## 风险登记
@@ -144,7 +150,7 @@
 | 测试覆盖率 ~22.5% | 🟡 偏低 | 关键模块补 AppTests / CatalogTests |
 | Sparkle 端到端更新未真实验证 | 🟡 release 成功 ≠ 用户装机成功 | 需要真实装机记录 |
 | CFBundleLocalizations 与 .xcstrings 不一致 | 🟢 已修复（v1.2.2） | Info.plist 补 5 种语言 |
-| LICENSE 决定 | 🟢 MIT | v1.2.2 README 已更新 |
+| LICENSE 决定 | 🟢 Apache-2.0 | 2026-08-14 已同步 LICENSE、NOTICE、README 与第三方声明 |
 | Apple Silicon / Intel 兼容性 | 🟢 Universal Binary | Release 配置 `arm64+x86_64` |
 | macOS 14+ 兼容性 | 🟢 LSMinimumSystemVersion 14.0 | — |
 | 第三方依赖供应链（Sparkle 2.9.5 SPM） | 🟡 已知 | 锁定 commit hash；升级走 PR 评审 |

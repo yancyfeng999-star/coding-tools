@@ -63,8 +63,8 @@ cd Apps/Mac
 `bump-version.sh` 自动：
 
 1. 修改 `Info.plist` 的 `CFBundleShortVersionString` 和 `CFBundleVersion`
-2. 在 `CHANGELOG.md` 顶部追加新版本段
-3. 提交 `chore: bump version to x.y.z (build n)`
+2. 在未设置 `SKIP_GIT=1` 时，仅提交 `Info.plist`，提交信息为 `chore: bump version to x.y.z (build n)`
+3. 不自动修改 `CHANGELOG.md`；正式 `release.sh` 会在构建、打包和发布阶段写入版本段，单独更新版本元数据时必须手动记录“尚未发布”的状态。
 
 ### 2.3 构建
 
