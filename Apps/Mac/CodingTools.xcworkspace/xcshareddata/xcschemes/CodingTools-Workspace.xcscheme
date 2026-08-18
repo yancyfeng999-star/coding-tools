@@ -28,65 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E48CFC4DC652CF39EC608D02"
-               BuildableName = "AIConfigDiscoveryTests.xctest"
-               BlueprintName = "AIConfigDiscoveryTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "083EBDC8CF64EFD14F7EBEE9"
-               BuildableName = "AgentEnvironmentTests.xctest"
-               BlueprintName = "AgentEnvironmentTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CC3B2597192B99C2E03EA5C9"
-               BuildableName = "AppTests.xctest"
-               BlueprintName = "AppTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "CFEB5CAADF84EB1CE02F66AA"
                BuildableName = "Catalog.framework"
                BlueprintName = "Catalog"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "EA3AC85DCD12249E41710093"
-               BuildableName = "CatalogTests.xctest"
-               BlueprintName = "CatalogTests"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -168,48 +112,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "12789AB981438FB6852664C2"
-               BuildableName = "DomainTests.xctest"
-               BlueprintName = "DomainTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C31D379BF3CD70B64BE17CE1"
-               BuildableName = "HelperTests.xctest"
-               BlueprintName = "HelperTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "43C772A10499BAFC1DCB3709"
-               BuildableName = "InstallerTests.xctest"
-               BlueprintName = "InstallerTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "AF08E1DF431BE8740D9A6950"
                BuildableName = "Installers.framework"
                BlueprintName = "Installers"
@@ -227,20 +129,6 @@
                BlueprintIdentifier = "3B35DDC3FA4FAE6C7C368D47"
                BuildableName = "LatestVersion.framework"
                BlueprintName = "LatestVersion"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "EA759314F0EA42510A19B475"
-               BuildableName = "LatestVersionTests.xctest"
-               BlueprintName = "LatestVersionTests"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -283,20 +171,6 @@
                BlueprintIdentifier = "607B4324F9C2ADE1B246B237"
                BuildableName = "ManifestSecurity.framework"
                BlueprintName = "ManifestSecurity"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A47B0583A2E1F0171E39A003"
-               BuildableName = "ManifestSecurityTests.xctest"
-               BlueprintName = "ManifestSecurityTests"
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -370,20 +244,6 @@
                ReferencedContainer = "container:CodingTools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "66BF404855FFFB0A55D1A0BE"
-               BuildableName = "UpdatesTests.xctest"
-               BlueprintName = "UpdatesTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -392,116 +252,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E48CFC4DC652CF39EC608D02"
-               BuildableName = "AIConfigDiscoveryTests.xctest"
-               BlueprintName = "AIConfigDiscoveryTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "083EBDC8CF64EFD14F7EBEE9"
-               BuildableName = "AgentEnvironmentTests.xctest"
-               BlueprintName = "AgentEnvironmentTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CC3B2597192B99C2E03EA5C9"
-               BuildableName = "AppTests.xctest"
-               BlueprintName = "AppTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "EA3AC85DCD12249E41710093"
-               BuildableName = "CatalogTests.xctest"
-               BlueprintName = "CatalogTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "12789AB981438FB6852664C2"
-               BuildableName = "DomainTests.xctest"
-               BlueprintName = "DomainTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C31D379BF3CD70B64BE17CE1"
-               BuildableName = "HelperTests.xctest"
-               BlueprintName = "HelperTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "43C772A10499BAFC1DCB3709"
-               BuildableName = "InstallerTests.xctest"
-               BlueprintName = "InstallerTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "EA759314F0EA42510A19B475"
-               BuildableName = "LatestVersionTests.xctest"
-               BlueprintName = "LatestVersionTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A47B0583A2E1F0171E39A003"
-               BuildableName = "ManifestSecurityTests.xctest"
-               BlueprintName = "ManifestSecurityTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "66BF404855FFFB0A55D1A0BE"
-               BuildableName = "UpdatesTests.xctest"
-               BlueprintName = "UpdatesTests"
-               ReferencedContainer = "container:CodingTools.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
