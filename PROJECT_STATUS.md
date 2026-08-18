@@ -5,8 +5,8 @@
 
 ## 当前状态
 
-- **阶段**：v1.5.4 为最近公开 Release（build 27）；UI foundation P1 已随 GitHub Release 发出
-- **版本**：v1.5.4（build 27）
+- **阶段**：v1.5.5 为最近公开 Release（build 28）；应用更新改为手动检查后退出静默安装
+- **版本**：v1.5.5（build 28）
 - **最近更新**：2026-08-18
 
 ## 阶段路线
@@ -154,6 +154,7 @@
 | v1.5.2 | UI foundation P0 + GitHub Release | ✅ 已发布（未公证） |
 | v1.5.3 | 打包后只留安装包，不注册多余本地 App | ✅ 已发布（未公证） |
 | v1.5.4 | UI foundation P1 + GitHub Release | ✅ 已发布（未公证） |
+| v1.5.5 | 手动检查更新后退出静默安装并重开 | ✅ 已发布（未公证） |
 | v2.0.0 | Apple Developer ID + 公证 + App Store 上架 | ⬜ 待启动 |
 
 ## 风险登记

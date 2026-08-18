@@ -4,7 +4,7 @@
 
 Coding Tools 把 Homebrew、mise、官方安装包、官方文档和精选教程整合到一个签名化的目录中，帮助开发者安全安装、启动和持续更新开发工具。
 
-> 当前源码版本：v1.5.4（build 27）；最近公开 Release 为 v1.5.4（build 27）。已纳入首次启动说明、诊断与导出导入、目录缓存重置、崩溃恢复提示，以及统一界面令牌和工具展示状态映射。PKG 仍未用 Developer ID 签名，公证未做。
+> 当前源码版本：v1.5.5（build 28）；最近公开 Release 为 v1.5.5（build 28）。应用更新只通过「检查更新」按钮触发，找到新版本后退出、静默安装并重新打开。PKG 仍未用 Developer ID 签名，公证未做。
 
 中文说明见 [`README.zh-CN.md`](./README.zh-CN.md)。
 
