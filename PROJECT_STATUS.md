@@ -5,9 +5,9 @@
 
 ## 当前状态
 
-- **阶段**：v1.5.5 为最近公开 Release（build 28）；应用更新改为手动检查后退出静默安装
-- **版本**：v1.5.5（build 28）
-- **最近更新**：2026-08-18
+- **阶段**：v1.5.6 为最近公开 Release（build 29）；设置页加入本地环境检查
+- **版本**：v1.5.6（build 29）
+- **最近更新**：2026-08-19
 
 ## 阶段路线
 
@@ -92,6 +92,13 @@
 - [x] `release.sh` Python 段修复：去掉重复生成 `## [Unreleased]` 模板的逻辑，每次发版只插入新版本段、不污染既有结构
 - [x] PROJECT_STATUS.md 阶段状态对齐：阶段 2–7 标 ✅，阶段 8 待启动；本轮 v1.2.1 记录到「已完成」
 
+## 已完成（本轮 · 2026-08-19）
+
+### v1.5.6 GitHub Release（本地环境检查）
+- [x] 七个 Agent 独立探测、HTTPS 最新版本、冲突诊断、可信逐项升级。
+- [x] GitHub Release v1.5.6（build 29）已发布：ZIP / PKG / DMG / appcast。PKG 未用 Developer ID 签名，公证未做。
+- [x] 发版测试 130 通过；Release 构建为 ad-hoc「Sign to Run Locally」。
+
 ## 已完成（本轮 · 2026-08-18）
 
 ### v1.5.4 GitHub Release（UI foundation P1）
@@ -164,6 +171,7 @@
 | v1.5.3 | 打包后只留安装包，不注册多余本地 App | ✅ 已发布（未公证） |
 | v1.5.4 | UI foundation P1 + GitHub Release | ✅ 已发布（未公证） |
 | v1.5.5 | 手动检查更新后退出静默安装并重开 | ✅ 已发布（未公证） |
+| v1.5.6 | 本地环境检查 + 七个 Agent 探测/逐项升级 | ✅ 已发布（未公证） |
 | v2.0.0 | Apple Developer ID + 公证 + App Store 上架 | ⬜ 待启动 |
 
 ## 风险登记
