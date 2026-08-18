@@ -28,16 +28,23 @@ public protocol InstallationDetecting: Sendable {
     func systemArchitecture() async -> Architecture
 }
 
-public final class InstallationDetector: InstallationDetecting, @unchecked Sendable {
+public protocol InstallationDiagnosing: Sendable {
+    func installations(tool: Tool) async -> ToolInstallationReport
+}
+
+public final class InstallationDetector: InstallationDetecting, InstallationDiagnosing, @unchecked Sendable {
     private let executor: any ProcessExecuting
     private let fileManager: FileManager
+    private let resolver: any CLIExecutableResolving
 
     public init(
         executor: any ProcessExecuting = ProcessExecutor(),
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        resolver: any CLIExecutableResolving = CLIExecutableResolver()
     ) {
         self.executor = executor
         self.fileManager = fileManager
+        self.resolver = resolver
     }
 
     public func probe(tool: Tool) async -> InstallationProbe {
@@ -105,55 +112,114 @@ public final class InstallationDetector: InstallationDetecting, @unchecked Senda
         }
     }
 
+    public func installations(tool: Tool) async -> ToolInstallationReport {
+        let command = command(for: tool)
+        let resolved = resolver.resolve(command: command, toolID: tool.id)
+        let installations = await withTaskGroup(of: DetectedToolInstallation.self) { group in
+            for executable in resolved {
+                group.addTask { await self.inspect(tool: tool, executable: executable) }
+            }
+            return await group.reduce(into: [DetectedToolInstallation]()) { $0.append($1) }
+        }
+        return ToolInstallationReport(toolID: tool.id, installations: installations)
+    }
+
     // MARK: - CLI Probe
 
     private func probeCLI(tool: Tool, command: String) async -> InstallationProbe {
-        guard let path = locateExecutable(named: command) else {
+        let resolved = resolver.resolve(command: command, toolID: tool.id)
+        guard let preferred = resolved.first else {
             return makeProbe(tool: tool, version: nil, path: nil, status: .notInstalled)
         }
-        let (version, arch) = await (detectVersion(command: command), detectBinaryArch(path: path))
-        let status: HealthStatus = version == nil ? .broken : .installed
-        return makeProbe(tool: tool, version: version, path: path.path, arch: arch, status: status)
-    }
-
-    private func locateExecutable(named name: String) -> URL? {
-        let env = ProcessInfo.processInfo.environment
-        let home = env["HOME"] ?? NSHomeDirectory()
-        let candidates = [
-            "/opt/homebrew/bin/\(name)",
-            "/usr/local/bin/\(name)",
-            "/usr/bin/\(name)",
-            "\(home)/.local/bin/\(name)",
-            "\(home)/.cargo/bin/\(name)",
-            "\(home)/.mise/installs/\(name)",  // 兜底
-        ]
-        for p in candidates where fileManager.isExecutableFile(atPath: p) {
-            return URL(fileURLWithPath: p)
+        let inspected = await inspect(tool: tool, executable: preferred)
+        let status: HealthStatus
+        if inspected.failure == nil, inspected.version != nil {
+            status = .installed
+        } else if inspected.failure != nil {
+            status = .broken
+        } else {
+            status = .broken
         }
-        return nil
+        let arch = await detectBinaryArch(path: preferred.canonicalPath)
+        return makeProbe(
+            tool: tool,
+            version: inspected.version,
+            path: preferred.canonicalPath.path,
+            arch: arch,
+            status: status,
+            installSource: preferred.source,
+            failure: inspected.failure
+        )
     }
 
-    private func detectVersion(command: String) async -> String? {
-        // 优先 `--version`，再 `-version`，再 `version`。
-        let attempts: [[String]] = [["--version"], ["-version"], ["version"]]
+    private func command(for tool: Tool) -> String {
+        if let profile = AgentToolProfiles.profile(for: tool.id) {
+            return profile.command
+        }
+        return tool.launchCapability?.command ?? tool.slug
+    }
+
+    private func inspect(tool: Tool, executable: ResolvedExecutable) async -> DetectedToolInstallation {
+        let (version, failure) = await readVersion(tool: tool, executable: executable.canonicalPath)
+        return DetectedToolInstallation(
+            path: executable.path.path,
+            canonicalPath: executable.canonicalPath.path,
+            version: version,
+            source: executable.source,
+            isPreferred: executable.isPreferred,
+            failure: failure
+        )
+    }
+
+    private func readVersion(tool: Tool, executable: URL) async -> (String?, ProbeFailure?) {
+        let attempts: [[String]]
+        if let profile = AgentToolProfiles.profile(for: tool.id) {
+            attempts = [profile.versionArguments]
+        } else {
+            attempts = [["--version"], ["-version"], ["version"]]
+        }
+        var lastFailure: ProbeFailure?
         for args in attempts {
             do {
                 let out = try await executor.run(ProcessRequest(
-                    executableURL: URL(fileURLWithPath: "/usr/bin/env"),
-                    arguments: [command] + args,
-                    timeout: .seconds(5)
+                    executableURL: executable,
+                    arguments: args,
+                    timeout: .seconds(8)
                 ))
-                if out.exitCode == 0 {
-                    let text = (out.stdout + out.stderr)
-                    if let version = Self.parseVersion(from: text) {
-                        return version
-                    }
+                if out.exitCode != 0 {
+                    lastFailure = ProbeFailure(
+                        kind: .nonZeroExit,
+                        redactedMessage: "version command exited \(out.exitCode)"
+                    )
+                    continue
                 }
+                let text = out.stdout + out.stderr
+                if let version = Self.parseVersion(from: text) {
+                    return (version, nil)
+                }
+                lastFailure = ProbeFailure(
+                    kind: .versionUnparseable,
+                    redactedMessage: "version output was not parseable"
+                )
             } catch {
-                continue
+                lastFailure = failure(from: error)
             }
         }
-        return nil
+        return (nil, lastFailure)
+    }
+
+    private func failure(from error: Error) -> ProbeFailure {
+        switch error {
+        case ProcessExecutionError.timeout:
+            return ProbeFailure(kind: .timedOut, redactedMessage: "version command timed out")
+        case ProcessExecutionError.launchFailed(let message):
+            return ProbeFailure(kind: .launchFailed, redactedMessage: OutputRedactor.redact(message))
+        default:
+            return ProbeFailure(
+                kind: .nonZeroExit,
+                redactedMessage: OutputRedactor.redact(String(describing: error))
+            )
+        }
     }
 
     private func detectBinaryArch(path: URL) async -> Architecture? {
@@ -246,7 +312,9 @@ public final class InstallationDetector: InstallationDetecting, @unchecked Senda
         arch: Architecture? = nil,
         bundleID: String? = nil,
         teamID: String? = nil,
-        status: HealthStatus
+        status: HealthStatus,
+        installSource: DetectedInstallSource? = nil,
+        failure: ProbeFailure? = nil
     ) -> InstallationProbe {
         InstallationProbe(
             toolID: tool.id,
@@ -255,7 +323,9 @@ public final class InstallationDetector: InstallationDetecting, @unchecked Senda
             architecture: arch,
             bundleID: bundleID,
             teamID: teamID,
-            healthStatus: status
+            healthStatus: status,
+            installSource: installSource,
+            failure: failure
         )
     }
 

@@ -46,6 +46,22 @@ final class ToolPresentationMapperTests: XCTestCase {
         XCTAssertEqual(result.statusKey, "tool.status.installed")
     }
 
+    func testLocalAheadNeverOffersDowngrade() {
+        let presentation = ToolPresentationMapper.map(
+            options: [brew],
+            probe: .result(installedProbe(version: "0.20.0")),
+            latest: .known("0.19.0"),
+            operation: .idle
+        )
+        XCTAssertEqual(presentation.status, .localAhead(localVersion: "0.20.0", latestVersion: "0.19.0"))
+        XCTAssertEqual(presentation.primaryAction, .open)
+        XCTAssertFalse(presentation.showsUpdateAction)
+    }
+
+    func testEqualDateStyleVersionIsCurrent() {
+        XCTAssertEqual(ToolPresentationMapper.compareVersions("2026.7.1-2", "2026.7.1-2"), .orderedSame)
+    }
+
     func testLocalBelowLatestMapsToUpdateWithBothVersions() {
         let probe = installedProbe(version: "1.2.0")
         let result = ToolPresentationMapper.map(

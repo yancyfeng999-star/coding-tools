@@ -23,6 +23,7 @@ struct SettingsView: View {
             Form {
                 appearanceSection
                 languageSection
+                agentEnvironmentSection
                 updatesSection
                 generalSection
                 supportSection
@@ -69,6 +70,17 @@ struct SettingsView: View {
             }
         } header: {
             Text("settings.section.language")
+        }
+    }
+
+    private var agentEnvironmentSection: some View {
+        Section {
+            AgentEnvironmentSection()
+                .environmentObject(appState)
+        } header: {
+            Text("settings.section.agentEnvironment")
+        } footer: {
+            Text("settings.agentEnvironment.footer")
         }
     }
 

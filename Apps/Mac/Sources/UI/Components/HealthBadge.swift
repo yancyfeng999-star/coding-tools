@@ -94,7 +94,7 @@ public extension ToolPresentation {
         switch status {
         case .checking: return "clock"
         case .notInstalled: return "circle"
-        case .installedCurrent: return "checkmark.circle.fill"
+        case .installedCurrent, .localAhead: return "checkmark.circle.fill"
         case .updateAvailable: return "arrow.up.circle.fill"
         case .broken: return "wrench.adjustable"
         case .versionUnknown: return "questionmark.circle"
@@ -107,7 +107,7 @@ public extension ToolPresentation {
 
     var badgeTone: PresentationStatusBadge.Tone {
         switch status {
-        case .installedCurrent: return .success
+        case .installedCurrent, .localAhead: return .success
         case .updateAvailable, .completedPendingConfirmation: return .warning
         case .broken, .operationFailed: return .danger
         case .notInstalled, .checking, .versionUnknown, .sourceUnavailable, .operationRunning: return .neutral

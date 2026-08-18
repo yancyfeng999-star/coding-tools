@@ -74,6 +74,9 @@ open CodingTools.xcworkspace
 - Settings → Support & Feedback includes report issue, feature idea, homepage, help, and copy diagnostic summary. Issue URLs prefill only app version, build, macOS version, and CPU architecture. Logs and diagnostics are never uploaded automatically; copy-diagnostics shows a preview first.
 - First launch explains the four tabs, trusted install sources, and the split between app updates and tool updates. Settings → Diagnostics shows catalog cache status, last crash, crash-folder access, and a user-triggered export/import of favorites, recents, theme, language, and update preferences. The portable file never includes home paths, tokens, or logs.
 - Appearance supports Light, Dark, and Follow System. Switching back to Follow System clears a previously pinned app/window appearance so new system changes apply.
+- Settings → **Local environment check** covers seven Agent CLIs: Claude Code, Codex, Gemini CLI, Grok Build, OpenCode, OpenClaw, and Hermes. Detection enumerates known directories and does not modify PATH. Each card shows local version, latest stable version, channel/source, and a read-only conflict list. Install/update buttons run only trusted typed catalog options; Hermes and script-only Grok entries show official docs instead of executing remote scripts. **Update all** previews trusted updates, waits for confirmation, then runs them one tool at a time. Copy a redacted diagnostic from Settings if you need to file an issue.
+
+Evidence for this work: `local_tests` from framework schemes. `runtime_verified`, `remote_release`, `update_verified`, and `user_installed` are `not_run` until those gates happen.
 
 ---
 

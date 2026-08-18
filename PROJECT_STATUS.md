@@ -99,6 +99,15 @@
 - [x] GitHub Release v1.5.4（build 27）已发布：ZIP / PKG / DMG / appcast。PKG 未用 Developer ID 签名，公证未做。
 - [x] 发版测试 114 通过；Release 构建为 ad-hoc「Sign to Run Locally」。
 
+## Agent 环境检查（2026-08-19，implemented / 分层证据）
+
+- `local_tests`: DomainTests / InstallerTests / LatestVersionTests / AgentEnvironmentTests（本机框架测试）
+- `local_build`: not_run on this Mac（禁止构建 CodingTools.app）；CI compile 另计
+- `runtime_verified`: not_run
+- `remote_release`: not_run
+- `update_verified`: not_run
+- `user_installed`: not_run
+
 ## 进行中
 
 - [ ] Apple Developer ID 申请（外部流程，阶段 10 阻塞 sandbox + 公证 + 上架）

@@ -87,51 +87,59 @@ public actor ProcessExecutor: ProcessExecuting {
         let stderrPipe = Pipe()
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
+        process.standardInput = FileHandle.nullDevice
 
-        // 3. 注册到 actor 状态
+        let box = ProcessExitBox()
+        stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
+            let chunk = handle.availableData
+            if !chunk.isEmpty { box.appendStdout(chunk) }
+        }
+        stderrPipe.fileHandleForReading.readabilityHandler = { handle in
+            let chunk = handle.availableData
+            if !chunk.isEmpty { box.appendStderr(chunk) }
+        }
+        process.terminationHandler = { proc in
+            stdoutPipe.fileHandleForReading.readabilityHandler = nil
+            stderrPipe.fileHandleForReading.readabilityHandler = nil
+            box.appendStdout(stdoutPipe.fileHandleForReading.readDataToEndOfFile())
+            box.appendStderr(stderrPipe.fileHandleForReading.readDataToEndOfFile())
+            box.finish(exitCode: proc.terminationStatus)
+        }
+
         let id = UUID()
         running[id] = process
-
         defer { running.removeValue(forKey: id) }
 
-        // 4. 启动 + 异步等待 termination
         do {
             try process.run()
         } catch {
             throw ProcessExecutionError.launchFailed(String(describing: error))
         }
 
-        // 5. 用 task group 跑：主 task = 等 process 退出；次 task = 超时
-        return try await withThrowingTaskGroup(of: ProcessOutput?.self) { group in
-            // 主 task
-            group.addTask { [self] in
-                // 在 actor 外面 collect 完数据再 resume
-                let output: ProcessOutput = try await self.awaitExit(
-                    of: process,
-                    stdoutPipe: stdoutPipe,
-                    stderrPipe: stderrPipe
-                )
-                return output
-            }
-            // 超时 task
-            group.addTask {
-                try await Task.sleep(for: request.timeout)
-                return nil  // 标记超时
-            }
+        return try await withTaskCancellationHandler {
+            try await withThrowingTaskGroup(of: ProcessOutput?.self) { group in
+                group.addTask {
+                    await box.wait()
+                }
+                group.addTask {
+                    try await Task.sleep(for: request.timeout)
+                    return nil
+                }
 
-            // 第一个完成的 task 胜出
-            guard let first = try await group.next() else {
-                throw ProcessExecutionError.launchFailed("no task completed")
-            }
-            group.cancelAll()
+                guard let first = try await group.next() else {
+                    throw ProcessExecutionError.launchFailed("no task completed")
+                }
+                if let out = first {
+                    group.cancelAll()
+                    return out
+                }
 
-            if let out = first {
-                return out
-            } else {
-                // 超时 task 胜出
-                process.terminate()
+                if process.isRunning { process.terminate() }
+                _ = try await group.next()
                 throw ProcessExecutionError.timeout
             }
+        } onCancel: {
+            if process.isRunning { process.terminate() }
         }
     }
 
@@ -142,72 +150,6 @@ public actor ProcessExecutor: ProcessExecuting {
         running.removeValue(forKey: id)
     }
 
-    // MARK: - Helpers
-
-    private func awaitExit(
-        of process: Process,
-        stdoutPipe: Pipe,
-        stderrPipe: Pipe
-    ) async throws -> ProcessOutput {
-        // 用 readabilityHandler 持续收集；polling + terminationHandler 联合保证
-        // 双重 resume 安全（用一个原子标志保证只 resume 一次）。
-        let box = ProcessExitBox()
-
-        stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
-            let chunk = handle.availableData
-            if chunk.isEmpty { return }
-            box.appendStdout(chunk)
-        }
-        stderrPipe.fileHandleForReading.readabilityHandler = { handle in
-            let chunk = handle.availableData
-            if chunk.isEmpty { return }
-            box.appendStderr(chunk)
-        }
-
-        // terminationHandler 可能是异步回调，polling 也同时在跑；
-        // 用 box 的「只第一次 resume」机制避免双重 resume。
-        process.terminationHandler = { proc in
-            stdoutPipe.fileHandleForReading.readabilityHandler = nil
-            stderrPipe.fileHandleForReading.readabilityHandler = nil
-            let extraOut = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-            let extraErr = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-            box.appendStdout(extraOut)
-            box.appendStderr(extraErr)
-            box.tryResume(
-                stdout: box.takeStdout(),
-                stderr: box.takeStderr(),
-                exitCode: proc.terminationStatus
-            )
-        }
-
-        // Polling 兜底：Process.terminationStatus 在某些边界下不可靠，
-        // polling 能保证 await 一定返回。如果调用方 Task 被 cancel，
-        // sleep 会抛 CancellationError，我们让它向上传播。
-        while process.isRunning {
-            do {
-                try await Task.sleep(for: .milliseconds(25))
-            } catch {
-                // 调用方 Task 被取消 → 强制 terminate 并抛
-                if process.isRunning { process.terminate() }
-                throw CancellationError()
-            }
-        }
-
-        // Process 已退出；如果 terminationHandler 已经先 resume 过，
-        // 这里就拿不到 continuation；否则我们自己 resume。
-        let extraOut = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-        let extraErr = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-        box.appendStdout(extraOut)
-        box.appendStderr(extraErr)
-        stdoutPipe.fileHandleForReading.readabilityHandler = nil
-        stderrPipe.fileHandleForReading.readabilityHandler = nil
-
-        return await box.awaitIfNotResumed(
-            fallbackStdout: box.takeStdout(),
-            fallbackStderr: box.takeStderr(),
-            exitCode: process.terminationStatus
-        )
-    }
 }
 
 public enum ProcessExecutionError: Error, Sendable, Equatable {
@@ -290,17 +232,15 @@ public enum OutputRedactor {
 
 // MARK: - ProcessExitBox
 //
-// 收集 stdout/stderr 数据 + 保证 continuation 只被 resume 一次。
-// terminationHandler 和 polling 都会触发"process 退出"事件，必须互斥。
+// Single completion: either the result is already known, or exactly one waiter
+// is parked. finish(_:) is idempotent.
+
 private final class ProcessExitBox: @unchecked Sendable {
     private let lock = NSLock()
     private var stdoutData = Data()
     private var stderrData = Data()
-    private var resumed = false
-    private var cont: CheckedContinuation<ProcessOutput, Never>?
-    private var pendingOutput: ProcessOutput?
-
-    init() {}
+    private var result: ProcessOutput?
+    private var continuation: CheckedContinuation<ProcessOutput, Never>?
 
     func appendStdout(_ d: Data) {
         lock.lock(); defer { lock.unlock() }
@@ -312,47 +252,34 @@ private final class ProcessExitBox: @unchecked Sendable {
         stderrData.append(d)
     }
 
-    func takeStdout() -> String {
-        lock.lock(); defer { lock.unlock() }
-        return String(data: stdoutData, encoding: .utf8) ?? ""
-    }
-
-    func takeStderr() -> String {
-        lock.lock(); defer { lock.unlock() }
-        return String(data: stderrData, encoding: .utf8) ?? ""
-    }
-
-    /// terminationHandler 调用入口：第一次成功 resume，后续 no-op。
-    func tryResume(stdout: String, stderr: String, exitCode: Int32) {
-        lock.lock()
-        if resumed {
-            lock.unlock(); return
-        }
-        resumed = true
-        if let c = cont {
-            cont = nil
-            lock.unlock()
-            c.resume(returning: ProcessOutput(stdout: OutputRedactor.redact(stdout), stderr: OutputRedactor.redact(stderr), exitCode: exitCode))
-        } else {
-            pendingOutput = ProcessOutput(stdout: OutputRedactor.redact(stdout), stderr: OutputRedactor.redact(stderr), exitCode: exitCode)
-            lock.unlock()
-        }
-    }
-
-    /// Polling 路径调用：若 terminationHandler 已经 resume 过，直接返回已存结果；
-    /// 否则建立 continuation 等待 handler resume。
-    func awaitIfNotResumed(fallbackStdout: String, fallbackStderr: String, exitCode: Int32) async -> ProcessOutput {
-        return await withCheckedContinuation { (c: CheckedContinuation<ProcessOutput, Never>) in
+    func wait() async -> ProcessOutput {
+        await withCheckedContinuation { continuation in
             lock.lock()
-            if resumed {
-                let out = pendingOutput ?? ProcessOutput(stdout: fallbackStdout, stderr: fallbackStderr, exitCode: exitCode)
+            if let result {
                 lock.unlock()
-                c.resume(returning: out)
+                continuation.resume(returning: result)
             } else {
-                resumed = true
-                cont = c
+                precondition(self.continuation == nil)
+                self.continuation = continuation
                 lock.unlock()
             }
         }
+    }
+
+    func finish(exitCode: Int32) {
+        let output: ProcessOutput
+        let continuation: CheckedContinuation<ProcessOutput, Never>?
+        lock.lock()
+        guard result == nil else { lock.unlock(); return }
+        output = ProcessOutput(
+            stdout: OutputRedactor.redact(String(decoding: stdoutData, as: UTF8.self)),
+            stderr: OutputRedactor.redact(String(decoding: stderrData, as: UTF8.self)),
+            exitCode: exitCode
+        )
+        result = output
+        continuation = self.continuation
+        self.continuation = nil
+        lock.unlock()
+        continuation?.resume(returning: output)
     }
 }

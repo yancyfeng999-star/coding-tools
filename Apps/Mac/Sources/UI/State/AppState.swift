@@ -50,6 +50,16 @@ public final class AppState: ObservableObject {
     /// 每个 tool 的 latest version（key: toolID）。来自 Brew/Npm provider + cache。
     @Published public var latestVersions: [String: String] = [:]
     @Published public var latestQueriedIDs: Set<String> = []
+    @Published public var probeStates: [String: Loadable<InstallationProbe>] = [:]
+    @Published public var latestVersionStates: [String: Loadable<LatestVersionRecord>] = [:]
+    @Published public var installationReports: [String: ToolInstallationReport] = [:]
+    @Published public private(set) var latestVersionFailures: [String: LatestVersionFailure] = [:]
+    @Published public var bulkUpdateState = BulkToolUpdateState()
+    private var refreshGeneration: [String: UInt64] = [:]
+    private var latestRefreshGeneration: [String: UInt64] = [:]
+    private var agentEnvironmentRefreshInFlight = false
+    public var installationDiagnoser: (any InstallationDiagnosing)?
+    public var toolOperationRunner: ((Tool, InstallOption) async -> InstallRunState)?
     /// 启动时在用户 home 扫到的 AI CLI 配置文件
     @Published public var discoveredConfigs: [AIConfig] = []
     /// Last Open/launch resolution. Views and the menu bar share `launch(_:)`.
@@ -94,13 +104,12 @@ public final class AppState: ObservableObject {
     public var helperClient: HelperClient?
     /// 安装探测器（默认 `InstallationDetector()`，可注入 mock）
     public var detector: InstallationDetecting = InstallationDetector()
-    /// Latest version provider（默认 brew + npm + cache；可注入 mock）
-    public var latestVersionProvider: LatestVersionProvider =
+    /// Latest version provider（默认 HTTPS registry + 10 分钟成功缓存）
+    public var latestVersionProvider: any LatestVersionProvider =
         CachedLatestVersionProvider(
-            inner: CompositeLatestVersionProvider(providers: [
-                BrewLatestVersionProvider(),
-                NpmLatestVersionProvider(),
-            ])
+            inner: RoutedLatestVersionProvider(
+                registry: RegistryLatestVersionProvider(client: AllowlistedURLSessionClient())
+            )
         )
     /// 启动时扫用户 home 找 AI CLI 配置（默认 FilesystemAIConfigDiscovery）
     public var configDiscoverer: AIConfigDiscovering = FilesystemAIConfigDiscovery()
@@ -173,27 +182,46 @@ public final class AppState: ObservableObject {
 
     // MARK: - Detection
 
+    public static let agentToolIDs: Set<String> = [
+        "claude-code", "codex", "gemini-cli", "grok-build", "opencode", "openclaw", "hermes",
+    ]
+
+    public var agentTools: [Tool] {
+        tools.filter { Self.agentToolIDs.contains($0.id) }
+    }
+
     /// 探测所有当前 tools 的安装状态。结果存到 `probes`。
-    /// 触发时机：catalog 加载完成后 + 用户手动刷新。
     public func refreshProbes() async {
-        let tools = self.tools
-        probingToolIDs = Set(tools.map(\.id))
-        let results = await detector.probeAll(tools: tools)
-        var dict: [String: InstallationProbe] = [:]
-        for probe in results { dict[probe.toolID] = probe }
-        probes = dict
-        probingToolIDs = []
-        failedProbeIDs = []
+        await refreshProbes(toolIDs: nil)
+    }
+
+    public func refreshProbes(toolIDs: Set<String>? = nil) async {
+        let selected = toolIDs.map { ids in tools.filter { ids.contains($0.id) } } ?? tools
+        for tool in selected {
+            probeStates[tool.id] = .loading(previous: probes[tool.id])
+            probingToolIDs.insert(tool.id)
+            refreshGeneration[tool.id, default: 0] += 1
+        }
+        await withTaskGroup(of: (String, UInt64, InstallationProbe).self) { group in
+            for tool in selected {
+                let generation = refreshGeneration[tool.id, default: 0]
+                group.addTask { [detector] in
+                    (tool.id, generation, await detector.probe(tool: tool))
+                }
+            }
+            for await (toolID, generation, probe) in group {
+                guard refreshGeneration[toolID] == generation else { continue }
+                probes[toolID] = probe
+                probeStates[toolID] = .loaded(probe)
+                probingToolIDs.remove(toolID)
+                failedProbeIDs.remove(toolID)
+            }
+        }
     }
 
     /// 探测单个 tool（详情页用）
     public func refreshProbe(toolID: String) async {
-        guard let tool = tools.first(where: { $0.id == toolID }) else { return }
-        probingToolIDs.insert(toolID)
-        let probe = await detector.probe(tool: tool)
-        probes[toolID] = probe
-        failedProbeIDs.remove(toolID)
-        probingToolIDs.remove(toolID)
+        await refreshProbes(toolIDs: [toolID])
     }
 
     public func markProbeFailed(toolID: String) {
@@ -203,61 +231,159 @@ public final class AppState: ObservableObject {
 
     // MARK: - Latest version
 
-    /// 拉所有 tool 的 latest version。结果存到 `latestVersions`。
-    /// 触发时机：catalog 加载完成后 + 探测完成后（installed version 已知）。
     public func refreshLatestVersions() async {
-        let tools = self.tools
-        // 并行拉（cached provider 内部串行）
-        await withTaskGroup(of: (String, String?).self) { group in
-            for tool in tools {
-                let toolID = tool.id
-                let installed = probes[toolID]?.installedVersion
+        await refreshLatestVersions(toolIDs: nil, force: false)
+    }
+
+    public func refreshLatestVersions(toolIDs: Set<String>? = nil, force: Bool = false) async {
+        let selected = toolIDs.map { ids in tools.filter { ids.contains($0.id) } } ?? tools
+        if force, let cache = latestVersionProvider as? LatestVersionCacheInvalidating {
+            await cache.invalidate(toolIDs: Set(selected.map(\.id)))
+        }
+        for tool in selected {
+            latestVersionStates[tool.id] = .loading(previous: latestVersionRecord(for: tool.id))
+            latestRefreshGeneration[tool.id, default: 0] += 1
+        }
+        await withTaskGroup(of: (String, UInt64, Result<LatestVersionRecord, LatestVersionFailure>).self) { group in
+            for tool in selected {
+                let generation = latestRefreshGeneration[tool.id, default: 0]
                 group.addTask { [latestVersionProvider] in
-                    let v = await latestVersionProvider.latestVersion(
-                        toolID: toolID,
-                        installedVersion: installed
-                    )
-                    return (toolID, v)
+                    (tool.id, generation, await latestVersionProvider.latestVersion(for: tool))
                 }
             }
-            for await (toolID, v) in group {
+            for await (toolID, generation, result) in group {
+                guard latestRefreshGeneration[toolID] == generation else { continue }
                 latestQueriedIDs.insert(toolID)
-                if let v {
-                    latestVersions[toolID] = v
-                } else {
-                    latestVersions[toolID] = nil
+                switch result {
+                case .success(let record):
+                    latestVersions[toolID] = record.version
+                    latestVersionStates[toolID] = .loaded(record)
+                    latestVersionFailures.removeValue(forKey: toolID)
+                case .failure(let failure):
+                    latestVersionFailures[toolID] = failure
+                    latestVersionStates[toolID] = .failed(
+                        LoadFailure(
+                            localizationKey: "tool.latest.networkUnavailable",
+                            redactedMessage: String(describing: failure)
+                        ),
+                        previous: latestVersionRecord(for: toolID)
+                    )
                 }
             }
         }
     }
 
-    /// Refresh latest version for one tool only (detail page).
     public func refreshLatestVersion(toolID: String) async {
-        guard let tool = tools.first(where: { $0.id == toolID }) else { return }
-        let installed = probes[toolID]?.installedVersion
-        let value = await latestVersionProvider.latestVersion(
-            toolID: tool.id,
-            installedVersion: installed
+        await refreshLatestVersion(toolID: toolID, force: false)
+    }
+
+    public func refreshLatestVersion(toolID: String, force: Bool) async {
+        await refreshLatestVersions(toolIDs: [toolID], force: force)
+    }
+
+    public func latestVersionRecord(for toolID: String) -> LatestVersionRecord? {
+        switch latestVersionStates[toolID] {
+        case .loaded(let record), .loading(previous: let record?), .failed(_, previous: let record?):
+            return record
+        default:
+            return nil
+        }
+    }
+
+    public func latestVersionFailure(for toolID: String) -> LatestVersionFailure? {
+        latestVersionFailures[toolID]
+    }
+
+    public func refreshAgentEnvironment(force: Bool) async {
+        if agentEnvironmentRefreshInFlight, !force { return }
+        agentEnvironmentRefreshInFlight = true
+        defer { agentEnvironmentRefreshInFlight = false }
+        async let local: Void = refreshProbes(toolIDs: Self.agentToolIDs)
+        async let remote: Void = refreshLatestVersions(toolIDs: Self.agentToolIDs, force: force)
+        _ = await (local, remote)
+    }
+
+    public func diagnoseAgentInstallations() async {
+        let selected = tools.filter { Self.agentToolIDs.contains($0.id) }
+        let diagnoser = installationDiagnoser ?? (detector as? InstallationDiagnosing) ?? InstallationDetector()
+        await withTaskGroup(of: (String, ToolInstallationReport).self) { group in
+            for tool in selected {
+                group.addTask {
+                    (tool.id, await diagnoser.installations(tool: tool))
+                }
+            }
+            for await (toolID, report) in group {
+                installationReports[toolID] = report
+            }
+        }
+    }
+
+    public func plannedBulkAgentUpdates() -> [BulkToolUpdateItem] {
+        var presentations: [String: ToolPresentation] = [:]
+        for tool in agentTools {
+            presentations[tool.id] = presentation(for: tool)
+        }
+        return BulkToolUpdatePlanner.makeItems(tools: agentTools, presentations: presentations)
+    }
+
+    public func runBulkAgentUpdate(items: [BulkToolUpdateItem]) async {
+        var states: [String: BulkToolUpdateItemState] = [:]
+        for item in items { states[item.id] = .pending }
+        bulkUpdateState = BulkToolUpdateState(itemStates: states)
+        for item in items {
+            var next = bulkUpdateState.itemStates
+            next[item.id] = .running
+            bulkUpdateState = BulkToolUpdateState(itemStates: next)
+            let result = await executeTrustedOperation(tool: item.tool, option: item.option)
+            var after = bulkUpdateState.itemStates
+            switch result {
+            case .completed:
+                after[item.id] = .completed
+            case .failed:
+                after[item.id] = .failed("install failed")
+            case .cancelled:
+                after[item.id] = .skipped
+            default:
+                after[item.id] = .failed("install failed")
+            }
+            bulkUpdateState = BulkToolUpdateState(itemStates: after)
+            await refreshProbe(toolID: item.tool.id)
+            await refreshLatestVersion(toolID: item.tool.id, force: true)
+        }
+    }
+
+    public func agentEnvironmentCardModel(for toolID: String) -> AgentEnvironmentCardModel {
+        let tool = tools.first(where: { $0.id == toolID }) ?? Tool(
+            id: toolID,
+            slug: toolID,
+            name: toolID,
+            category: .aiCoding
         )
-        latestQueriedIDs.insert(toolID)
-        latestVersions[toolID] = value
+        return AgentEnvironmentCardModel.make(
+            tool: tool,
+            presentation: presentation(for: tool),
+            probeState: probeStates[toolID],
+            latestState: latestVersionStates[toolID],
+            report: installationReports[toolID]
+        )
     }
 
     public func latestFact(for tool: Tool) -> LatestVersionFact {
-        if !TrustedInstallOption.canQueryLatest(tool.installOptions) {
+        if let record = latestVersionRecord(for: tool.id) {
+            return .known(record.version)
+        }
+        if latestVersionFailures[tool.id] != nil || latestQueriedIDs.contains(tool.id) {
             return .unavailable
         }
-        if let value = latestVersions[tool.id] {
+        if latestVersions[tool.id] != nil, let value = latestVersions[tool.id] {
             return .known(value)
-        }
-        if latestQueriedIDs.contains(tool.id) {
-            return .unavailable
         }
         return .notQueried
     }
 
     public func probeOutcome(for toolID: String) -> ToolProbeOutcome {
         if probingToolIDs.contains(toolID) { return .checking }
+        if case .loading = probeStates[toolID] { return .checking }
         if failedProbeIDs.contains(toolID) { return .failed }
         if let probe = probes[toolID] { return .result(probe) }
         return .missing
@@ -561,51 +687,55 @@ public final class AppState: ObservableObject {
 
     @MainActor
     private func runInstall(tool: Tool, option: InstallOption?, generation: UInt64) async {
-        guard let opt = option, TrustedInstallOption.isTrusted(opt) else {
+        guard let opt = option else {
             finishInstallIfCurrent(generation: generation, .failed)
             return
         }
-        installLog += "==> 准备安装 \(tool.name) [\(opt.type.rawValue)]\n"
+        let outcome = await executeTrustedOperation(tool: tool, option: opt)
+        if outcome == .completed {
+            await refreshProbe(toolID: tool.id)
+            let probe = probes[tool.id]
+            let probeLooksInstalled = probe?.healthStatus == .installed || probe?.healthStatus == .outdated
+            if probeLooksInstalled {
+                installLog += "==> 安装完成\n"
+                finishInstallIfCurrent(generation: generation, .completed)
+                if let store = persistStore, let probe {
+                    try? await store.saveInstallation(probe)
+                }
+            } else {
+                installLog += "==> 安装完成，状态待确认\n"
+                finishInstallIfCurrent(generation: generation, .completedPendingConfirmation)
+            }
+        } else {
+            finishInstallIfCurrent(generation: generation, outcome)
+        }
+    }
+
+    public func executeTrustedOperation(tool: Tool, option: InstallOption) async -> InstallRunState {
+        guard TrustedInstallOption.isTrusted(option) else { return .failed }
+        if let toolOperationRunner { return await toolOperationRunner(tool, option) }
+        installLog += "==> 准备安装 \(tool.name) [\(option.type.rawValue)]\n"
         do {
-            let descriptor = try opt.toInstallAction()
+            let descriptor = try option.toInstallAction()
             let action = Self.descriptorToAction(descriptor)
-            let progress: InstallProgressHandler = { [weak self] p in
-                // P0-G3-2：进度消息脱敏后再写入 installLog
-                let safe = OutputRedactor.redact(p.message)
+            let progress: InstallProgressHandler = { [weak self] progress in
+                let safe = OutputRedactor.redact(progress.message)
                 Task { @MainActor in
-                    self?.installLog += "[\(p.stage.rawValue)] \(safe)\n"
+                    self?.installLog += "[\(progress.stage.rawValue)] \(safe)\n"
                 }
             }
-            // 阶段 9 修复（P0-G2-5）：走 HelperClient（Helper 不可用回退 in-process）
             let result = try await executeWithHelperFallback(
                 toolID: tool.id,
                 action: action,
                 progress: progress
             )
-            if result.exitCode == 0 {
-                await refreshProbe(toolID: tool.id)
-                let probe = probes[tool.id]
-                let probeLooksInstalled = probe?.healthStatus == .installed || probe?.healthStatus == .outdated
-                if probeLooksInstalled {
-                    installLog += "==> 安装完成\n"
-                    finishInstallIfCurrent(generation: generation, .completed)
-                    if let store = persistStore, let probe {
-                        try? await store.saveInstallation(probe)
-                    }
-                } else {
-                    installLog += "==> 安装完成，状态待确认\n"
-                    finishInstallIfCurrent(generation: generation, .completedPendingConfirmation)
-                }
-            } else {
-                installLog += "==> 安装失败，退出码 \(result.exitCode)\n"
-                finishInstallIfCurrent(generation: generation, .failed)
-            }
+            return result.exitCode == 0 ? .completed : .failed
         } catch is CancellationError {
             installLog += "\n[用户取消] 已停止底层进程\n"
-            finishInstallIfCurrent(generation: generation, .cancelled)
+            return .cancelled
         } catch {
-            installLog += "==> 失败: \(error)\n"
-            finishInstallIfCurrent(generation: generation, .failed)
+            installLog += "==> 失败: \(OutputRedactor.redact(String(describing: error)))\n"
+            return .failed
         }
     }
 

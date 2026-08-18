@@ -23,6 +23,24 @@
 - Arrange / Act / Assert
 - 至少一个失败用例
 
+### Agent 环境检查（确定性）
+
+| Case | Expected |
+| --- | --- |
+| `/usr/bin/true` × 100 | no hang |
+| 32 concurrent exits | all complete |
+| version command exceeds 8s | timedOut terminal state |
+| `~/.local/bin/claude` | installed + absolute path execution |
+| `.grok/bin` and `.local/bin` same realpath | one installation, no conflict |
+| standalone Codex + ChatGPT embedded Codex | two installations, preferred PATH marked |
+| npm 200 / malformed / 500 / timeout | loaded / invalidResponse / httpStatus / timedOut |
+| Hermes local 0.20.0 vs PyPI 0.19.0 | localAhead, no downgrade action |
+| one tool fails | remaining cards complete |
+| refresh with cache | stale value remains visible |
+| bulk update with second item failing | sequential; first/third outcomes preserved |
+
+Evidence layers: `local_tests` = `DomainTests InstallerTests LatestVersionTests AgentEnvironmentTests`. `local_build` is CI compile only. `runtime_verified`, `remote_release`, `update_verified`, `user_installed` stay `not_run` until those gates actually run.
+
 ## 2. 集成测试
 
 | 场景 | 验证点 |

@@ -1,204 +1,144 @@
 import XCTest
 @testable import LatestVersion
-import ProcessExecution
+import Domain
 
-// MARK: - Test stub for ProcessExecuting
-
-final class StubProcessExecutor: ProcessExecuting, @unchecked Sendable {
-    var stdout: String = ""
-    var exitCode: Int32 = 0
-    var error: Error?
-
-    func run(_ request: ProcessRequest) async throws -> ProcessOutput {
-        if let error = error { throw error }
-        return ProcessOutput(
-            stdout: stdout,
-            stderr: "",
-            exitCode: exitCode
-        )
+final class VersionSourceResolverTests: XCTestCase {
+    func testAgentVersionSourcesAreExact() {
+        XCTAssertEqual(VersionSourceResolver.sources(for: tool("claude-code")), [.npm("@anthropic-ai/claude-code")])
+        XCTAssertEqual(VersionSourceResolver.sources(for: tool("codex")), [.npm("@openai/codex")])
+        XCTAssertEqual(VersionSourceResolver.sources(for: tool("gemini-cli")), [.npm("@google/gemini-cli")])
+        XCTAssertEqual(VersionSourceResolver.sources(for: tool("grok-build")), [.npm("@xai-official/grok")])
+        XCTAssertEqual(VersionSourceResolver.sources(for: tool("opencode")), [.npm("opencode-ai"), .github(owner: "anomalyco", repo: "opencode")])
+        XCTAssertEqual(VersionSourceResolver.sources(for: tool("openclaw")), [.npm("openclaw")])
+        XCTAssertEqual(VersionSourceResolver.sources(for: tool("hermes")), [.pypi("hermes-agent")])
     }
 
-    func cancel(id: UUID) async {
-        // no-op
+    func testNpmPackageNormalization() {
+        XCTAssertEqual(VersionSourceResolver.normalizeNpmPackage("opencode-ai@latest"), "opencode-ai")
+        XCTAssertEqual(VersionSourceResolver.normalizeNpmPackage("@openai/codex"), "@openai/codex")
+        XCTAssertEqual(VersionSourceResolver.normalizeNpmPackage("@scope/name@beta"), "@scope/name")
+    }
+
+    private func tool(_ id: String) -> Tool {
+        Tool(id: id, slug: id, name: id, category: .aiCoding)
     }
 }
 
-// MARK: - BrewLatestVersionProvider
+final class RegistryLatestVersionProviderTests: XCTestCase {
+    func testParsesInjectedRegistryJSON() async {
+        let client = FixtureHTTPClient(payloads: [
+            "https://registry.npmjs.org/@anthropic-ai/claude-code/latest": #"{"version":"2.1.234"}"#,
+            "https://pypi.org/pypi/hermes-agent/json": #"{"info":{"version":"0.19.0"}}"#,
+            "https://api.github.com/repos/anomalyco/opencode/releases/latest": #"{"tag_name":"v1.18.18"}"#,
+        ])
+        let registry = RegistryLatestVersionProvider(client: client)
+        let npm = await registry.fetch(source: .npm("@anthropic-ai/claude-code"))
+        let pypi = await registry.fetch(source: .pypi("hermes-agent"))
+        let github = await registry.fetch(source: .github(owner: "anomalyco", repo: "opencode"))
+        XCTAssertEqual(try npm.get().version, "2.1.234")
+        XCTAssertEqual(try pypi.get().version, "0.19.0")
+        XCTAssertEqual(try github.get().version, "1.18.18")
+    }
+
+    func testAllowlistTimeoutAndSizeBecomeTerminalFailures() async {
+        let client = FixtureHTTPClient(errors: [
+            "https://registry.npmjs.org/openclaw/latest": .timedOut,
+            "https://pypi.org/pypi/hermes-agent/json": .responseTooLarge,
+            "https://api.github.com/repos/anomalyco/opencode/releases/latest": .httpStatus(500),
+            "https://registry.npmjs.org/bad/latest": .hostNotAllowlisted,
+        ])
+        let registry = RegistryLatestVersionProvider(client: client)
+        let timedOut = await registry.fetch(source: .npm("openclaw"))
+        let tooLarge = await registry.fetch(source: .pypi("hermes-agent"))
+        let http = await registry.fetch(source: .github(owner: "anomalyco", repo: "opencode"))
+        let blocked = await registry.fetch(source: .npm("bad"))
+        XCTAssertEqual(timedOut, .failure(.timedOut))
+        XCTAssertEqual(tooLarge, .failure(.responseTooLarge))
+        XCTAssertEqual(http, .failure(.httpStatus(500)))
+        XCTAssertEqual(blocked, .failure(.unsupportedSource))
+    }
+
+    func testMalformedJSONIsInvalidResponse() async {
+        let client = FixtureHTTPClient(payloads: [
+            "https://registry.npmjs.org/openclaw/latest": #"{"not":"a version"}"#,
+        ])
+        let registry = RegistryLatestVersionProvider(client: client)
+        let result = await registry.fetch(source: .npm("openclaw"))
+        XCTAssertEqual(result, .failure(.invalidResponse))
+    }
+
+    func testRoutedProviderFallsBackToGitHub() async {
+        let client = FixtureHTTPClient(
+            payloads: [
+                "https://api.github.com/repos/anomalyco/opencode/releases/latest": #"{"tag_name":"v1.18.18"}"#,
+            ],
+            errors: [
+                "https://registry.npmjs.org/opencode-ai/latest": .httpStatus(404),
+            ]
+        )
+        let provider = RoutedLatestVersionProvider(registry: RegistryLatestVersionProvider(client: client))
+        let result = await provider.latestVersion(for: Tool(id: "opencode", slug: "opencode", name: "OpenCode", category: .aiCoding))
+        XCTAssertEqual(try result.get().version, "1.18.18")
+        XCTAssertEqual(try result.get().source, .github(owner: "anomalyco", repo: "opencode"))
+    }
+}
+
+final class CachedLatestVersionProviderTests: XCTestCase {
+    actor CountingProvider: LatestVersionProvider {
+        var calls = 0
+        func latestVersion(for tool: Tool) async -> Result<LatestVersionRecord, LatestVersionFailure> {
+            calls += 1
+            return .success(LatestVersionRecord(version: "1.0.0", source: .npm("fixture"), fetchedAt: Date(timeIntervalSince1970: 0)))
+        }
+    }
+
+    func testSuccessIsCachedAndFailureIsNot() async {
+        let inner = CountingProvider()
+        let cached = CachedLatestVersionProvider(inner: inner, ttl: 600)
+        let tool = Tool(id: "claude-code", slug: "claude-code", name: "Claude", category: .aiCoding)
+        _ = await cached.latestVersion(for: tool)
+        _ = await cached.latestVersion(for: tool)
+        let calls = await inner.calls
+        XCTAssertEqual(calls, 1)
+    }
+
+    func testInvalidateForcesRefresh() async {
+        let inner = CountingProvider()
+        let cached = CachedLatestVersionProvider(inner: inner, ttl: 600)
+        let tool = Tool(id: "claude-code", slug: "claude-code", name: "Claude", category: .aiCoding)
+        _ = await cached.latestVersion(for: tool)
+        await cached.invalidate(toolIDs: ["claude-code"])
+        _ = await cached.latestVersion(for: tool)
+        let calls = await inner.calls
+        XCTAssertEqual(calls, 2)
+    }
+}
 
 final class BrewLatestVersionProviderTests: XCTestCase {
     func testParseBrewInfoJSONFormula() {
         let json = """
-        {
-          "formulae": [
-            {
-              "name": "git",
-              "versions": {
-                "stable": "2.47.1",
-                "devel": "2.48.0-rc1"
-              }
-            }
-          ],
-          "casks": []
-        }
+        {"formulae":[{"name":"git","versions":{"stable":"2.47.1"}}],"casks":[]}
         """
-        let result = BrewLatestVersionProvider.parseBrewInfoJSON(
-            Data(json.utf8), toolID: "git"
+        XCTAssertEqual(
+            BrewLatestVersionProvider.parseBrewInfoJSON(Data(json.utf8), toolID: "git"),
+            "2.47.1"
         )
-        XCTAssertEqual(result, "2.47.1")
-    }
-
-    func testParseBrewInfoJSONCask() {
-        let json = """
-        {
-          "formulae": [],
-          "casks": [
-            {
-              "token": "docker",
-              "version": "4.32.0,148734"
-            }
-          ]
-        }
-        """
-        let result = BrewLatestVersionProvider.parseBrewInfoJSON(
-            Data(json.utf8), toolID: "docker"
-        )
-        XCTAssertEqual(result, "4.32.0,148734")
-    }
-
-    func testParseBrewInfoJSONNotFound() {
-        let json = """
-        {"formulae":[{"name":"other","versions":{"stable":"1.0.0"}}],"casks":[]}
-        """
-        let result = BrewLatestVersionProvider.parseBrewInfoJSON(
-            Data(json.utf8), toolID: "git"
-        )
-        XCTAssertNil(result)
-    }
-
-    func testParseBrewInfoJSONInvalid() {
-        let result = BrewLatestVersionProvider.parseBrewInfoJSON(
-            Data("not json".utf8), toolID: "git"
-        )
-        XCTAssertNil(result)
-    }
-
-    func testParseBrewInfoJSONEmpty() {
-        let result = BrewLatestVersionProvider.parseBrewInfoJSON(
-            Data("{}".utf8), toolID: "git"
-        )
-        XCTAssertNil(result)
-    }
-
-    func testParseBrewInfoJSONEmptyVersion() {
-        let json = """
-        {"formulae":[{"name":"git","versions":{"stable":""}}],"casks":[]}
-        """
-        let result = BrewLatestVersionProvider.parseBrewInfoJSON(
-            Data(json.utf8), toolID: "git"
-        )
-        XCTAssertNil(result, "empty version string should be treated as not found")
     }
 }
 
-// MARK: - Brew integration (graceful nil)
+private final class FixtureHTTPClient: VersionHTTPClient, @unchecked Sendable {
+    var payloads: [String: String]
+    var errors: [String: VersionHTTPClientError]
 
-final class BrewProviderIntegrationTests: XCTestCase {
-    func testReturnsNilWhenBrewNotAvailable() async {
-        let stub = StubProcessExecutor()
-        // pathResolver 找不到 brew → 返回 nil
-        let provider = BrewLatestVersionProvider(
-            executor: stub,
-            pathResolver: HomebrewPathResolver(),
-            timeout: 0.1
-        )
-        let result = await provider.latestVersion(toolID: "git", installedVersion: "2.45.0")
-        XCTAssertNil(result, "should return nil when brew not available")
-    }
-}
-
-// MARK: - NpmLatestVersionProvider
-
-final class NpmLatestVersionProviderTests: XCTestCase {
-    func testReturnsTrimmedVersion() async {
-        // 真跑 npm 拿一个已存在的 scoped package 的 latest 版本
-        // （测试期间可能慢或被网络挡；失败就 skip 而不是 fail）
-        let provider = NpmLatestVersionProvider(
-            executor: ProcessExecutor(),
-            npmPath: "/usr/bin/npm",
-            timeout: 5.0
-        )
-        let result = await provider.latestVersion(toolID: "@anthropic-ai/claude-code", installedVersion: nil)
-        // 不强制断言（依赖网络 + 实际 latest 可能变）；只确认返回 String 或 nil
-        if let r = result {
-            XCTAssertFalse(r.isEmpty)
-        }
-        // 至少路径走通（不崩溃）
-        XCTAssertTrue(true, "no-op if npm path exercised")
+    init(payloads: [String: String] = [:], errors: [String: VersionHTTPClientError] = [:]) {
+        self.payloads = payloads
+        self.errors = errors
     }
 
-    func testReturnsNilWhenNpmMissing() async {
-        let stub = StubProcessExecutor()
-        let provider = NpmLatestVersionProvider(
-            executor: stub,
-            npmPath: "/nonexistent/npm",
-            timeout: 0.1
-        )
-        let result = await provider.latestVersion(toolID: "@x/y", installedVersion: nil)
-        XCTAssertNil(result)
-    }
-}
-
-// MARK: - CachedLatestVersionProvider
-
-final class CachedLatestVersionProviderTests: XCTestCase {
-
-    final class FakeProvider: LatestVersionProvider, @unchecked Sendable {
-        var callCount = 0
-        var result: String? = "1.0.0"
-        func latestVersion(toolID: String, installedVersion: String?) async -> String? {
-            callCount += 1
-            return result
-        }
-    }
-
-    func testCacheHitAvoidsRecall() async {
-        let fake = FakeProvider()
-        let cached = CachedLatestVersionProvider(inner: fake, ttl: 60)
-        let a = await cached.latestVersion(toolID: "git", installedVersion: "1.0.0")
-        let b = await cached.latestVersion(toolID: "git", installedVersion: "1.0.0")
-        let c = await cached.latestVersion(toolID: "git", installedVersion: "1.0.0")
-        XCTAssertEqual(a, "1.0.0")
-        XCTAssertEqual(b, "1.0.0")
-        XCTAssertEqual(c, "1.0.0")
-        XCTAssertEqual(fake.callCount, 1, "second+third call should hit cache")
-    }
-
-    func testCacheKeyDifferentiatesInstalledVersion() async {
-        let fake = FakeProvider()
-        let cached = CachedLatestVersionProvider(inner: fake, ttl: 60)
-        _ = await cached.latestVersion(toolID: "git", installedVersion: "1.0.0")
-        _ = await cached.latestVersion(toolID: "git", installedVersion: "1.1.0")
-        _ = await cached.latestVersion(toolID: "git", installedVersion: nil)
-        XCTAssertEqual(fake.callCount, 3, "different installedVersion = different cache key")
-    }
-
-    func testCacheExpires() async throws {
-        let fake = FakeProvider()
-        let cached = CachedLatestVersionProvider(inner: fake, ttl: 0.05)  // 50ms
-        _ = await cached.latestVersion(toolID: "git", installedVersion: nil)
-        try await Task.sleep(nanoseconds: 100_000_000)  // 100ms
-        _ = await cached.latestVersion(toolID: "git", installedVersion: nil)
-        XCTAssertEqual(fake.callCount, 2, "after TTL expiry, should call inner again")
-    }
-
-    func testCacheStoresNilResults() async {
-        let fake = FakeProvider()
-        fake.result = nil
-        let cached = CachedLatestVersionProvider(inner: fake, ttl: 60)
-        let a = await cached.latestVersion(toolID: "x", installedVersion: nil)
-        let b = await cached.latestVersion(toolID: "x", installedVersion: nil)
-        XCTAssertNil(a)
-        XCTAssertNil(b)
-        XCTAssertEqual(fake.callCount, 1, "nil result also cached to avoid repeated failed lookups")
+    func data(from url: URL, timeout: TimeInterval, maximumBytes: Int) async throws -> Data {
+        let key = url.absoluteString
+        if let error = errors[key] { throw error }
+        if let body = payloads[key] { return Data(body.utf8) }
+        throw VersionHTTPClientError.networkUnavailable
     }
 }

@@ -23,6 +23,16 @@ struct CatalogView: View {
         .sheet(item: $state.selectedTool) { tool in
             ToolDetailView(tool: tool)
         }
+        .task {
+            let ids = Set(state.tools.compactMap { tool -> String? in
+                guard !AppState.agentToolIDs.contains(tool.id) else { return nil }
+                guard state.probes[tool.id] == nil else { return nil }
+                return tool.id
+            })
+            if !ids.isEmpty {
+                await state.refreshProbes(toolIDs: ids)
+            }
+        }
     }
 
     private var sidebar: some View {

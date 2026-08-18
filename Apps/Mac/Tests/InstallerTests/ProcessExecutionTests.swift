@@ -59,6 +59,71 @@ final class ProcessExecutionTests: XCTestCase {
         }
     }
 
+    func testFastExitDoesNotHangAcrossRepeatedRuns() async throws {
+        let done = expectation(description: "100 fast exits complete")
+        let executor = ProcessExecutor()
+        let task = Task {
+            defer { done.fulfill() }
+            do {
+                for _ in 0..<100 {
+                    let output = try await executor.run(ProcessRequest(
+                        executableURL: URL(fileURLWithPath: "/usr/bin/true"),
+                        arguments: [],
+                        timeout: .seconds(1)
+                    ))
+                    XCTAssertEqual(output.exitCode, 0)
+                }
+            } catch {
+                XCTFail("unexpected process error: \(error)")
+            }
+        }
+        await fulfillment(of: [done], timeout: 5)
+        task.cancel()
+    }
+
+    func testConcurrentFastExitProcessesComplete() async throws {
+        let done = expectation(description: "32 concurrent exits complete")
+        let executor = ProcessExecutor()
+        let task = Task {
+            defer { done.fulfill() }
+            do {
+                try await withThrowingTaskGroup(of: Int32.self) { group in
+                    for _ in 0..<32 {
+                        group.addTask {
+                            try await executor.run(ProcessRequest(
+                                executableURL: URL(fileURLWithPath: "/usr/bin/true"),
+                                arguments: [],
+                                timeout: .seconds(1)
+                            )).exitCode
+                        }
+                    }
+                    var codes: [Int32] = []
+                    for try await code in group { codes.append(code) }
+                    XCTAssertEqual(codes, Array(repeating: 0, count: 32))
+                }
+            } catch {
+                XCTFail("unexpected process error: \(error)")
+            }
+        }
+        await fulfillment(of: [done], timeout: 5)
+        task.cancel()
+    }
+
+    func testTimeoutReturnsWithinBudget() async throws {
+        let clock = ContinuousClock()
+        let started = clock.now
+        do {
+            _ = try await ProcessExecutor().run(ProcessRequest(
+                executableURL: URL(fileURLWithPath: "/bin/sleep"),
+                arguments: ["10"],
+                timeout: .milliseconds(300)
+            ))
+            XCTFail("expected timeout")
+        } catch ProcessExecutionError.timeout {
+            XCTAssertLessThan(started.duration(to: clock.now), .seconds(2))
+        }
+    }
+
     func testTimeout() async throws {
         let executor = ProcessExecutor()
         do {

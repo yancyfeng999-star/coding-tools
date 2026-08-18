@@ -31,6 +31,7 @@ public enum ToolPresentationStatus: Equatable, Sendable {
     case notInstalled(latestVersion: String?)
     case installedCurrent(localVersion: String, latestVersion: String?)
     case updateAvailable(localVersion: String, latestVersion: String)
+    case localAhead(localVersion: String, latestVersion: String)
     case broken(localVersion: String?, reason: String?)
     case versionUnknown(path: String?)
     case sourceUnavailable(reason: String)
@@ -308,7 +309,8 @@ public enum ToolPresentationMapper {
             }
             switch latest {
             case .known(let remote):
-                if compareVersions(local, remote) == .orderedAscending {
+                switch compareVersions(local, remote) {
+                case .orderedAscending:
                     return presentation(
                         status: .updateAvailable(localVersion: local, latestVersion: remote),
                         primary: .update(targetVersion: remote),
@@ -319,17 +321,29 @@ public enum ToolPresentationMapper {
                         latest: .known(remote),
                         local: .known(local)
                     )
+                case .orderedDescending:
+                    return presentation(
+                        status: .localAhead(localVersion: local, latestVersion: remote),
+                        primary: .open,
+                        enabled: true,
+                        secondary: [.refresh, .openDiagnostics],
+                        statusKey: "tool.status.localAhead",
+                        primaryKey: "tool.action.open",
+                        latest: .known(remote),
+                        local: .known(local)
+                    )
+                case .orderedSame:
+                    return presentation(
+                        status: .installedCurrent(localVersion: local, latestVersion: remote),
+                        primary: .open,
+                        enabled: true,
+                        secondary: [.reinstall, .refresh],
+                        statusKey: "tool.status.installed",
+                        primaryKey: "tool.action.open",
+                        latest: .known(remote),
+                        local: .known(local)
+                    )
                 }
-                return presentation(
-                    status: .installedCurrent(localVersion: local, latestVersion: remote),
-                    primary: .open,
-                    enabled: true,
-                    secondary: [.reinstall, .refresh],
-                    statusKey: "tool.status.installed",
-                    primaryKey: "tool.action.open",
-                    latest: .known(remote),
-                    local: .known(local)
-                )
             case .notQueried:
                 return presentation(
                     status: .versionUnknown(path: probe.detectedPath),

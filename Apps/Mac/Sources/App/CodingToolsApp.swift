@@ -40,16 +40,11 @@ struct CodingToolsApp: App {
                     // adapter 兜底。
                     appState.helperClient = HelperClient()
                     await appState.loadCatalogIfNeeded()
-                    // 启动扫 AI CLI 配置（在用户 home 找 Claude/Codex/Gemini 等配置）
                     await appState.discoverAIConfigs()
-                    // Catalog 加载完跑更新后 Detection，UI 立刻能看到 24 个工具的安装状态
-                    await appState.refreshProbes()
-                    // 探测完后再拉 latest version（依赖 installed version）
-                    await appState.refreshLatestVersions()
-                    // P0-G3-1 修复：从 store 恢复最近列表
                     await appState.loadRecents()
                     await appState.loadFavorites()
                     await appState.loadFoundationState()
+                    Task { await appState.refreshAgentEnvironment(force: false) }
                 }
         }
         .windowResizability(.contentSize)

@@ -30,6 +30,16 @@
 - 远程目录 JSON（必须签名 + 校验）
 - Homebrew 公式名 / Cask 名（仅来自签名目录）
 - 官方安装包 URL（必须 HTTPS + SHA-256）
+- 最新版本 JSON（仅允许白名单主机）
+
+## Agent 环境检测与最新版本
+
+Latest-version hosts: `registry.npmjs.org`, `pypi.org`, `api.github.com`, `formulae.brew.sh`.
+Requests are HTTPS-only, 5-second timeout, 1 MiB maximum response, allowlisted redirect host.
+Agent detection reads executable metadata and `--version` output only.
+It never reads Agent configuration, credentials, sessions, history, prompts, or workspaces.
+Version commands use the resolved absolute executable, an argument array, empty stdin, and a hard timeout. They never invoke `/usr/bin/env` plus a bare command name, `/bin/sh -c`, `bash -c`, or `zsh -c`.
+Grok/Hermes remote install script URLs are not executed. Bulk update is a user-confirmed sequence of typed per-tool actions, never `brew upgrade` or `npm update -g`.
 
 **可信来源**：
 

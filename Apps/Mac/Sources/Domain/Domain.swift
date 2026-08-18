@@ -239,6 +239,8 @@ public struct InstallationProbe: Hashable, Sendable, Codable {
     public let teamID: String?
     public let healthStatus: HealthStatus
     public let lastCheckedAt: Date
+    public let installSource: DetectedInstallSource?
+    public let failure: ProbeFailure?
 
     public init(
         toolID: String,
@@ -248,7 +250,9 @@ public struct InstallationProbe: Hashable, Sendable, Codable {
         bundleID: String? = nil,
         teamID: String? = nil,
         healthStatus: HealthStatus,
-        lastCheckedAt: Date = Date()
+        lastCheckedAt: Date = Date(),
+        installSource: DetectedInstallSource? = nil,
+        failure: ProbeFailure? = nil
     ) {
         self.toolID = toolID
         self.installedVersion = installedVersion
@@ -258,6 +262,8 @@ public struct InstallationProbe: Hashable, Sendable, Codable {
         self.teamID = teamID
         self.healthStatus = healthStatus
         self.lastCheckedAt = lastCheckedAt
+        self.installSource = installSource
+        self.failure = failure
     }
 }
 

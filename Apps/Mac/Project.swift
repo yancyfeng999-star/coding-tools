@@ -383,6 +383,22 @@ let project = Project(
             dependencies: [
                 .target(name: "LatestVersion"),
                 .target(name: "ProcessExecution"),
+                .target(name: "Domain"),
+            ]
+        ),
+        .target(
+            name: "AgentEnvironmentTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "com.codingtools.agent-environment-tests",
+            deploymentTargets: .macOS("14.0"),
+            sources: ["Tests/AgentEnvironmentTests/**"],
+            dependencies: [
+                .target(name: "UI"),
+                .target(name: "Domain"),
+                .target(name: "Detection"),
+                .target(name: "LatestVersion"),
+                .target(name: "ProcessExecution"),
             ]
         ),
         .target(
@@ -461,6 +477,12 @@ let project = Project(
             shared: true,
             buildAction: .buildAction(targets: [.target("LatestVersion")]),
             testAction: .targets([TestableTarget.testableTarget(target: "LatestVersionTests")])
+        ),
+        .scheme(
+            name: "AgentEnvironmentTests",
+            shared: true,
+            buildAction: .buildAction(targets: [.target("UI")]),
+            testAction: .targets([TestableTarget.testableTarget(target: "AgentEnvironmentTests")])
         ),
         .scheme(
             name: "AIConfigDiscoveryTests",

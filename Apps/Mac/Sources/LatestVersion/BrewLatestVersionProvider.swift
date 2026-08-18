@@ -9,7 +9,7 @@ import Domain
 //
 // 3s 硬超时（brew info 首次可能 5-10s；超时后 silent skip）。
 
-public final class BrewLatestVersionProvider: LatestVersionProvider, @unchecked Sendable {
+public final class BrewLatestVersionProvider: @unchecked Sendable {
 
     private let executor: any ProcessExecuting
     private let pathResolver: HomebrewPathResolver
@@ -25,13 +25,11 @@ public final class BrewLatestVersionProvider: LatestVersionProvider, @unchecked 
         self.timeout = timeout
     }
 
-    public func latestVersion(toolID: String, installedVersion: String?) async -> String? {
-        // 解析 brew 路径
+    public func latestStableVersion(packageName: String) async -> String? {
         guard let brew = await resolveBrewPath() else { return nil }
-        // 跑 `brew info --json=v2 <package>`（formula + cask 都用这个）
         let request = ProcessRequest(
             executableURL: brew,
-            arguments: ["info", "--json=v2", toolID],
+            arguments: ["info", "--json=v2", packageName],
             timeout: .seconds(Int(timeout))
         )
         let result: ProcessOutput
@@ -41,8 +39,7 @@ public final class BrewLatestVersionProvider: LatestVersionProvider, @unchecked 
             return nil
         }
         guard result.exitCode == 0 else { return nil }
-        // 解析 JSON
-        return Self.parseBrewInfoJSON(Data(result.stdout.utf8), toolID: toolID)
+        return Self.parseBrewInfoJSON(Data(result.stdout.utf8), toolID: packageName)
     }
 
     private func resolveBrewPath() async -> URL? {
