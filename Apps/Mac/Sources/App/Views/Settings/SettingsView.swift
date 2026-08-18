@@ -118,12 +118,6 @@ struct SettingsView: View {
 
     private var generalSection: some View {
         Section {
-            Toggle(isOn: autoCheckBinding) {
-                Text("settings.general.autoCheck")
-            }
-            Toggle(isOn: autoDownloadBinding) {
-                Text("settings.general.autoDownload")
-            }
             HStack {
                 Text("settings.version")
                 Spacer()
@@ -398,20 +392,6 @@ struct SettingsView: View {
         Binding(
             get: { language.current },
             set: { language.switchTo($0) }
-        )
-    }
-
-    private var autoCheckBinding: Binding<Bool> {
-        Binding(
-            get: { appState.appUpdatingProvider?()?.isAutomaticChecksEnabled ?? true },
-            set: { appState.appUpdatingProvider?()?.setAutomaticChecksEnabled($0) }
-        )
-    }
-
-    private var autoDownloadBinding: Binding<Bool> {
-        Binding(
-            get: { appState.appUpdatingProvider?()?.isAutomaticDownloadEnabled ?? false },
-            set: { appState.appUpdatingProvider?()?.setAutomaticDownloadEnabled($0) }
         )
     }
 

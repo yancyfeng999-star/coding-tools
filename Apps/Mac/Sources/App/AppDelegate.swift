@@ -74,21 +74,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Sparkle
 
-    /// 启动 Sparkle 调度循环（后台定时检查 + 静默下载）。
-    /// 静默策略：SUEnableAutomaticDownloading=true → 静默拉新包。
-    /// 不弹窗：所有用户交互通过 SilentUpdateUserDriver emit 到 updateModel。
+    /// 启动 Sparkle，但不调度自动检查。更新只由「检查更新」按钮触发。
     private func startSparkleUpdater() {
-        // 触发 lazy init（确保 appUpdater 在 start() 之前已建好）
         _ = appUpdater
         do {
             try updater.start()
         } catch {
-            // SPUUpdater.start() 在已启动 / 配置错误时抛错；不致命，只是不自动调度
             NSLog("⚠️ Sparkle updater.start() failed: \(error)")
         }
-        // 启动后立即拉一次 appcast，让 Settings 在打开时就能显示「最新版本」。
-        // 不阻塞主流程：Sparkle 内部异步。
-        updater.checkForUpdatesInBackground()
+        updater.automaticallyChecksForUpdates = UpdateUserDriverPolicy.automaticChecksEnabled
+        updater.automaticallyDownloadsUpdates = UpdateUserDriverPolicy.automaticDownloadsEnabled
     }
 
     // MARK: - Menu Bar

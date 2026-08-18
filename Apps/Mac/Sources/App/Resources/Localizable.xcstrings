@@ -3877,37 +3877,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neue Versionen werden automatisch heruntergeladen."
+            "value": "Keine automatischen Updates. Nach „Nach Updates suchen“ wird geprüft; bei einem Update beendet sich die App, installiert still und startet neu."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New versions download automatically; you'll be prompted to install on next launch."
+            "value": "Coding Tools never checks or installs updates by itself. Click Check for Updates to look for a new version; if one is found, the app quits, installs silently, and reopens."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les nouvelles versions se téléchargent automatiquement."
+            "value": "Aucune mise à jour automatique. Cliquez sur Vérifier les mises à jour ; si une version est disponible, l’app se ferme, s’installe en silence, puis se rouvre."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "新バージョンは自動ダウンロードされ、再起動時にインストール。"
+            "value": "自動では更新しません。「更新を確認」を押すと確認し、更新があれば終了して静かにインストールし、再起動します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "새 버전은 자동 다운로드되며, 재시작 시 설치됩니다."
+            "value": "자동으로 업데이트하지 않습니다. 업데이트 확인을 누르면 검사하고, 새 버전이 있으면 종료 후 조용히 설치하고 다시 엽니다."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "新版本会自动下载，提示你重启安装。"
+            "value": "不会自动检查或安装应用更新。点击「检查更新」后才会查找新版本；若有更新，软件会退出、静默安装，然后重新打开。"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay actualizaciones automáticas. Pulsa Comprobar actualizaciones; si hay una, la app se cierra, se instala en silencio y vuelve a abrirse."
           }
         }
       }

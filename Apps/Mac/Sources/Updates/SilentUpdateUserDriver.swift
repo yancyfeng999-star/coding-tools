@@ -27,9 +27,8 @@ public final class SilentUpdateUserDriver: NSObject, SPUUserDriver {
     // MARK: SPUUserDriver
 
     public func show(_ request: SPUUpdatePermissionRequest, reply: @escaping (SUUpdatePermissionResponse) -> Void) {
-        // 自动同意所有权限请求（settings 默认值）
         let response = SUUpdatePermissionResponse(
-            automaticUpdateChecks: true,
+            automaticUpdateChecks: UpdateUserDriverPolicy.permissionAllowsAutomaticChecks,
             sendSystemProfile: false
         )
         reply(response)
@@ -50,9 +49,11 @@ public final class SilentUpdateUserDriver: NSObject, SPUUserDriver {
         bytesReceived = 0
         expectedContentLength = 0
 
-        // 立即同意安装（流程会走 download → extract → readyToInstall）
-        // Sparkle 会根据 state.stage 走 download / install
-        reply(.install)
+        if UpdateUserDriverPolicy.installWhenUpdateFound {
+            reply(.install)
+        } else {
+            reply(.dismiss)
+        }
     }
 
     public func showUpdateReleaseNotes(with data: SPUDownloadData) {
@@ -109,7 +110,13 @@ public final class SilentUpdateUserDriver: NSObject, SPUUserDriver {
     }
 
     public func showReady(toInstallAndRelaunch reply: @escaping (SPUUserUpdateChoice) -> Void) {
-        // 暂存 reply；UI 主动调用 fulfillInstall() 才会继续
+        let remote = latestKnownRemoteVersion() ?? "—"
+        if UpdateUserDriverPolicy.installAndRelaunchWhenReady {
+            model?.transition(.readyToInstall(remoteVersion: remote))
+            model?.transition(.installing)
+            reply(.install)
+            return
+        }
         model?.setPendingReply { decision in
             switch decision {
             case .install: reply(.install)
@@ -117,12 +124,14 @@ public final class SilentUpdateUserDriver: NSObject, SPUUserDriver {
             case .skip:    reply(.skip)
             }
         }
-        let remote = latestKnownRemoteVersion() ?? "—"
         model?.transition(.readyToInstall(remoteVersion: remote))
     }
 
     public func showInstallingUpdate(withApplicationTerminated applicationTerminated: Bool, retryTerminatingApplication: @escaping () -> Void) {
         model?.transition(.installing)
+        if UpdateUserDriverPolicy.shouldRetryTermination(applicationTerminated: applicationTerminated) {
+            retryTerminatingApplication()
+        }
     }
 
     public func showUpdateInstalledAndRelaunched(_ relaunched: Bool, acknowledgement: @escaping () -> Void) {

@@ -80,11 +80,11 @@
 	<key>NSSupportsSuddenTermination</key>
 	<true/>
 	<key>SUAllowsAutomaticUpdates</key>
-	<true/>
+	<false/>
 	<key>SUEnableAutomaticChecks</key>
-	<true/>
+	<false/>
 	<key>SUEnableAutomaticDownloading</key>
-	<true/>
+	<false/>
 	<key>SUFeedURL</key>
 	<string>https://github.com/yancyfeng999-star/coding-tools/releases/latest/download/appcast.xml</string>
 	<key>SUMinimumAutoupdateVersion</key>

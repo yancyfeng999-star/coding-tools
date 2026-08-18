@@ -505,8 +505,8 @@ public final class AppState: ObservableObject {
             recents: recent,
             theme: ThemeManager.shared.mode.rawValue,
             language: LanguageManager.shared.current.rawValue,
-            autoCheckUpdates: appUpdatingProvider?()?.isAutomaticChecksEnabled ?? true,
-            autoDownloadUpdates: appUpdatingProvider?()?.isAutomaticDownloadEnabled ?? false
+            autoCheckUpdates: false,
+            autoDownloadUpdates: false,
         )
     }
 
@@ -524,8 +524,8 @@ public final class AppState: ObservableObject {
         if let language = AppLanguage(rawValue: payload.language) {
             LanguageManager.shared.switchTo(language)
         }
-        appUpdatingProvider?()?.setAutomaticChecksEnabled(payload.autoCheckUpdates)
-        appUpdatingProvider?()?.setAutomaticDownloadEnabled(payload.autoDownloadUpdates)
+        appUpdatingProvider?()?.setAutomaticChecksEnabled(UpdateUserDriverPolicy.automaticChecksEnabled)
+        appUpdatingProvider?()?.setAutomaticDownloadEnabled(UpdateUserDriverPolicy.automaticDownloadsEnabled)
         toastCenter?.show(Toast(kind: .success, messageKey: "settings.diagnostics.importDone"))
     }
 

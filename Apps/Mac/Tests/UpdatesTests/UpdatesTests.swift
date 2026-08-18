@@ -3,7 +3,7 @@ import XCTest
 
 @MainActor
 final class MockUpdaterBackend: UpdaterBackend {
-    var automaticallyChecksForUpdates: Bool = true
+    var automaticallyChecksForUpdates: Bool = false
     var automaticallyDownloadsUpdates: Bool = false
     private(set) var checkForUpdatesCallCount: Int = 0
 
@@ -22,10 +22,10 @@ final class NoOpAppUpdaterTests: XCTestCase {
         XCTAssertEqual(updater.checkCount, 2)
     }
 
-    func testDefaultsAreEnabled() {
+    func testDefaultsAreDisabled() {
         let updater = NoOpAppUpdater()
-        XCTAssertTrue(updater.isAutomaticChecksEnabled)
-        XCTAssertTrue(updater.isAutomaticDownloadEnabled)
+        XCTAssertFalse(updater.isAutomaticChecksEnabled)
+        XCTAssertFalse(updater.isAutomaticDownloadEnabled)
     }
 
     func testSetAutomaticChecksEnabledPersists() {
@@ -80,9 +80,9 @@ final class SparkleAppUpdaterTests: XCTestCase {
 
 @MainActor
 final class MockUpdaterBackendTests: XCTestCase {
-    func testDefaultStateMatchesSparkleDefaults() {
+    func testDefaultStateMatchesManualUpdatePolicy() {
         let backend = MockUpdaterBackend()
-        XCTAssertTrue(backend.automaticallyChecksForUpdates)
+        XCTAssertFalse(backend.automaticallyChecksForUpdates)
         XCTAssertFalse(backend.automaticallyDownloadsUpdates)
     }
 

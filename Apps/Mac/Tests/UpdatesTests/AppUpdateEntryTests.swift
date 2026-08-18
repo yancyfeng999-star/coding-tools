@@ -46,6 +46,21 @@ final class AppUpdateEntryTests: XCTestCase {
     }
 }
 
+final class UpdateUserDriverPolicyTests: XCTestCase {
+    func testNeverSchedulesAutomaticChecksOrDownloads() {
+        XCTAssertFalse(UpdateUserDriverPolicy.automaticChecksEnabled)
+        XCTAssertFalse(UpdateUserDriverPolicy.automaticDownloadsEnabled)
+        XCTAssertFalse(UpdateUserDriverPolicy.permissionAllowsAutomaticChecks)
+    }
+
+    func testUserInitiatedCheckInstallsAndRelaunchesWhenReady() {
+        XCTAssertTrue(UpdateUserDriverPolicy.installWhenUpdateFound)
+        XCTAssertTrue(UpdateUserDriverPolicy.installAndRelaunchWhenReady)
+        XCTAssertTrue(UpdateUserDriverPolicy.shouldRetryTermination(applicationTerminated: false))
+        XCTAssertFalse(UpdateUserDriverPolicy.shouldRetryTermination(applicationTerminated: true))
+    }
+}
+
 @MainActor
 final class AppUpdateCheckGuardIntegrationTests: XCTestCase {
     func testSparkleUpdaterStillDelegatesWhenCalledDirectly() {

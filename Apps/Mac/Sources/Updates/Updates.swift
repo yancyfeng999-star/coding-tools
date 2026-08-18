@@ -17,6 +17,20 @@ import Sparkle
 //
 // 阶段 7 由子代理 C 完整接入。
 
+/// Manual-only app updates. Sparkle must not schedule checks or install
+/// unless the user clicked 检查更新.
+public enum UpdateUserDriverPolicy {
+    public static let automaticChecksEnabled = false
+    public static let automaticDownloadsEnabled = false
+    public static let permissionAllowsAutomaticChecks = false
+    public static let installWhenUpdateFound = true
+    public static let installAndRelaunchWhenReady = true
+
+    public static func shouldRetryTermination(applicationTerminated: Bool) -> Bool {
+        !applicationTerminated
+    }
+}
+
 @MainActor
 public protocol AppUpdating: AnyObject {
     /// 主动检查更新（"设置 → 检查更新" 触发，弹窗显示进度）。
@@ -97,8 +111,8 @@ public final class SPUUpdaterBackend: UpdaterBackend {
 @MainActor
 public final class NoOpAppUpdater: AppUpdating {
     public private(set) var checkCount: Int = 0
-    public private(set) var automaticChecksEnabled: Bool = true
-    public private(set) var automaticDownloadEnabled: Bool = true
+    public private(set) var automaticChecksEnabled: Bool = UpdateUserDriverPolicy.automaticChecksEnabled
+    public private(set) var automaticDownloadEnabled: Bool = UpdateUserDriverPolicy.automaticDownloadsEnabled
 
     public init() {}
 

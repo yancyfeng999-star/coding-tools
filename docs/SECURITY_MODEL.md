@@ -226,8 +226,8 @@ HTTP 明文请求：被 ATS 阻止；本地回环需要单独配置。
 | --- | --- | --- | --- |
 | `SUFeedURL` | string | `https://github.com/yancyfeng999-star/coding-tools/releases/latest/download/appcast.xml` | appcast 下载地址（HTTPS 必需） |
 | `SUPublicEDKey` | string | `__SPARKLE_PUBLIC_KEY__`（构建期由 `release.sh` 注入） | EdDSA 公钥 base64 |
-| `SUEnableAutomaticChecks` | bool | `true` | 默认开启自动检查 |
-| `SUEnableAutomaticDownloading` | bool | `false`（v1.0 前不自动下载） | 用户必须显式触发下载 |
+| `SUEnableAutomaticChecks` | bool | `false` | 不自动检查；只走「检查更新」按钮 |
+| `SUEnableAutomaticDownloading` | bool | `false` | 不后台下载；用户点检查更新后才下载并退出安装 |
 | `SUScheduledCheckInterval` | int | `86400` | 24 小时 |
 | `SUAllowsAutomaticUpdates` | bool | `true` | Sparkle 提示重启安装 |
 | `SUMinimumAutoupdateVersion` | string | `0.5.0` | 低于此版本强制走完整更新流 |
