@@ -14,15 +14,15 @@ struct BulkAgentUpdateSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(items) { item in
+                ForEach(items, id: \.id) { item in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(item.tool.name)
                         Text("\(item.localVersion) → \(item.targetVersion)")
-                            .tokenFont(.caption)
+                            .tokenFont(.metadata)
                             .foregroundStyle(DesignTokens.Palette.secondaryText)
                         if let itemState = state.bulkUpdateState.itemStates[item.id] {
                             Text(label(for: itemState))
-                                .tokenFont(.caption)
+                                .tokenFont(.metadata)
                         }
                     }
                 }

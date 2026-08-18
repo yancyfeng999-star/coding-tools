@@ -19,9 +19,12 @@ struct AgentEnvironmentCard: View {
             labeledRow("settings.agentEnvironment.latest", value: localized(model.latestSummary))
             labeledRow("settings.agentEnvironment.source", value: localized(model.sourceLabel))
             if model.conflictCount > 1 {
-                Text("tool.conflict.multiple") + Text(" (\(model.conflictCount))")
-                    .tokenFont(.caption)
-                    .foregroundStyle(DesignTokens.Palette.warning)
+                HStack(spacing: 4) {
+                    Text("tool.conflict.multiple")
+                    Text("(\(model.conflictCount))")
+                }
+                .tokenFont(.metadata)
+                .foregroundStyle(DesignTokens.Palette.warning)
             }
             actionRow
         }
@@ -48,7 +51,7 @@ struct AgentEnvironmentCard: View {
             Text(value)
                 .textSelection(.enabled)
         }
-        .tokenFont(.caption)
+        .tokenFont(.metadata)
     }
 
     private var actionRow: some View {
@@ -71,9 +74,7 @@ struct AgentEnvironmentCard: View {
         case .refresh, .retry:
             Task { await state.refreshAgentEnvironment(force: true) }
         case .unavailable, .none:
-            if let url = tool.documentationURL ?? tool.homepageURL {
-                NSWorkspace.shared.open(url)
-            }
+            NSWorkspace.shared.open(tool.documentationURL ?? tool.homepageURL)
         }
     }
 

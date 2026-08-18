@@ -34,7 +34,7 @@ struct AgentEnvironmentSection: View {
             Text("settings.agentEnvironment.title")
                 .tokenFont(.sectionTitle)
             Text("settings.agentEnvironment.subtitle")
-                .tokenFont(.caption)
+                .tokenFont(.metadata)
                 .foregroundStyle(DesignTokens.Palette.secondaryText)
             HStack(spacing: DesignTokens.Space.space2) {
                 Button("settings.agentEnvironment.diagnose") {
