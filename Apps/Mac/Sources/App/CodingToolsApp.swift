@@ -5,6 +5,7 @@ import Catalog
 import LatestVersion
 import Persistence
 import Installers
+import AppKit
 
 @main
 struct CodingToolsApp: App {
@@ -34,6 +35,7 @@ struct CodingToolsApp: App {
                         try await loader.loadCatalog()
                     }
                     appState.persistStore = AppState.makeDefaultStore()
+                    appState.preferencesStore = AppPreferencesStore()
                     // P0-G2-5 修复：注入 HelperClient；Helper 不可用时 in-process
                     // adapter 兜底。
                     appState.helperClient = HelperClient()
@@ -47,6 +49,7 @@ struct CodingToolsApp: App {
                     // P0-G3-1 修复：从 store 恢复最近列表
                     await appState.loadRecents()
                     await appState.loadFavorites()
+                    await appState.loadFoundationState()
                 }
         }
         .windowResizability(.contentSize)
@@ -64,6 +67,18 @@ struct CodingToolsApp: App {
                 }
                 .keyboardShortcut("u", modifiers: .command)
                 .disabled(!AppUpdateCheckGuard.canStartCheck(appState.updateState))
+            }
+            CommandGroup(after: .help) {
+                Button("settings.help.open") {
+                    NotificationCenter.default.post(name: .codingToolsOpenSettings, object: nil)
+                }
+                Button("settings.support.reportIssue") {
+                    let meta = IssueURLBuilder.currentMetadata(
+                        version: appState.localVersion,
+                        build: "\(appState.localBuild)"
+                    )
+                    NSWorkspace.shared.open(IssueURLBuilder.bugReportURL(metadata: meta))
+                }
             }
         }
     }

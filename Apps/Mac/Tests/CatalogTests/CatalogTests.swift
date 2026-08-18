@@ -252,3 +252,21 @@ struct FailingHTTPClient: CatalogHTTPClient {
         return (Data(), resp)
     }
 }
+
+final class FileSystemCatalogCacheResetTests: XCTestCase {
+    func testResetRemovesCachedFiles() throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("catalog-cache-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let cache = FileSystemCatalogCache(directory: dir)
+        try cache.save(
+            data: Data("{}".utf8),
+            catalogVersion: "2026.08.18",
+            sourceURL: URL(string: "https://example.com/catalog.json")!
+        )
+        XCTAssertNotNil(try cache.metadata())
+        try cache.reset()
+        XCTAssertNil(try cache.metadata())
+        XCTAssertEqual(try cache.listVersions(), [])
+    }
+}

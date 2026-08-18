@@ -19,6 +19,9 @@ public protocol Store: Sendable {
     func saveCatalog(_ snapshot: CatalogSnapshot) async throws
     func loadLatestCatalog() async throws -> CatalogSnapshot?
     func clearOperationHistory() async throws
+    func replaceFavorites(_ ids: [String]) async throws
+    func replaceRecents(_ ids: [String]) async throws
+    func resetCatalogCache() async throws
 }
 
 public actor InMemoryStore: Store {
@@ -71,5 +74,17 @@ public actor InMemoryStore: Store {
 
     public func clearOperationHistory() async throws {
         installations.removeAll()
+    }
+
+    public func replaceFavorites(_ ids: [String]) async throws {
+        favorites = Set(ids)
+    }
+
+    public func replaceRecents(_ ids: [String]) async throws {
+        recents = Array(ids.prefix(10))
+    }
+
+    public func resetCatalogCache() async throws {
+        catalog = nil
     }
 }

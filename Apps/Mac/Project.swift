@@ -200,6 +200,7 @@ let project = Project(
                 .target(name: "Localization"),
                 .target(name: "Theme"),
                 .target(name: "Updates"),
+                .target(name: "ProcessExecution"),
             ]
         ),
         .target(
@@ -344,6 +345,9 @@ let project = Project(
                 .target(name: "Domain"),
                 .target(name: "Updates"),
                 .target(name: "Launching"),
+                .target(name: "Persistence"),
+                .target(name: "ProcessExecution"),
+                .target(name: "Catalog"),
             ]
         ),
         .target(

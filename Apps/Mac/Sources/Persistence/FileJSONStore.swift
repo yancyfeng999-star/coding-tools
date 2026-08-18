@@ -28,6 +28,7 @@ public actor FileJSONStore: Store {
     private let fileURL: URL
     private var state: StoreState = StoreState()
     private var loadOnce = false
+    private var recovered = false
 
     public init(directory: URL = FileJSONStore.defaultDirectory()) {
         self.fileURL = directory.appendingPathComponent(Self.storeFileName)
@@ -115,6 +116,28 @@ public actor FileJSONStore: Store {
         try await persistLocked()
     }
 
+    public func replaceFavorites(_ ids: [String]) async throws {
+        try await ensureLoaded()
+        state.favorites = Set(ids)
+        try await persistLocked()
+    }
+
+    public func replaceRecents(_ ids: [String]) async throws {
+        try await ensureLoaded()
+        state.recents = Array(ids.prefix(10))
+        try await persistLocked()
+    }
+
+    public func resetCatalogCache() async throws {
+        try await ensureLoaded()
+        state.catalogCache = nil
+        try await persistLocked()
+    }
+
+    public func recoveredFromCorruption() -> Bool {
+        recovered
+    }
+
     // MARK: - Internals
 
     private func ensureLoaded() async throws {
@@ -124,8 +147,21 @@ public actor FileJSONStore: Store {
         let data: Data
         do { data = try Data(contentsOf: fileURL) }
         catch { return }
-        guard let raw = try? JSONDecoder().decode(StoreState.self, from: data) else { return }
-        state = raw
+        let iso = JSONDecoder()
+        iso.dateDecodingStrategy = .iso8601
+        if let raw = try? iso.decode(StoreState.self, from: data) {
+            state = raw
+            return
+        }
+        if let raw = try? JSONDecoder().decode(StoreState.self, from: data) {
+            state = raw
+            return
+        }
+        recovered = true
+        let backupName = "store.json.corrupt-\(Int(Date().timeIntervalSince1970))"
+        let backup = fileURL.deletingLastPathComponent().appendingPathComponent(backupName)
+        try? FileManager.default.moveItem(at: fileURL, to: backup)
+        state = StoreState()
     }
 
     private func persistLocked() async throws {

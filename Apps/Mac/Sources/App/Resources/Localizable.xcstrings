@@ -6562,6 +6562,856 @@
           }
         }
       }
+    },
+    "onboarding.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Coding Tools"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "欢迎使用 Coding Tools"
+          }
+        }
+      }
+    },
+    "onboarding.body.tabs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home, Tools, Content, and Settings stay as four tabs."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "首页、工具、内容和设置仍是四个标签。"
+          }
+        }
+      }
+    },
+    "onboarding.body.sources": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install only from signed catalog options: Homebrew, mise, npm, or official packages."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只从已签名目录安装：Homebrew、mise、npm 或官方安装包。"
+          }
+        }
+      }
+    },
+    "onboarding.body.sudo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coding Tools never runs silent sudo or edits your shell profile."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不会静默执行 sudo，也不会改你的 shell 配置。"
+          }
+        }
+      }
+    },
+    "onboarding.body.updates": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App updates (Sparkle) and tool updates are separate actions."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用更新（Sparkle）和工具更新是两套操作。"
+          }
+        }
+      }
+    },
+    "onboarding.continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始使用"
+          }
+        }
+      }
+    },
+    "onboarding.compatibility": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibility"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兼容性"
+          }
+        }
+      }
+    },
+    "onboarding.compatibility.ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac meets the minimum requirements."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这台 Mac 满足最低要求。"
+          }
+        }
+      }
+    },
+    "onboarding.compatibility.warn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some requirements are missing. Check macOS version and update signing key."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分要求未满足。请检查 macOS 版本和更新签名公钥。"
+          }
+        }
+      }
+    },
+    "help.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help & Shortcuts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帮助与快捷键"
+          }
+        }
+      }
+    },
+    "help.shortcuts.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keyboard"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "键盘"
+          }
+        }
+      }
+    },
+    "help.shortcuts.settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开设置"
+          }
+        }
+      }
+    },
+    "help.shortcuts.update": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for App Updates"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查应用更新"
+          }
+        }
+      }
+    },
+    "help.shortcuts.close": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close a safe sheet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭可安全关闭的弹窗"
+          }
+        }
+      }
+    },
+    "help.shortcuts.default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the default action"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确认默认操作"
+          }
+        }
+      }
+    },
+    "help.faq.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Common questions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "常见问题"
+          }
+        }
+      }
+    },
+    "help.faq.install.q": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How are tools installed?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具怎么安装？"
+          }
+        }
+      }
+    },
+    "help.faq.install.a": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each tool uses a typed Homebrew, mise, npm, or official-package action from the signed catalog. There is no remote shell."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个工具都使用签名目录里的 Homebrew、mise、npm 或官方包动作，没有远程 Shell。"
+          }
+        }
+      }
+    },
+    "help.faq.update.q": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is the difference between app and tool updates?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用更新和工具更新有什么区别？"
+          }
+        }
+      }
+    },
+    "help.faq.update.a": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App updates use Sparkle. Tool updates are confirmed per tool and never run brew upgrade globally."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用更新走 Sparkle。工具更新按单个工具确认，永远不会全局执行 brew upgrade。"
+          }
+        }
+      }
+    },
+    "help.faq.sudo.q": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Will Coding Tools change my PATH?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会改我的 PATH 吗？"
+          }
+        }
+      }
+    },
+    "help.faq.sudo.a": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No. It does not edit .zshrc or overwrite PATH, and it does not run sudo silently."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不会。它不改 .zshrc、不覆盖 PATH，也不会静默 sudo。"
+          }
+        }
+      }
+    },
+    "help.faq.privacy.q": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is included in diagnostics?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "诊断摘要包含什么？"
+          }
+        }
+      }
+    },
+    "help.faq.privacy.a": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version, macOS, architecture, theme, language, catalog status, and update state. Logs and home paths are not uploaded."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本、macOS、架构、主题、语言、目录状态和更新状态。不会上传日志或用户主目录路径。"
+          }
+        }
+      }
+    },
+    "settings.help.open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help & Shortcuts"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帮助与快捷键"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.catalogVersion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog version"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目录版本"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.keyID": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog key ID"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目录公钥 ID"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.toolCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工具数量"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.expires": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog expires"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目录过期时间"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.cache": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog cache"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目录缓存"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.cache.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No disk cache"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有磁盘缓存"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.refreshCatalog": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh catalog"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刷新目录"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.resetCache": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset catalog cache"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置目录缓存"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.lastCrash": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last crash"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近一次崩溃"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.noCrash": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None recorded"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有记录"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.openCrashFolder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open crash log folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开崩溃日志文件夹"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.export": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export favorites and settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导出收藏与设置"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.import": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import favorites and settings"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "导入收藏与设置"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.compatibility": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibility"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兼容性"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.cacheReset": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalog cache reset."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目录缓存已重置。"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.importDone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imported favorites and settings."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已导入收藏与设置。"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.importFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not import that file."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法导入该文件。"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.prefsRecovered": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings were reset after a damaged preferences file."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "偏好设置文件损坏，已恢复默认值。"
+          }
+        }
+      }
+    },
+    "settings.diagnostics.storeRecovered": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local store was reset after a damaged file."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地存储文件损坏，已恢复默认值。"
+          }
+        }
+      }
+    },
+    "settings.crash.recovery.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unexpected quit detected"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检测到异常退出"
+          }
+        }
+      }
+    },
+    "settings.crash.recovery.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A local crash log is available. Logs stay on this Mac unless you copy them."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本机有一份崩溃日志。除非你复制，否则不会离开这台 Mac。"
+          }
+        }
+      }
+    },
+    "settings.crash.recovery.open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open crash folder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开崩溃文件夹"
+          }
+        }
+      }
+    },
+    "settings.crash.recovery.dismiss": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "知道了"
+          }
+        }
+      }
+    },
+    "tool.field.path.copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy path"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制路径"
+          }
+        }
+      }
+    },
+    "common.notProvided": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not provided"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未提供"
+          }
+        }
+      }
     }
   },
   "home.stats.tools": {

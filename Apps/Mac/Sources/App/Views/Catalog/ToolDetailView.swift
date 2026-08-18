@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import Localization
 import Theme
 import UI
@@ -150,14 +151,20 @@ struct ToolDetailView: View {
                 labeledValue("tool.field.status", textKey: presentation.statusKey)
                 labeledValue("tool.local.version", text: localVersionText)
                 labeledValue("tool.latest.version", text: latestVersionText)
-                labeledValue("tool.field.path", text: pathText)
+                pathRow
                 labeledValue("tool.field.architecture", text: architectureText)
                 labeledValue("tool.field.source", text: sourceText)
                 labeledValue("tool.field.lastChecked", text: lastCheckedText)
+                if let exact = state.probe(for: tool.id)?.lastCheckedAt {
+                    Text(exact.formatted(date: .abbreviated, time: .shortened))
+                        .tokenFont(.tinyMetadata)
+                        .foregroundStyle(DesignTokens.Palette.tertiaryText)
+                        .textSelection(.enabled)
+                }
                 Button {
                     Task {
                         await state.refreshProbe(toolID: tool.id)
-                        await state.refreshLatestVersions()
+                        await state.refreshLatestVersion(toolID: tool.id)
                     }
                 } label: {
                     Label("tool.action.refresh", systemImage: "arrow.clockwise")
@@ -195,9 +202,40 @@ struct ToolDetailView: View {
         }
     }
 
+    private var fullPath: String? {
+        guard let path = state.probe(for: tool.id)?.detectedPath, !path.isEmpty else { return nil }
+        return path
+    }
+
     private var pathText: String {
-        guard let path = state.probe(for: tool.id)?.detectedPath, !path.isEmpty else { return "—" }
+        guard let path = fullPath else { return "—" }
         return ToolPresentationMapper.midTruncatedPath(path)
+    }
+
+    private var pathRow: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("tool.field.path")
+                .tokenFont(.supporting)
+                .foregroundStyle(DesignTokens.Palette.secondaryText)
+                .frame(width: 120, alignment: .leading)
+            Text(pathText)
+                .tokenFont(.code)
+                .textSelection(.enabled)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            if let path = fullPath {
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(path, forType: .string)
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                }
+                .buttonStyle(.borderless)
+                .help("tool.field.path.copy")
+                .accessibilityLabel(Text("tool.field.path.copy"))
+            }
+            Spacer()
+        }
     }
 
     private var architectureText: String {
@@ -294,7 +332,8 @@ struct ToolDetailView: View {
             let v = opt.version.map { "@\($0)" } ?? "@latest"
             return "mise use \(opt.toolName ?? tool.id)\(v)"
         case .officialArtifact:
-            return "download \(opt.url?.absoluteString ?? "<missing>")"
+            let host = opt.url?.host ?? String(localized: "common.notProvided")
+            return "download \(host)"
         case .npmGlobal:
             let pkg = opt.packageName ?? tool.id
             if let v = opt.versionRule, !v.isEmpty {

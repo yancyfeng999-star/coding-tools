@@ -28,6 +28,36 @@ struct RootView: View {
                 ToastView(center: ToastCenter.shared)
                     .allowsHitTesting(true)
             }
+            .sheet(isPresented: $state.showOnboarding) {
+                OnboardingSheet()
+                    .environmentObject(state)
+            }
+            .confirmationDialog(
+                "settings.crash.recovery.title",
+                isPresented: crashPromptBinding,
+                titleVisibility: .visible
+            ) {
+                Button("settings.crash.recovery.open") {
+                    state.openCrashFolder()
+                    Task { await state.acknowledgeCrash() }
+                }
+                Button("settings.crash.recovery.dismiss") {
+                    Task { await state.acknowledgeCrash() }
+                }
+            } message: {
+                Text("settings.crash.recovery.message")
+            }
+    }
+
+    private var crashPromptBinding: Binding<Bool> {
+        Binding(
+            get: { state.crashRecovery?.needsPrompt == true },
+            set: { presented in
+                if !presented {
+                    Task { await state.acknowledgeCrash() }
+                }
+            }
+        )
     }
 
     private var tabRoot: some View {

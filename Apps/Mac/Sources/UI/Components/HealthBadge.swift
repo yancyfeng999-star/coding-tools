@@ -126,4 +126,17 @@ public extension ToolPresentation {
         case .unavailable, .none: return "slash.circle"
         }
     }
+
+    public var accessibilitySummary: String {
+        var parts = [
+            String(localized: String.LocalizationValue(statusKey)),
+            String(localized: String.LocalizationValue(primaryLabelKey)),
+        ]
+        switch localDisplay {
+        case .known(let version): parts.append(version)
+        case .unreadable: parts.append(String(localized: "tool.local.unreadable"))
+        case .none: break
+        }
+        return parts.joined(separator: ", ")
+    }
 }

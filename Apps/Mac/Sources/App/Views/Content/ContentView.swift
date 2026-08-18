@@ -90,9 +90,9 @@ private struct ContentRow: View {
                 NSWorkspace.shared.open(item.sourceURL)
             }
         } label: {
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: DesignTokens.Space.space3) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
                         .fill(badgeColor.opacity(0.15))
                         .frame(width: 40, height: 40)
                     Image(systemName: badgeIcon)
@@ -117,15 +117,15 @@ private struct ContentRow: View {
                     }
                     HStack(spacing: 6) {
                         typeBadge
-                            .font(.caption2)
-                            .padding(.horizontal, 6)
+                            .tokenFont(.tinyMetadata)
+                            .padding(.horizontal, DesignTokens.Space.space2)
                             .padding(.vertical, 2)
                             .background(badgeColor.opacity(0.15), in: Capsule(style: .continuous))
                             .foregroundStyle(badgeColor)
                         if !item.tags.isEmpty {
                             Text(item.tags.prefix(3).joined(separator: " · "))
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .tokenFont(.tinyMetadata)
+                                .foregroundStyle(DesignTokens.Palette.secondaryText)
                         }
                     }
                 }

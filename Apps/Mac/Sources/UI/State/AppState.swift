@@ -11,6 +11,9 @@ import Updates
 import Persistence
 import ProcessExecution
 import Launching
+import Catalog
+import Theme
+import Localization
 import AppKit
 
 /// UI 全局状态中枢。**所有 UI 状态都通过 AppState 暴露**，
@@ -108,6 +111,13 @@ public final class AppState: ObservableObject {
     public var appUpdatingProvider: (() -> AppUpdating?)?
     /// ToastCenter 引用（CodingToolsApp 启动时设上）
     public weak var toastCenter: ToastCenter?
+    /// P1：onboarding + crash acknowledgement
+    public var preferencesStore: AppPreferencesStore?
+    public var catalogCache: any CatalogCacheStoring = FileSystemCatalogCache()
+    @Published public var showOnboarding = false
+    @Published public var crashRecovery: CrashRecoveryStatus?
+    @Published public var storeRecoveredFromCorruption = false
+    @Published public var catalogCacheMetadata: CachedCatalogMetadata?
 
     public init() {}
 
@@ -219,6 +229,18 @@ public final class AppState: ObservableObject {
                 }
             }
         }
+    }
+
+    /// Refresh latest version for one tool only (detail page).
+    public func refreshLatestVersion(toolID: String) async {
+        guard let tool = tools.first(where: { $0.id == toolID }) else { return }
+        let installed = probes[toolID]?.installedVersion
+        let value = await latestVersionProvider.latestVersion(
+            toolID: tool.id,
+            installedVersion: installed
+        )
+        latestQueriedIDs.insert(toolID)
+        latestVersions[toolID] = value
     }
 
     public func latestFact(for tool: Tool) -> LatestVersionFact {
@@ -376,6 +398,135 @@ public final class AppState: ObservableObject {
 
     public func favoriteTools() -> [Tool] {
         tools.filter { favorites.contains($0.id) }
+    }
+
+    // MARK: - P1 foundation
+
+    public func loadFoundationState() async {
+        if let store = persistStore as? FileJSONStore {
+            _ = try? await store.loadFavorites()
+            storeRecoveredFromCorruption = await store.recoveredFromCorruption()
+        }
+        catalogCacheMetadata = try? catalogCache.metadata()
+        let prefs = preferencesStore ?? AppPreferencesStore()
+        preferencesStore = prefs
+        let result = await prefs.recoverIfNeeded()
+        let document: AppPreferencesDocument
+        switch result {
+        case .loaded(let doc), .migrated(_, let doc):
+            document = doc
+            showOnboarding = !doc.hasCompletedOnboarding
+        case .createdDefault(let doc):
+            let existingFavorites = (try? await persistStore?.loadFavorites()) ?? []
+            let existingRecents = (try? await persistStore?.loadRecents()) ?? []
+            if !existingFavorites.isEmpty || !existingRecents.isEmpty {
+                var migrated = doc
+                migrated.hasCompletedOnboarding = true
+                try? await prefs.save(migrated)
+                document = migrated
+                showOnboarding = false
+            } else {
+                document = doc
+                showOnboarding = true
+            }
+        case .recoveredFromCorruption:
+            document = await prefs.load()
+            showOnboarding = true
+            toastCenter?.show(Toast(kind: .warning, messageKey: "settings.diagnostics.prefsRecovered"))
+        }
+        if storeRecoveredFromCorruption {
+            toastCenter?.show(Toast(kind: .warning, messageKey: "settings.diagnostics.storeRecovered"))
+        }
+        let recovery = CrashRecovery.status(
+            directory: CrashReporter.defaultDirectory(),
+            acknowledgedAt: document.lastAcknowledgedCrashAt
+        )
+        crashRecovery = recovery.needsPrompt ? recovery : nil
+    }
+
+    public func completeOnboarding() async {
+        guard let prefs = preferencesStore else {
+            showOnboarding = false
+            return
+        }
+        var document = await prefs.load()
+        document.hasCompletedOnboarding = true
+        try? await prefs.save(document)
+        showOnboarding = false
+    }
+
+    public func acknowledgeCrash() async {
+        guard let prefs = preferencesStore else {
+            crashRecovery = nil
+            return
+        }
+        var document = await prefs.load()
+        document.lastAcknowledgedCrashAt = Date()
+        try? await prefs.save(document)
+        crashRecovery = nil
+    }
+
+    public func openCrashFolder() {
+        let directory = crashRecovery?.directory ?? CrashReporter.defaultDirectory()
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        NSWorkspace.shared.open(directory)
+    }
+
+    public func compatibilityReport() -> CompatibilityReport {
+        CompatibilityCheck.evaluateCurrent(catalogReady: catalogSnapshot != nil && loadError == nil)
+    }
+
+    public func catalogStatusSummary() -> String {
+        guard let snapshot = catalogSnapshot else {
+            return loadError ?? "unloaded"
+        }
+        return "\(snapshot.catalogVersion) · \(snapshot.tools.count) · \(snapshot.keyID)"
+    }
+
+    public func refreshCatalogCacheMetadata() {
+        catalogCacheMetadata = try? catalogCache.metadata()
+    }
+
+    public func resetCatalogCache() async {
+        if let fileCache = catalogCache as? FileSystemCatalogCache {
+            try? fileCache.reset()
+        }
+        try? await persistStore?.resetCatalogCache()
+        catalogCacheMetadata = nil
+        catalogSnapshot = nil
+        await refreshCatalog()
+        catalogCacheMetadata = try? catalogCache.metadata()
+        toastCenter?.show(Toast(kind: .success, messageKey: "settings.diagnostics.cacheReset"))
+    }
+
+    public func exportUserData() -> UserDataExport {
+        UserDataPortable.make(
+            favorites: Array(favorites).sorted(),
+            recents: recent,
+            theme: ThemeManager.shared.mode.rawValue,
+            language: LanguageManager.shared.current.rawValue,
+            autoCheckUpdates: appUpdatingProvider?()?.isAutomaticChecksEnabled ?? true,
+            autoDownloadUpdates: appUpdatingProvider?()?.isAutomaticDownloadEnabled ?? false
+        )
+    }
+
+    public func importUserData(_ data: Data) async throws {
+        let payload = try UserDataPortable.decode(data)
+        favorites = Set(payload.favorites)
+        recent = Array(payload.recents.prefix(10))
+        if let store = persistStore {
+            try await store.replaceFavorites(payload.favorites)
+            try await store.replaceRecents(payload.recents)
+        }
+        if let theme = ThemeMode(rawValue: payload.theme) {
+            ThemeManager.shared.apply(theme)
+        }
+        if let language = AppLanguage(rawValue: payload.language) {
+            LanguageManager.shared.switchTo(language)
+        }
+        appUpdatingProvider?()?.setAutomaticChecksEnabled(payload.autoCheckUpdates)
+        appUpdatingProvider?()?.setAutomaticDownloadEnabled(payload.autoDownloadUpdates)
+        toastCenter?.show(Toast(kind: .success, messageKey: "settings.diagnostics.importDone"))
     }
 
     // MARK: - Install (真实接入 AdapterRegistry，缺依赖时 fallback 到占位输出)

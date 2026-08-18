@@ -105,6 +105,53 @@ final class FileJSONStoreTests: XCTestCase {
         let installs = try await store.loadInstallations()
         XCTAssertEqual(installs.count, 0)
     }
+
+    func testReplaceFavoritesAndRecents() async throws {
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = FileJSONStore(directory: dir)
+        try await store.saveFavorite(toolID: "old")
+        try await store.replaceFavorites(["git", "nodejs"])
+        try await store.replaceRecents(["git", "python", "rust"])
+        let favorites = try await store.loadFavorites()
+        let recents = try await store.loadRecents()
+        XCTAssertEqual(Set(favorites), Set(["git", "nodejs"]))
+        XCTAssertEqual(recents, ["git", "python", "rust"])
+    }
+
+    func testResetCatalogCacheKeepsFavorites() async throws {
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = FileJSONStore(directory: dir)
+        try await store.saveFavorite(toolID: "git")
+        let snapshot = CatalogSnapshot(
+            schemaVersion: "1.0.0",
+            catalogVersion: "cache-test",
+            createdAt: Date(),
+            expiresAt: Date().addingTimeInterval(3600),
+            keyID: "k",
+            signature: "s",
+            tools: []
+        )
+        try await store.saveCatalog(snapshot)
+        try await store.resetCatalogCache()
+        let favorites = try await store.loadFavorites()
+        XCTAssertEqual(favorites, ["git"])
+    }
+
+    func testCorruptStoreIsBackedUp() async throws {
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let json = dir.appendingPathComponent("store.json")
+        try Data("not-json".utf8).write(to: json)
+        let store = FileJSONStore(directory: dir)
+        let favorites = try await store.loadFavorites()
+        let recovered = await store.recoveredFromCorruption()
+        XCTAssertTrue(favorites.isEmpty)
+        XCTAssertTrue(recovered)
+        let backups = try FileManager.default.contentsOfDirectory(atPath: dir.path)
+        XCTAssertTrue(backups.contains { $0.hasPrefix("store.json.corrupt-") })
+    }
 }
 
 // MARK: - P0-G3-2/3/4 修复：OutputRedactor 新增规则 + path 重写

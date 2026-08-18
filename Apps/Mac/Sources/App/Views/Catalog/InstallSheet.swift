@@ -158,7 +158,8 @@ struct InstallSheet: View {
             let v = installOption.version.map { "@\($0)" } ?? "@latest"
             return "mise use \(installOption.toolName ?? tool.id)\(v)"
         case .officialArtifact:
-            return "download \(installOption.url?.absoluteString ?? "<missing url>")"
+            let host = installOption.url?.host ?? String(localized: "common.notProvided")
+            return "download \(host)"
         case .npmGlobal:
             let pkg = installOption.packageName ?? tool.id
             if let v = installOption.versionRule, !v.isEmpty {

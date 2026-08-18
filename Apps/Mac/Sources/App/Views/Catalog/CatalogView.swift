@@ -173,7 +173,7 @@ private struct ToolCard: View {
         .onHover { isHovering = $0 }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(tool.name))
-        .accessibilityValue(Text(LocalizedStringKey(presentation.statusKey)))
+        .accessibilityValue(Text(presentation.accessibilitySummary))
     }
 
     @ViewBuilder

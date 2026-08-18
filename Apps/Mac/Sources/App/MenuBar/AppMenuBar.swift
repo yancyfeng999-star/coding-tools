@@ -187,6 +187,16 @@ public final class AppMenuBar: ObservableObject {
         feedback.image = NSImage(systemSymbolName: "envelope", accessibilityDescription: "Feedback")
         menu.addItem(feedback)
 
+        let help = NSMenuItem(
+            title: language.localized("settings.help.open", fallback: "Help & Shortcuts"),
+            action: #selector(openSettings),
+            keyEquivalent: "?"
+        )
+        help.keyEquivalentModifierMask = [.command]
+        help.target = self
+        help.image = NSImage(systemSymbolName: "questionmark.circle", accessibilityDescription: "Help")
+        menu.addItem(help)
+
         menu.addItem(.separator())
 
         // Quit

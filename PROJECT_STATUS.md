@@ -5,9 +5,9 @@
 
 ## 当前状态
 
-- **阶段**：v1.5.3 为最近公开 Release（build 26）；阶段 9 架构就位、阶段 11 目录签名已接通、阶段 12 本地 Crash 落盘已起步
-- **版本**：v1.5.3（build 26）
-- **最近更新**：2026-08-14
+- **阶段**：v1.5.3 为最近公开 Release（build 26）；UI foundation P1 已在源码落地（尚未升版 / 构建 / 公证 / Release）
+- **版本**：v1.5.3（build 26）源码含未发布 P1
+- **最近更新**：2026-08-18
 
 ## 阶段路线
 
@@ -94,6 +94,7 @@
 
 ## 进行中
 
+- [x] UI foundation P1（首次启动、诊断、导出导入、目录缓存重置、崩溃恢复提示、帮助）已写进源码；本地测试见本轮验证，运行时 / Release 仍未做
 - [ ] Apple Developer ID 申请（外部流程，阶段 10 阻塞 sandbox + 公证 + 上架）
 - [ ] Sandbox 实际开启（等阶段 10 完成）
 - [ ] NpmGlobalAdapter 切换到走 HelperClient（阶段 9 二期）
@@ -127,8 +128,8 @@
 - [ ] `Catalog/revocations/` 维护流程持续补齐
 
 ### 阶段 12 二期（Crash 报告访问 + Sentry 可选）
-- [ ] Settings 加「打开 crash log 文件夹」按钮
-- [ ] 关于页加「最近一次 crash 时间」指示
+- [x] Settings 加「打开 crash log 文件夹」按钮（UI foundation P1）
+- [x] 诊断区显示最近一次 crash 时间（UI foundation P1）
 - [ ] v2.0 路线：Sentry SDK 集成（云端 dedup / 告警 / 需新建 Sentry 账号 + DSN）
 
 ## 发布节点

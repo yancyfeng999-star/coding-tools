@@ -3,6 +3,9 @@ import Localization
 import Theme
 import UI
 import Updates
+import Persistence
+import ProcessExecution
+import UniformTypeIdentifiers
 
 /// 设置：外观 / 语言 / 应用更新 / 通用 / 支持与反馈 / 诊断与恢复 / 关于。
 struct SettingsView: View {
@@ -11,6 +14,7 @@ struct SettingsView: View {
     @ObservedObject private var language = LanguageManager.shared
     @ObservedObject private var theme = ThemeManager.shared
     @State private var showDiagnosticPreview = false
+    @State private var showHelp = false
 
     private var updateEntry: AppUpdateEntry { AppUpdateEntry.forSettings(appState.updateState) }
 
@@ -33,6 +37,9 @@ struct SettingsView: View {
                     NSPasteboard.general.setString(diagnosticSummary.previewText, forType: .string)
                     showDiagnosticPreview = false
                 }
+            }
+            .sheet(isPresented: $showHelp) {
+                HelpSheet()
             }
         }
         .background(DesignTokens.Palette.appBackground)
@@ -152,6 +159,11 @@ struct SettingsView: View {
                 Label("settings.support.help", systemImage: "questionmark.circle")
             }
             Button {
+                showHelp = true
+            } label: {
+                Label("settings.help.open", systemImage: "questionmark.circle")
+            }
+            Button {
                 showDiagnosticPreview = true
             } label: {
                 Label("settings.support.copyDiagnostics", systemImage: "doc.on.clipboard")
@@ -165,6 +177,32 @@ struct SettingsView: View {
 
     private var diagnosticsSection: some View {
         Section {
+            labeled("settings.diagnostics.catalogVersion", value: appState.catalogSnapshot?.catalogVersion ?? "—")
+            labeled("settings.diagnostics.keyID", value: appState.catalogSnapshot?.keyID ?? "—")
+            labeled("settings.diagnostics.toolCount", value: "\(appState.catalogSnapshot?.tools.count ?? 0)")
+            labeled("settings.diagnostics.expires", value: expiresText)
+            labeled("settings.diagnostics.cache", value: cacheText)
+            labeled("settings.diagnostics.lastCrash", value: lastCrashText)
+            labeled("settings.diagnostics.compatibility", value: compatibilityText)
+
+            Button("settings.diagnostics.refreshCatalog") {
+                Task {
+                    await appState.refreshCatalog()
+                    appState.refreshCatalogCacheMetadata()
+                }
+            }
+            Button("settings.diagnostics.resetCache") {
+                Task { await appState.resetCatalogCache() }
+            }
+            Button("settings.diagnostics.openCrashFolder") {
+                appState.openCrashFolder()
+            }
+            Button("settings.diagnostics.export") {
+                exportUserData()
+            }
+            Button("settings.diagnostics.import") {
+                importUserData()
+            }
             Button("settings.diagnostics.clearHistory") {
                 Task { await appState.clearOperationHistory() }
             }
@@ -400,10 +438,66 @@ struct SettingsView: View {
             architecture: meta.architecture,
             theme: theme.mode.rawValue,
             language: language.current.rawValue,
-            catalogStatus: appState.catalogSnapshot == nil ? "unloaded" : "loaded",
+            catalogStatus: appState.catalogStatusSummary(),
             appUpdateState: appState.updateState.statusTextKey,
-            selectedToolStatus: appState.selectedTool.map { "\($0.id):\($0.status.rawValue)" }
+            selectedToolStatus: appState.selectedTool.map { "\($0.id):\(appState.presentation(for: $0).statusKey)" }
         )
+    }
+
+    private var expiresText: String {
+        guard let date = appState.catalogSnapshot?.expiresAt else { return "—" }
+        return date.formatted(date: .abbreviated, time: .omitted)
+    }
+
+    private var cacheText: String {
+        guard let meta = appState.catalogCacheMetadata else {
+            return String(localized: "settings.diagnostics.cache.empty")
+        }
+        let when = meta.savedAt.formatted(.relative(presentation: .named))
+        return "\(meta.catalogVersion) · \(meta.bytes) · \(when)"
+    }
+
+    private var lastCrashText: String {
+        if let date = appState.crashRecovery?.lastCrashAt ?? CrashRecovery.status(
+            directory: CrashReporter.defaultDirectory(),
+            acknowledgedAt: nil
+        ).lastCrashAt {
+            return date.formatted(.relative(presentation: .named))
+        }
+        return String(localized: "settings.diagnostics.noCrash")
+    }
+
+    private var compatibilityText: String {
+        let report = appState.compatibilityReport()
+        return "macOS \(report.currentMacOS) · \(report.architecture) · \(report.isHealthy ? "ok" : "warn")"
+    }
+
+    private func exportUserData() {
+        let payload = appState.exportUserData()
+        guard let data = try? UserDataPortable.encode(payload) else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = "coding-tools-user-data.json"
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            try? data.write(to: url, options: .atomic)
+        }
+    }
+
+    private func importUserData() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.begin { response in
+            guard response == .OK, let url = panel.url, let data = try? Data(contentsOf: url) else { return }
+            Task { @MainActor in
+                do {
+                    try await appState.importUserData(data)
+                } catch {
+                    appState.toastCenter?.show(Toast(kind: .error, messageKey: "settings.diagnostics.importFailed"))
+                }
+            }
+        }
     }
 
     private func openURL(_ url: URL) {

@@ -390,9 +390,9 @@ struct UpdateProgressCard: View {
                 .progressViewStyle(.circular)
                 .controlSize(.small)
         }
-        .padding(16)
+        .padding(DesignTokens.Space.space4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(tint.opacity(0.08), in: RoundedRectangle(cornerRadius: DesignTokens.Radius.panel, style: .continuous))
     }
 }
 
@@ -417,7 +417,7 @@ struct UpdateFailedCard: View {
             Button("home.update.retry", action: onRetry)
                 .controlSize(.small)
         }
-        .padding(16)
+        .padding(DesignTokens.Space.space4)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(DesignTokens.Palette.contentBackground, in: RoundedRectangle(cornerRadius: DesignTokens.Radius.panel, style: .continuous))
     }

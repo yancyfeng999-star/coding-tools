@@ -21,6 +21,7 @@
 - 视觉改动必须使用 `DesignTokens`（Theme 模块），不要在四个标签页上直接写 `.title` / `.blue` / 渐变 / 悬停缩放。
 - 工具是否安装、是否可更新、主按钮文案必须走 `ToolPresentationMapper`。不要在卡片、详情、安装弹窗或菜单栏各自判断。
 - 新增用户文案必须同时提供 `zh-Hans` 和 `en`，不能把英文 fallback 当作正式中文翻译。「应用更新」和「工具更新」必须使用不同 key。
+- 设置 schema 变更必须带版本号和损坏恢复；导出/导入、诊断、Issue URL 不得包含用户主目录、Token、环境变量或签名下载 URL。
 
 ### Catalog 与外部内容
 

@@ -72,6 +72,7 @@ open CodingTools.xcworkspace
 - Tool cards, tool detail, the install sheet, and the menu bar render one presentation mapping. Missing latest version is never “up to date”; a failed probe is never “not installed”.
 - **App Updates** (Sparkle) and **tool updates** are separate copy and separate state. Settings and the menu bar always expose **Check for Updates**; a check already in flight cannot start another.
 - Settings → Support & Feedback includes report issue, feature idea, homepage, help, and copy diagnostic summary. Issue URLs prefill only app version, build, macOS version, and CPU architecture. Logs and diagnostics are never uploaded automatically; copy-diagnostics shows a preview first.
+- First launch explains the four tabs, trusted install sources, and the split between app updates and tool updates. Settings → Diagnostics shows catalog cache status, last crash, crash-folder access, and a user-triggered export/import of favorites, recents, theme, language, and update preferences. The portable file never includes home paths, tokens, or logs.
 - Appearance supports Light, Dark, and Follow System. Switching back to Follow System clears a previously pinned app/window appearance so new system changes apply.
 
 ---

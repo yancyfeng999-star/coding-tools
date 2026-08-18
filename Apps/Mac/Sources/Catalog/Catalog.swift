@@ -143,6 +143,17 @@ public struct FileSystemCatalogCache: CatalogCacheStoring, @unchecked Sendable {
         return try decoder.decode(CachedCatalogMetadata.self, from: data)
     }
 
+    public func reset() throws {
+        guard fileManager.fileExists(atPath: directory.path) else { return }
+        let items = try fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        )
+        for item in items {
+            try fileManager.removeItem(at: item)
+        }
+    }
+
     private static func sanitize(_ s: String) -> String {
         s.replacingOccurrences(of: "/", with: "_")
          .replacingOccurrences(of: "..", with: "_")
