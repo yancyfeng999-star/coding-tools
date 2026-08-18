@@ -28,6 +28,40 @@ final class AgentEnvironmentStateTests: XCTestCase {
         XCTAssertEqual(state.latestVersionFailure(for: "codex"), .timedOut)
     }
 
+    func testRefreshKeepsStaleProbeVisibleInPresentation() async {
+        let state = AppState()
+        state.detector = DelayedDetector(delays: ["claude-code": .milliseconds(10)], version: "2.1.221")
+        await state.refreshProbes(toolIDs: ["claude-code"])
+        XCTAssertEqual(state.probe(for: "claude-code")?.installedVersion, "2.1.221")
+        state.latestVersionStates["claude-code"] = .loaded(
+            LatestVersionRecord(
+                version: "2.1.221",
+                source: .npm("@anthropic-ai/claude-code"),
+                fetchedAt: Date(timeIntervalSince1970: 0)
+            )
+        )
+
+        state.detector = DelayedDetector(delays: ["claude-code": .milliseconds(400)], version: "2.1.221")
+        let task = Task { await state.refreshProbes(toolIDs: ["claude-code"]) }
+        try? await Task.sleep(for: .milliseconds(50))
+        guard let tool = state.tools.first(where: { $0.id == "claude-code" }) else {
+            XCTFail("expected placeholder claude-code")
+            return
+        }
+        if case .result(let probe) = state.probeOutcome(for: "claude-code") {
+            XCTAssertEqual(probe.installedVersion, "2.1.221")
+        } else {
+            XCTFail("refresh must keep the cached probe, not collapse to checking")
+        }
+        let presentation = state.presentation(for: tool)
+        XCTAssertEqual(presentation.localDisplay, .known("2.1.221"))
+        XCTAssertEqual(presentation.primaryAction, .open)
+        let model = state.agentEnvironmentCardModel(for: "claude-code")
+        XCTAssertEqual(model.localSummary, "2.1.221")
+        XCTAssertEqual(model.healthStatus, .installed)
+        await task.value
+    }
+
     func testStaleGenerationDoesNotOverwriteNewerProbe() async {
         let state = AppState()
         let detector = GenerationAwareDetector()
@@ -43,9 +77,11 @@ final class AgentEnvironmentStateTests: XCTestCase {
 
 private actor DelayedDetector: InstallationDetecting {
     let delays: [String: Duration]
+    let version: String
 
-    init(delays: [String: Duration]) {
+    init(delays: [String: Duration], version: String = "1.0.0") {
         self.delays = delays
+        self.version = version
     }
 
     func probe(tool: Tool) async -> InstallationProbe {
@@ -54,7 +90,7 @@ private actor DelayedDetector: InstallationDetecting {
         }
         return InstallationProbe(
             toolID: tool.id,
-            installedVersion: "1.0.0",
+            installedVersion: version,
             detectedPath: "/tmp/\(tool.id)",
             architecture: .arm64,
             healthStatus: .installed

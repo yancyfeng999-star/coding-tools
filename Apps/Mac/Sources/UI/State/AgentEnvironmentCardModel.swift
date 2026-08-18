@@ -72,6 +72,9 @@ public struct AgentEnvironmentCardModel: Equatable, Sendable {
         case .updateAvailable: return .outdated
         case .broken, .operationFailed: return .broken
         case .notInstalled, .sourceUnavailable: return .notInstalled
+        case .versionUnknown:
+            if case .known = presentation.localDisplay { return .installed }
+            return .notInstalled
         default: return .notInstalled
         }
     }
@@ -80,18 +83,21 @@ public struct AgentEnvironmentCardModel: Equatable, Sendable {
         presentation: ToolPresentation,
         probeState: Loadable<InstallationProbe>?
     ) -> String {
-        if case .loading = probeState { return "tool.probe.checking" }
+        if case .known(let local) = presentation.localDisplay {
+            return local
+        }
+        if case .loading(let previous) = probeState,
+           let version = previous?.installedVersion, !version.isEmpty {
+            return version
+        }
         switch presentation.status {
         case .notInstalled, .sourceUnavailable:
             return "tool.status.notInstalled"
         case .broken:
             return "tool.probe.installedButBroken"
-        case .localAhead(let local, _):
-            return local
-        case .installedCurrent(let local, _), .updateAvailable(let local, _):
-            return local
+        case .checking:
+            return "tool.probe.checking"
         default:
-            if case .known(let local) = presentation.localDisplay { return local }
             return "tool.status.unconfirmed"
         }
     }
@@ -100,15 +106,18 @@ public struct AgentEnvironmentCardModel: Equatable, Sendable {
         presentation: ToolPresentation,
         latestState: Loadable<LatestVersionRecord>?
     ) -> String {
-        if case .failed = latestState { return "tool.latest.networkUnavailable" }
-        if case .loading = latestState { return "tool.probe.checking" }
-        switch presentation.latestDisplay {
-        case .known(let version):
-            return version
-        case .unavailable:
+        if case .failed = latestState {
             return "tool.latest.networkUnavailable"
-        case .notQueried:
-            return "tool.probe.checking"
         }
+        if case .known(let version) = presentation.latestDisplay {
+            return version
+        }
+        if case .loading(let previous) = latestState, let previous {
+            return previous.version
+        }
+        if case .unavailable = presentation.latestDisplay {
+            return "tool.latest.networkUnavailable"
+        }
+        return "tool.probe.checking"
     }
 }

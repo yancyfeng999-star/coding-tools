@@ -369,23 +369,31 @@ public final class AppState: ObservableObject {
     }
 
     public func latestFact(for tool: Tool) -> LatestVersionFact {
+        if latestVersionFailures[tool.id] != nil {
+            return .unavailable
+        }
         if let record = latestVersionRecord(for: tool.id) {
             return .known(record.version)
         }
-        if latestVersionFailures[tool.id] != nil || latestQueriedIDs.contains(tool.id) {
+        if latestQueriedIDs.contains(tool.id) {
             return .unavailable
         }
-        if latestVersions[tool.id] != nil, let value = latestVersions[tool.id] {
+        if let value = latestVersions[tool.id] {
             return .known(value)
         }
         return .notQueried
     }
 
     public func probeOutcome(for toolID: String) -> ToolProbeOutcome {
+        if let probe = probes[toolID] {
+            return .result(probe)
+        }
+        if case .loading(let previous) = probeStates[toolID], let previous {
+            return .result(previous)
+        }
         if probingToolIDs.contains(toolID) { return .checking }
         if case .loading = probeStates[toolID] { return .checking }
         if failedProbeIDs.contains(toolID) { return .failed }
-        if let probe = probes[toolID] { return .result(probe) }
         return .missing
     }
 

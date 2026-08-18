@@ -92,7 +92,9 @@ public struct ToolPresentation: Equatable, Sendable {
     }
 
     public var isConfirmedCurrent: Bool {
-        if case .installedCurrent = status { return true }
+        if case .installedCurrent(_, let latest?) = status, !latest.isEmpty {
+            return true
+        }
         return false
     }
 }
@@ -357,12 +359,12 @@ public enum ToolPresentationMapper {
                 )
             case .unavailable:
                 return presentation(
-                    status: .versionUnknown(path: probe.detectedPath),
-                    primary: .refresh,
+                    status: .installedCurrent(localVersion: local, latestVersion: nil),
+                    primary: .open,
                     enabled: true,
-                    secondary: [.openLocalPath, .reinstall],
-                    statusKey: "tool.status.unconfirmed",
-                    primaryKey: "tool.action.refresh",
+                    secondary: [.refresh, .openDiagnostics],
+                    statusKey: "tool.latest.networkUnavailable",
+                    primaryKey: "tool.action.open",
                     latest: .unavailable,
                     local: .known(local)
                 )

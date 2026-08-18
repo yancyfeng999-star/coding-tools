@@ -180,6 +180,8 @@ final class ToolPresentationMapperTests: XCTestCase {
             operation: .idle
         )
         XCTAssertEqual(result.latestDisplay, .unavailable)
+        XCTAssertEqual(result.primaryAction, .open)
+        XCTAssertFalse(result.showsUpdateAction)
         XCTAssertFalse(result.isConfirmedCurrent)
         XCTAssertNotEqual(result.statusKey, "tool.status.installed")
     }
