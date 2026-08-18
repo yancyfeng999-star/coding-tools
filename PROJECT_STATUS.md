@@ -5,8 +5,8 @@
 
 ## 当前状态
 
-- **阶段**：v1.5.3 为最近公开 Release（build 26）；UI foundation P1 已在源码落地（尚未升版 / 构建 / 公证 / Release）
-- **版本**：v1.5.3（build 26）源码含未发布 P1
+- **阶段**：v1.5.4 为最近公开 Release（build 27）；UI foundation P1 已随 GitHub Release 发出
+- **版本**：v1.5.4（build 27）
 - **最近更新**：2026-08-18
 
 ## 阶段路线
@@ -92,9 +92,15 @@
 - [x] `release.sh` Python 段修复：去掉重复生成 `## [Unreleased]` 模板的逻辑，每次发版只插入新版本段、不污染既有结构
 - [x] PROJECT_STATUS.md 阶段状态对齐：阶段 2–7 标 ✅，阶段 8 待启动；本轮 v1.2.1 记录到「已完成」
 
+## 已完成（本轮 · 2026-08-18）
+
+### v1.5.4 GitHub Release（UI foundation P1）
+- [x] 首次启动说明、兼容性摘要、诊断页、收藏/设置导出导入、目录缓存重置、崩溃恢复提示、帮助与快捷键。
+- [x] GitHub Release v1.5.4（build 27）已发布：ZIP / PKG / DMG / appcast。PKG 未用 Developer ID 签名，公证未做。
+- [x] 发版测试 114 通过；Release 构建为 ad-hoc「Sign to Run Locally」。
+
 ## 进行中
 
-- [x] UI foundation P1（首次启动、诊断、导出导入、目录缓存重置、崩溃恢复提示、帮助）已写进源码；本地测试见本轮验证，运行时 / Release 仍未做
 - [ ] Apple Developer ID 申请（外部流程，阶段 10 阻塞 sandbox + 公证 + 上架）
 - [ ] Sandbox 实际开启（等阶段 10 完成）
 - [ ] NpmGlobalAdapter 切换到走 HelperClient（阶段 9 二期）
@@ -147,6 +153,7 @@
 | v1.5.1 | Apache-2.0 开源文档与版本元数据 | ⏭️ 并入 v1.5.2 发布 |
 | v1.5.2 | UI foundation P0 + GitHub Release | ✅ 已发布（未公证） |
 | v1.5.3 | 打包后只留安装包，不注册多余本地 App | ✅ 已发布（未公证） |
+| v1.5.4 | UI foundation P1 + GitHub Release | ✅ 已发布（未公证） |
 | v2.0.0 | Apple Developer ID + 公证 + App Store 上架 | ⬜ 待启动 |
 
 ## 风险登记
