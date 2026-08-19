@@ -2160,7 +2160,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 已下载，去设置安装"
+            "value": "%@ 已就绪，可安装"
           }
         }
       }

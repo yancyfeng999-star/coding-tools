@@ -381,13 +381,7 @@ struct SettingsView: View {
     }
 
     private func statusText(_ presentation: UpdateStatusPresentation) -> String {
-        if presentation.key.isEmpty {
-            return presentation.argument ?? ""
-        }
-        if let argument = presentation.argument {
-            return String(format: NSLocalizedString(presentation.key, comment: ""), locale: .current, argument)
-        }
-        return NSLocalizedString(presentation.key, comment: "")
+        presentation.formattedText { language.localized($0) }
     }
 
     private var remoteVersionDisplay: String {

@@ -12,6 +12,25 @@ public struct UpdateStatusPresentation: Equatable, Sendable {
         self.argument = argument
     }
 
+    /// Resolve copy through an injected localizer so in-app language switches
+    /// (LanguageManager) apply without relying on `NSLocalizedString` / `.current`.
+    public func formattedText(localize: (String) -> String) -> String {
+        Self.format(key: key, argument: argument, localize: localize)
+    }
+
+    public static func format(
+        key: String,
+        argument: String?,
+        localize: (String) -> String
+    ) -> String {
+        if key.isEmpty {
+            return argument ?? ""
+        }
+        let template = localize(key)
+        guard let argument else { return template }
+        return String(format: template, argument)
+    }
+
     public static func settings(for state: UpdateState) -> UpdateStatusPresentation {
         switch state {
         case .idle:

@@ -347,6 +347,7 @@ struct UpdateAvailableCard: View {
 struct UpdateReadyCard: View {
     let remoteVersion: String
     let onInstall: () -> Void
+    @ObservedObject private var language = LanguageManager.shared
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
@@ -372,8 +373,11 @@ struct UpdateReadyCard: View {
     }
 
     private var readyTitle: String {
-        let version = UpdateStatusPresentation.displayVersion(remoteVersion)
-        return String(format: NSLocalizedString("home.update.readyToInstall", comment: ""), locale: .current, version)
+        UpdateStatusPresentation.format(
+            key: "home.update.readyToInstall",
+            argument: UpdateStatusPresentation.displayVersion(remoteVersion),
+            localize: { language.localized($0, fallback: "%@ ready to install") }
+        )
     }
 }
 

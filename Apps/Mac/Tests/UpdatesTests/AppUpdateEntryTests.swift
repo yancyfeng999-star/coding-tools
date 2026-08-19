@@ -90,6 +90,31 @@ final class AppUpdateEntryTests: XCTestCase {
         XCTAssertEqual(named.key, "settings.update.status.upToDate")
         XCTAssertEqual(named.argument, "1.5.5")
     }
+
+    func testStatusPresentationFormatsThroughInjectedLocalizer() {
+        var lookedUp: [String] = []
+        let presentation = UpdateStatusPresentation.settings(for: .readyToInstall(remoteVersion: "1.5.7"))
+        let text = presentation.formattedText { key in
+            lookedUp.append(key)
+            return "%@ ready to install"
+        }
+        XCTAssertEqual(lookedUp, ["settings.update.status.readyToInstall"])
+        XCTAssertEqual(text, "1.5.7 ready to install")
+
+        let idle = UpdateStatusPresentation.settings(for: .idle).formattedText { _ in "Idle" }
+        XCTAssertEqual(idle, "Idle")
+
+        let failed = UpdateStatusPresentation.settings(for: .failed(reason: "network", code: 1))
+            .formattedText { _ in "unused" }
+        XCTAssertEqual(failed, "network")
+
+        let home = UpdateStatusPresentation.format(
+            key: "home.update.readyToInstall",
+            argument: "1.5.7",
+            localize: { _ in "%@ 已就绪，可安装" }
+        )
+        XCTAssertEqual(home, "1.5.7 已就绪，可安装")
+    }
 }
 
 final class UpdateUserDriverPolicyTests: XCTestCase {
