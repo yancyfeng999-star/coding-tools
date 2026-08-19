@@ -297,6 +297,34 @@ final class AppStateTests: XCTestCase {
         XCTAssertEqual(updater.count, 1)
     }
 
+    func testPerformAppUpdateActionInstallsWhenReplyIsPending() {
+        let state = AppState()
+        let model = UpdateFlowModel()
+        state.bindUpdates(model)
+        model.transition(.readyToInstall(remoteVersion: "1.5.5"))
+        var decided: UpdateFlowModel.UpdateDecision?
+        model.setPendingReply { decided = $0 }
+        state.performAppUpdateAction()
+        XCTAssertEqual(decided, .install)
+    }
+
+    func testPerformAppUpdateActionChecksWhenReadyWithoutReply() {
+        final class CountingUpdater: AppUpdating {
+            var count = 0
+            var isAutomaticChecksEnabled: Bool = false
+            var isAutomaticDownloadEnabled: Bool = false
+            func checkForUpdates() { count += 1 }
+            func setAutomaticChecksEnabled(_ enabled: Bool) {}
+            func setAutomaticDownloadEnabled(_ enabled: Bool) {}
+        }
+        let updater = CountingUpdater()
+        let state = AppState()
+        state.appUpdatingProvider = { updater }
+        state.updateState = .readyToInstall(remoteVersion: "1.5.5")
+        state.performAppUpdateAction()
+        XCTAssertEqual(updater.count, 1)
+    }
+
     func testStartInstallRefusesToolWithoutTrustedOption() {
         let state = AppState()
         let tool = Tool(

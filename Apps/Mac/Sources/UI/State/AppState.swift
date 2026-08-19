@@ -895,6 +895,20 @@ public final class AppState: ObservableObject {
         appUpdatingProvider?()?.checkForUpdates()
     }
 
+    /// Settings / menu / ⌘U share this so ready-to-install is not a dead end.
+    public func performAppUpdateAction() {
+        switch AppUpdateEntry.forSettings(updateState).action {
+        case .confirmInstall:
+            if updateFlowModel?.hasPendingReply == true {
+                confirmInstallUpdate()
+                return
+            }
+            checkForUpdates()
+        case .check:
+            checkForUpdates()
+        }
+    }
+
     /// 确认安装（从 .readyToInstall 状态继续；用户点「立即重启」）
     public func confirmInstallUpdate() {
         updateFlowModel?.fulfillDecision(.install)

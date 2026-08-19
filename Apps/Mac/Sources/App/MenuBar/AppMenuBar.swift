@@ -228,7 +228,7 @@ public final class AppMenuBar: ObservableObject {
         )
         check.target = self
         check.isEnabled = entry.isEnabled
-        check.image = NSImage(systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: "Check for Updates")
+        check.image = NSImage(systemSymbolName: entry.systemImage, accessibilityDescription: "Check for Updates")
 
         var items: [NSMenuItem] = [check]
         switch updateState {
@@ -289,6 +289,12 @@ public final class AppMenuBar: ObservableObject {
     @objc private func checkForUpdates() {
         let updateState = updateStateProvider?() ?? .idle
         guard AppUpdateCheckGuard.canStartCheck(updateState) else { return }
+        if AppUpdateEntry.forMenuBar(updateState).action == .confirmInstall,
+           let state,
+           state.updateFlowModel?.hasPendingReply == true {
+            state.confirmInstallUpdate()
+            return
+        }
         checkForUpdatesProvider?()
     }
 

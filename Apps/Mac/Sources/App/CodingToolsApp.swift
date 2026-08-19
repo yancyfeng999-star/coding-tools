@@ -57,8 +57,8 @@ struct CodingToolsApp: App {
                 .keyboardShortcut(",", modifiers: .command)
             }
             CommandGroup(after: .appInfo) {
-                Button("settings.update.check") {
-                    appState.checkForUpdates()
+                Button(LocalizedStringKey(AppUpdateEntry.forSettings(appState.updateState).titleKey)) {
+                    appState.performAppUpdateAction()
                 }
                 .keyboardShortcut("u", modifiers: .command)
                 .disabled(!AppUpdateCheckGuard.canStartCheck(appState.updateState))

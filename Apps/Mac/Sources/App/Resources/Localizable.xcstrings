@@ -1,8 +1,12 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
-    "(%@)": {},
-    "%@": {},
+    "(%@)": {
+      "localizations": {}
+    },
+    "%@": {
+      "localizations": {}
+    },
     "%@ (%@)": {
       "localizations": {
         "zh-Hans": {
@@ -23,7 +27,9 @@
         }
       }
     },
-    "%@%%": {},
+    "%@%%": {
+      "localizations": {}
+    },
     "app.name": {
       "comment": "App display name",
       "extractionState": "manual",
@@ -630,7 +636,9 @@
         }
       }
     },
-    "category.%@": {},
+    "category.%@": {
+      "localizations": {}
+    },
     "category.aiCoding": {
       "extractionState": "manual",
       "localizations": {
@@ -2128,7 +2136,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ ready, install in Settings"
+            "value": "%@ ready to install"
           }
         },
         "fr": {
@@ -2157,7 +2165,9 @@
         }
       }
     },
-    "home.update.readyToInstall %@": {},
+    "home.update.readyToInstall %@": {
+      "localizations": {}
+    },
     "home.update.retry": {
       "extractionState": "manual",
       "localizations": {
@@ -2609,7 +2619,9 @@
         }
       }
     },
-    "macOS 14.0+": {},
+    "macOS 14.0+": {
+      "localizations": {}
+    },
     "menubar.availableUpdate": {
       "extractionState": "manual",
       "localizations": {
@@ -3877,43 +3889,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine automatischen Updates. Nach „Nach Updates suchen“ wird geprüft; bei einem Update beendet sich die App, installiert still und startet neu."
+            "value": "Keine automatischen Updates. Nutzen Sie „Nach Updates suchen“ oben. Ist eine Version geladen, wählen Sie „Installieren und neu starten“. Alternativ den Installer von GitHub Releases laden."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coding Tools never checks or installs updates by itself. Click Check for Updates to look for a new version; if one is found, the app quits, installs silently, and reopens."
+            "value": "Updates never start by themselves. Use Check for Updates at the top of this section. If a version is already downloaded, use Install and Relaunch. You can also download the installer from GitHub Releases."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucune mise à jour automatique. Cliquez sur Vérifier les mises à jour ; si une version est disponible, l’app se ferme, s’installe en silence, puis se rouvre."
+            "value": "Aucune mise à jour automatique. Cliquez sur Vérifier les mises à jour en haut. Si une version est déjà téléchargée, cliquez sur Installer et relancer. Vous pouvez aussi télécharger l’installateur depuis GitHub Releases."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "自動では更新しません。「更新を確認」を押すと確認し、更新があれば終了して静かにインストールし、再起動します。"
+            "value": "自動では更新しません。この欄の上の「更新を確認」を押してください。すでにダウンロード済みなら「インストールして再起動」を押します。GitHub Releases からインストーラを入手することもできます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "자동으로 업데이트하지 않습니다. 업데이트 확인을 누르면 검사하고, 새 버전이 있으면 종료 후 조용히 설치하고 다시 엽니다."
+            "value": "자동으로 업데이트하지 않습니다. 이 영역의 맨 위 ‘업데이트 확인’을 누르세요. 이미 다운로드된 버전이 있으면 ‘설치 후 다시 시작’을 누르세요. GitHub Releases에서 설치 파일을 받을 수도 있습니다."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "不会自动检查或安装应用更新。点击「检查更新」后才会查找新版本；若有更新，软件会退出、静默安装，然后重新打开。"
+            "value": "不会自动检查更新。请点本区顶部的「检查更新」。若已下载完成，请点「安装并重启」。也可从 GitHub Releases 下载安装包。"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No hay actualizaciones automáticas. Pulsa Comprobar actualizaciones; si hay una, la app se cierra, se instala en silencio y vuelve a abrirse."
+            "value": "No hay actualizaciones automáticas. Pulsa Comprobar actualizaciones arriba. Si ya se descargó una versión, pulsa Instalar y reiniciar. También puedes descargar el instalador desde GitHub Releases."
           }
         }
       }
@@ -4181,7 +4193,9 @@
         }
       }
     },
-    "settings.update.status.downloading %@": {},
+    "settings.update.status.downloading %@": {
+      "localizations": {}
+    },
     "settings.update.status.extracting": {
       "extractionState": "manual",
       "localizations": {
@@ -4223,7 +4237,9 @@
         }
       }
     },
-    "settings.update.status.extracting %@": {},
+    "settings.update.status.extracting %@": {
+      "localizations": {}
+    },
     "settings.update.status.idle": {
       "extractionState": "manual",
       "localizations": {
@@ -4470,7 +4486,9 @@
         }
       }
     },
-    "Sparkle · Tuist · SwiftUI": {},
+    "Sparkle · Tuist · SwiftUI": {
+      "localizations": {}
+    },
     "tab.catalog": {
       "extractionState": "manual",
       "localizations": {
@@ -5373,8 +5391,12 @@
         }
       }
     },
-    "Universal (arm64 + x86_64)": {},
-    "v%@": {},
+    "Universal (arm64 + x86_64)": {
+      "localizations": {}
+    },
+    "v%@": {
+      "localizations": {}
+    },
     "v%@ (%@)": {
       "localizations": {
         "zh-Hans": {
@@ -5385,7 +5407,9 @@
         }
       }
     },
-    "yancyfeng999-star/coding-tools": {},
+    "yancyfeng999-star/coding-tools": {
+      "localizations": {}
+    },
     "工具：%@ · ID：%@": {
       "localizations": {
         "zh-Hans": {
@@ -8112,6 +8136,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "Multiple distinct installations"
+          }
+        }
+      }
+    },
+    "settings.update.installAndRelaunch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install and Relaunch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装并重启"
+          }
+        }
+      }
+    },
+    "settings.update.installNow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download and Install"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载并安装"
+          }
+        }
+      }
+    },
+    "settings.update.downloadRelease": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download from GitHub Releases"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从 GitHub 下载安装包"
+          }
+        }
+      }
+    },
+    "menubar.installAndRelaunch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install and Relaunch"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装并重启"
+          }
+        }
+      }
+    },
+    "menubar.installNow": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download and Install…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载并安装…"
           }
         }
       }

@@ -168,7 +168,7 @@ struct HomeView: View {
                 )
             case .readyToInstall(let remote):
                 UpdateReadyCard(remoteVersion: remote) {
-                    appModel.selectedTab = .settings
+                    state.performAppUpdateAction()
                 }
             case .installing:
                 UpdateProgressCard(
@@ -346,7 +346,7 @@ struct UpdateAvailableCard: View {
 
 struct UpdateReadyCard: View {
     let remoteVersion: String
-    let onOpenSettings: () -> Void
+    let onInstall: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
@@ -354,11 +354,11 @@ struct UpdateReadyCard: View {
                 .tokenFont(.pageTitle)
                 .foregroundStyle(DesignTokens.Palette.warning)
             VStack(alignment: .leading, spacing: 2) {
-                Text("home.update.readyToInstall \(remoteVersion)")
+                Text(readyTitle)
                     .tokenFont(.sectionTitle)
             }
             Spacer()
-            Button("home.update.installNow", action: onOpenSettings)
+            Button("home.update.installNow", action: onInstall)
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
         }
@@ -369,6 +369,11 @@ struct UpdateReadyCard: View {
             RoundedRectangle(cornerRadius: DesignTokens.Radius.panel, style: .continuous)
                 .stroke(DesignTokens.Palette.subtleBorder, lineWidth: 1)
         )
+    }
+
+    private var readyTitle: String {
+        let version = UpdateStatusPresentation.displayVersion(remoteVersion)
+        return String(format: NSLocalizedString("home.update.readyToInstall", comment: ""), locale: .current, version)
     }
 }
 

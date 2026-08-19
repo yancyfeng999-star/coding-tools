@@ -99,6 +99,9 @@ public final class UpdateFlowModel {
         state = newState
     }
 
+    /// True while Sparkle is waiting for an explicit install / dismiss / skip.
+    public var hasPendingReply: Bool { pendingReply != nil }
+
     /// 记录 Sparkle 等待用户决策的回调；当 UI 点「安装」时调 `fulfillDecision(.install)`
     public func setPendingReply(_ reply: @escaping (UpdateDecision) -> Void) {
         self.pendingReply = reply

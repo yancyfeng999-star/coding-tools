@@ -86,9 +86,19 @@ struct SettingsView: View {
 
     private var updatesSection: some View {
         Section {
+            Button(action: appState.performAppUpdateAction) {
+                Label(LocalizedStringKey(updateEntry.titleKey), systemImage: updateEntry.systemImage)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(!updateEntry.isEnabled)
+            .accessibilityIdentifier("settings.update.action")
+            .accessibilityLabel(Text(LocalizedStringKey(updateEntry.titleKey)))
+
             versionRow(label: "settings.update.local",
-                       value: appState.localVersion.isEmpty ? "—" : appState.localVersion,
-                       build: appState.localBuild)
+                       value: displayedLocalVersion,
+                       build: displayedLocalBuild)
 
             versionRow(label: "settings.update.remote",
                        value: remoteVersionDisplay,
@@ -115,12 +125,10 @@ struct SettingsView: View {
             }
 
             Button {
-                appState.checkForUpdates()
+                openURL(URL(string: IssueURLBuilder.latestReleaseURL)!)
             } label: {
-                Label("settings.update.check", systemImage: "arrow.triangle.2.circlepath")
+                Label("settings.update.downloadRelease", systemImage: "arrow.down.app")
             }
-            .disabled(!updateEntry.isEnabled)
-            .accessibilityLabel(Text("settings.update.check"))
         } header: {
             Text("settings.section.appUpdate")
         } footer: {
@@ -303,54 +311,55 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var statusLabel: some View {
+        let presentation = UpdateStatusPresentation.settings(for: appState.updateState)
         switch appState.updateState {
         case .idle:
-            Text("settings.update.status.idle")
+            Text(statusText(presentation))
                 .foregroundStyle(DesignTokens.Palette.secondaryText)
         case .checking:
             HStack(spacing: DesignTokens.Space.space2) {
                 ProgressView().controlSize(.small)
-                Text("settings.update.status.checking")
+                Text(statusText(presentation))
                     .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
-        case .upToDate(let remote):
-            Label("settings.update.status.upToDate \(remote)", systemImage: "checkmark.circle.fill")
+        case .upToDate:
+            Label(statusText(presentation), systemImage: "checkmark.circle.fill")
                 .foregroundStyle(DesignTokens.Palette.success)
-        case .available(let remote, _, let size):
+        case .available(_, _, let size):
             VStack(alignment: .trailing, spacing: 2) {
-                Label("settings.update.status.available \(remote)", systemImage: "arrow.down.circle.fill")
+                Label(statusText(presentation), systemImage: "arrow.down.circle.fill")
                     .foregroundStyle(DesignTokens.Palette.accent)
                 Text(byteString(size))
                     .tokenFont(.tinyMetadata)
                     .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
-        case .downloading(let progress, let bytes, let total):
+        case .downloading(_, let bytes, let total):
             VStack(alignment: .trailing, spacing: 2) {
-                Text("settings.update.status.downloading \(Int(progress * 100))")
+                Text(statusText(presentation))
                     .foregroundStyle(DesignTokens.Palette.accent)
                     .monospacedDigit()
                 Text("\(byteString(bytes)) / \(byteString(total))")
                     .tokenFont(.tinyMetadata)
                     .foregroundStyle(DesignTokens.Palette.secondaryText)
             }
-        case .extracting(let progress):
-            Text("settings.update.status.extracting \(Int(progress * 100))")
+        case .extracting:
+            Text(statusText(presentation))
                 .foregroundStyle(DesignTokens.Palette.accent)
                 .monospacedDigit()
-        case .readyToInstall(let remote):
-            Label("settings.update.status.readyToInstall \(remote)", systemImage: "arrow.up.circle.fill")
+        case .readyToInstall:
+            Label(statusText(presentation), systemImage: "arrow.up.circle.fill")
                 .foregroundStyle(DesignTokens.Palette.warning)
         case .installing:
             HStack(spacing: DesignTokens.Space.space2) {
                 ProgressView().controlSize(.small)
-                Text("settings.update.status.installing")
+                Text(statusText(presentation))
                     .foregroundStyle(DesignTokens.Palette.accent)
             }
         case .installed:
-            Label("settings.update.status.installed", systemImage: "checkmark.seal.fill")
+            Label(statusText(presentation), systemImage: "checkmark.seal.fill")
                 .foregroundStyle(DesignTokens.Palette.success)
-        case .failed(let reason, _):
-            Label(reason, systemImage: "exclamationmark.triangle.fill")
+        case .failed:
+            Label(statusText(presentation), systemImage: "exclamationmark.triangle.fill")
                 .foregroundStyle(DesignTokens.Palette.danger)
                 .lineLimit(1)
         }
@@ -369,11 +378,29 @@ struct SettingsView: View {
         }
     }
 
+    private var displayedLocalVersion: String {
+        UpdateStatusPresentation.runningVersion().version
+    }
+
+    private var displayedLocalBuild: Int {
+        UpdateStatusPresentation.runningVersion().build
+    }
+
+    private func statusText(_ presentation: UpdateStatusPresentation) -> String {
+        if presentation.key.isEmpty {
+            return presentation.argument ?? ""
+        }
+        if let argument = presentation.argument {
+            return String(format: NSLocalizedString(presentation.key, comment: ""), locale: .current, argument)
+        }
+        return NSLocalizedString(presentation.key, comment: "")
+    }
+
     private var remoteVersionDisplay: String {
         switch appState.updateState {
-        case .upToDate(let v): return v
-        case .available(let v, _, _): return v
-        case .readyToInstall(let v): return v
+        case .upToDate(let v): return UpdateStatusPresentation.displayVersion(v)
+        case .available(let v, _, _): return UpdateStatusPresentation.displayVersion(v)
+        case .readyToInstall(let v): return UpdateStatusPresentation.displayVersion(v)
         default: return "—"
         }
     }

@@ -44,6 +44,52 @@ final class AppUpdateEntryTests: XCTestCase {
         XCTAssertFalse(AppUpdateCheckGuard.canStartCheck(.extracting(progress: 0.5)))
         XCTAssertFalse(AppUpdateCheckGuard.canStartCheck(.installing))
     }
+
+    func testSettingsReadyToInstallConfirmsInstall() {
+        let entry = AppUpdateEntry.forSettings(.readyToInstall(remoteVersion: "1.5.7"))
+        XCTAssertEqual(entry.action, .confirmInstall)
+        XCTAssertEqual(entry.titleKey, "settings.update.installAndRelaunch")
+    }
+
+    func testSettingsReadyToInstallUsesInstallAction() {
+        let entry = AppUpdateEntry.forSettings(.readyToInstall(remoteVersion: "1.5.5"))
+        XCTAssertEqual(entry.action, .confirmInstall)
+        XCTAssertEqual(entry.titleKey, "settings.update.installAndRelaunch")
+        XCTAssertTrue(entry.showsCheckUpdate)
+        XCTAssertTrue(entry.isEnabled)
+    }
+
+    func testSettingsAvailableUsesInstallNowAndCheckAction() {
+        let entry = AppUpdateEntry.forSettings(
+            .available(remoteVersion: "1.5.5", remoteBuild: 28, size: 1024)
+        )
+        XCTAssertEqual(entry.action, .check)
+        XCTAssertEqual(entry.titleKey, "settings.update.installNow")
+        XCTAssertTrue(entry.isEnabled)
+    }
+
+    func testMenuBarReadyToInstallUsesInstallAction() {
+        let entry = AppUpdateEntry.forMenuBar(.readyToInstall(remoteVersion: "—"))
+        XCTAssertEqual(entry.action, .confirmInstall)
+        XCTAssertEqual(entry.titleKey, "menubar.installAndRelaunch")
+        XCTAssertTrue(entry.isEnabled)
+    }
+
+    func testStatusPresentationKeepsArgumentOutOfTheKey() {
+        let empty = UpdateStatusPresentation.settings(for: .readyToInstall(remoteVersion: ""))
+        XCTAssertEqual(empty.key, "settings.update.status.readyToInstall")
+        XCTAssertEqual(empty.argument, "—")
+        XCTAssertFalse(empty.key.contains("—"))
+        XCTAssertFalse(empty.key.contains(" "))
+
+        let dash = UpdateStatusPresentation.settings(for: .readyToInstall(remoteVersion: "—"))
+        XCTAssertEqual(dash.key, "settings.update.status.readyToInstall")
+        XCTAssertEqual(dash.argument, "—")
+
+        let named = UpdateStatusPresentation.settings(for: .upToDate(remoteVersion: "1.5.5"))
+        XCTAssertEqual(named.key, "settings.update.status.upToDate")
+        XCTAssertEqual(named.argument, "1.5.5")
+    }
 }
 
 final class UpdateUserDriverPolicyTests: XCTestCase {

@@ -19,6 +19,7 @@ public enum IssueURLBuilder {
     public static let issuesNewURL = "https://github.com/yancyfeng999-star/coding-tools/issues/new"
     public static let discussionsIdeasURL = "https://github.com/yancyfeng999-star/coding-tools/discussions/new?category=ideas"
     public static let homepageURL = "https://github.com/yancyfeng999-star/coding-tools"
+    public static let latestReleaseURL = "https://github.com/yancyfeng999-star/coding-tools/releases/latest"
     public static let helpURL = "https://github.com/yancyfeng999-star/coding-tools#readme"
     public static let securityURL = "https://github.com/yancyfeng999-star/coding-tools/security/advisories/new"
 
