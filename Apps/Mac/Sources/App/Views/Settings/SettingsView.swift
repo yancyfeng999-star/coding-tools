@@ -123,12 +123,6 @@ struct SettingsView: View {
                     .truncationMode(.middle)
                     .textSelection(.enabled)
             }
-
-            Button {
-                openURL(URL(string: IssueURLBuilder.latestReleaseURL)!)
-            } label: {
-                Label("settings.update.downloadRelease", systemImage: "arrow.down.app")
-            }
         } header: {
             Text("settings.section.appUpdate")
         } footer: {

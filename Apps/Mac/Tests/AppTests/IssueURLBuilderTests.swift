@@ -2,14 +2,6 @@ import XCTest
 @testable import UI
 
 final class IssueURLBuilderTests: XCTestCase {
-    func testLatestReleaseURLPointsAtGitHubReleases() {
-        XCTAssertEqual(
-            IssueURLBuilder.latestReleaseURL,
-            "https://github.com/yancyfeng999-star/coding-tools/releases/latest"
-        )
-        XCTAssertNotNil(URL(string: IssueURLBuilder.latestReleaseURL))
-    }
-
     func testBugReportURLIncludesOnlySafeMetadata() {
         let metadata = IssueReportMetadata(
             version: "1.5.1",
