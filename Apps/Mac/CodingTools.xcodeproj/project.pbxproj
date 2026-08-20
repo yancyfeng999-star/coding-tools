@@ -68,6 +68,7 @@
 		63FF2F3E1FB2B583CE316F46 /* Sparkle.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB72B6828AF2904D0261D607 /* Sparkle.xcframework */; };
 		64D65E889C98615B196E6F1D /* Installers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 075D81157B4945796F9A2D2E /* Installers.framework */; };
 		668613C053984AF1FFAD5CD2 /* UI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEBF757E9E7DE20E30033C9F /* UI.framework */; };
+		66BA7B1DBEE4F8E067A4B7F4 /* UpdateStatusPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F58684BE981349A54FBA3387 /* UpdateStatusPresentation.swift */; };
 		67E639618A4B4BFAD42D8A20 /* Persistence.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 324B193C95738859B0300021 /* Persistence.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		67FD71CB73C1B6F729E7D951 /* ToolIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73B15938A8D76C90CD7CD3B /* ToolIconView.swift */; };
 		6AA27D2FB9ED2048CB55DFA4 /* ManifestSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55601AB72DEC3480C73CE4DE /* ManifestSecurity.swift */; };
@@ -848,6 +849,7 @@
 		F327EE36ED3A395B7ADA1816 /* OnboardingSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSheet.swift; sourceTree = "<group>"; };
 		F3FDAD3861773749507D48D8 /* CodingToolsLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CodingToolsLogo.png; sourceTree = "<group>"; };
 		F4DEF7B9D574CF4C02F4A845 /* PublicKeys */ = {isa = PBXFileReference; path = PublicKeys; sourceTree = "<group>"; };
+		F58684BE981349A54FBA3387 /* UpdateStatusPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateStatusPresentation.swift; sourceTree = "<group>"; };
 		F5DF40756AFF10F27F0FB70A /* SilentUpdateUserDriver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilentUpdateUserDriver.swift; sourceTree = "<group>"; };
 		F91DD07C5F20A100E4F9714F /* InstallSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallSheet.swift; sourceTree = "<group>"; };
 		FEC077D4825ACCC2BFB4C48D /* ContentCanonicalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentCanonicalizer.swift; sourceTree = "<group>"; };
@@ -1446,6 +1448,7 @@
 				F5DF40756AFF10F27F0FB70A /* SilentUpdateUserDriver.swift */,
 				A7548E63D789523E75313203 /* Updates.swift */,
 				AB03AEB999CD09BD9E54BA1F /* UpdateState.swift */,
+				F58684BE981349A54FBA3387 /* UpdateStatusPresentation.swift */,
 			);
 			path = Updates;
 			sourceTree = "<group>";
@@ -2104,6 +2107,7 @@
 				6BD123D0738ABDFD631DBDC7 /* AppUpdateEntry.swift in Sources */,
 				DC00BB88F5088461C4848678 /* SilentUpdateUserDriver.swift in Sources */,
 				7D1BCC50518E59087D39E290 /* UpdateState.swift in Sources */,
+				66BA7B1DBEE4F8E067A4B7F4 /* UpdateStatusPresentation.swift in Sources */,
 				DF07D5FD8106FFFABF9DE16E /* Updates.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
